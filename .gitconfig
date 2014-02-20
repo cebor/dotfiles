@@ -1,0 +1,18 @@
+[color]
+	ui = true
+[alias]
+	st = status
+	ci = commit
+	co = checkout
+	br = branch
+	l = log --graph --decorate
+	ls = log --stat --decorate
+[merge]
+	summary = true
+[core]
+	excludesfile = ~/.gitignore
+	attributesfile = ~/.gitattributes
+	editor = vim
+	autocrlf = input
+[push]
+	default = simple
