@@ -1,6 +1,5 @@
 # Aliases
 alias py="python"
 alias ipy="ipython"
-alias pyhttp="py -m SimpleHTTPServer"
 alias k9="kill -9"
 alias brew-upg="brew update && brew upgrade"
