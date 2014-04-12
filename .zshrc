@@ -18,6 +18,9 @@ source $ZSH/oh-my-zsh.sh
 # Virtualenv Pompt
 PROMPT="\$(virtualenv_prompt_info)$PROMPT"
 
+# nvm
+source $(brew --prefix nvm)/nvm.sh
+
 # # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
 #   export EDITOR='vim'
