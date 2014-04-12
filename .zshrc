@@ -11,7 +11,7 @@ ZSH=$HOME/.oh-my-zsh
 ZSH_THEME="robbyrussell"
 
 # Plugins 
-plugins=(git brew virtualenv virtualenvwrapper npm bower)
+plugins=(git brew extract virtualenv virtualenvwrapper npm bower)
 
 source $ZSH/oh-my-zsh.sh
 
