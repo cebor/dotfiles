@@ -4,6 +4,9 @@ for file in ~/.{exports,aliases,functions}; do
 done
 unset file
 
+# nvm
+source $(brew --prefix nvm)/nvm.sh
+
 # Path to your oh-my-zsh configuration.
 ZSH=$HOME/.oh-my-zsh
 
@@ -11,15 +14,12 @@ ZSH=$HOME/.oh-my-zsh
 ZSH_THEME="robbyrussell"
 
 # Plugins 
-plugins=(git brew extract virtualenv virtualenvwrapper npm bower)
+plugins=(git brew extract virtualenv virtualenvwrapper node npm bower osx)
 
 source $ZSH/oh-my-zsh.sh
 
 # Virtualenv Pompt
 PROMPT="\$(virtualenv_prompt_info)$PROMPT"
-
-# nvm
-source $(brew --prefix nvm)/nvm.sh
 
 # # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
