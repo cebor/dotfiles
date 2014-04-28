@@ -1,20 +1,24 @@
-# Compiled Python files
-*.pyc
-
-# Folder view configuration files
+### OSX ###
 .DS_Store
-Desktop.ini
+.AppleDouble
+.LSOverride
 
-# Thumbnail cache files
+# Icon must end with two \r
+Icon
+
+# Thumbnails
 ._*
-Thumbs.db
 
-# Files that might appear on external disks
+# Files that might appear on external disk
 .Spotlight-V100
 .Trashes
 
-# Icon
-Icon
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
 
 # IDEs
 .idea/
@@ -22,3 +26,6 @@ Icon
 
 # Deploy Scripts
 deploy.sh
+
+# Compiled Python files
+*.pyc
