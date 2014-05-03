@@ -1,23 +1,38 @@
 #!/bin/bash
+cd "$(dirname "$0")"
+
+# sync files
+./sync.sh
+cp .gitconfig ~/
 
 # homebrew
-ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+if test ! $(which brew)
+then
+  echo "Installing Homebrew."
+  ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+fi
 
 # zsh
-brew install zsh
 BREWZSH="/usr/local/bin/zsh"
 if ! grep -Fxq "$BREWZSH" /etc/shells
 then
+  echo "Installing ZSH."
+  brew install zsh
   echo "$BREWZSH" | sudo tee -a  /etc/shells
+  chsh -s "$BREWZSH"
 fi
-chsh -s "$BREWZSH"
 unset BREWZSH
 
 # nvm
-brew install nvm
+if test ! $(brew --prefix nvm)
+then
+  echo "Installing nvm."
+  brew install nvm
+fi
 
 # oh-my-zsh
 if [ ! -d ~/.oh-my-zsh ]; then
+  echo "Installing oh-my-zsh."
   git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
 fi
 
@@ -33,5 +48,8 @@ git config --global credential.helper osxkeychain
 unset GITUSER
 unset GITEMAIL
 
+echo "Installation & configuration finished!"
+
 # source
-source ~/.zshrc
+/usr/bin/env zsh
+. ~/.zshrc
