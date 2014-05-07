@@ -5,7 +5,7 @@ done
 unset file
 
 # nvm
-source $(brew --prefix nvm)/nvm.sh
+source ~/.nvm/nvm.sh
 
 # Path to your oh-my-zsh configuration.
 ZSH=$HOME/.oh-my-zsh
