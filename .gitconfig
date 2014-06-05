@@ -16,3 +16,5 @@
 	autocrlf = input
 [push]
 	default = simple
+[svn]
+	rmdir = true
