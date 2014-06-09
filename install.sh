@@ -3,7 +3,7 @@ cd "$(dirname "$0")"
 
 # sync files
 ./sync.sh
-cp .gitconfig ~/
+cp .gitconfig ~
 
 # homebrew
 if test ! $(which brew)
@@ -19,16 +19,10 @@ then
   echo "Installing ZSH."
   brew install zsh
   echo "$BREWZSH" | sudo tee -a  /etc/shells
+  echo "Changing shell to ZSH."
   chsh -s "$BREWZSH"
 fi
 unset BREWZSH
-
-# nvm
-if test ! $(brew --prefix nvm)
-then
-  echo "Installing nvm."
-  brew install nvm
-fi
 
 # oh-my-zsh
 if [ ! -d ~/.oh-my-zsh ]; then
@@ -36,20 +30,35 @@ if [ ! -d ~/.oh-my-zsh ]; then
   git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
 fi
 
+# gnu coreutils
+if test ! $(brew --prefix coreutils)
+then
+  echo "Installing coreutils."
+  brew install coreutils
+fi
+
+# python
+if test ! $(brew --prefix python)
+then
+  echo "Installing python."
+  brew install python
+fi
+
+# nvm
+if [ ! -d ~/.nvm ]; then
+  echo "Installing nvm."
+  curl https://raw.githubusercontent.com/creationix/nvm/v0.7.0/install.sh | sh
+fi
+
 # git
 echo "Configurating GIT ...."
-echo "Username: \c"
-read GITUSER
-echo "Email: \c"
-read GITEMAIL
-git config --global user.name "$GITUSER"
-git config --global user.email "$GITEMAIL"
+read -p "Username: "
+git config --global user.name "$REPLY"
+read -p "Email: "
+git config --global user.email "$REPLY"
 git config --global credential.helper osxkeychain
-unset GITUSER
-unset GITEMAIL
 
 echo "Installation & configuration finished!"
 
-# source
-/usr/bin/env zsh
-. ~/.zshrc
+# source .zshrc
+./source.zsh
