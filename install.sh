@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 cd "$(dirname "$0")"
 
 # sync files
 ./sync.sh
-cp .gitconfig ~
+cp .gitconfig $HOME
 
 # homebrew
 if test ! $(which brew)
@@ -27,7 +27,7 @@ unset BREWZSH
 # oh-my-zsh
 if [ ! -d ~/.oh-my-zsh ]; then
   echo "Installing oh-my-zsh."
-  git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+  git clone https://github.com/robbyrussell/oh-my-zsh.git $HOME/.oh-my-zsh
 fi
 
 # gnu coreutils
@@ -35,6 +35,13 @@ if test ! $(brew --prefix coreutils)
 then
   echo "Installing coreutils."
   brew install coreutils
+fi
+
+# gnu findutils
+if test ! $(brew --prefix findutils)
+then
+  echo "Installing coreutils."
+  brew install findutils
 fi
 
 # python
@@ -45,9 +52,20 @@ then
 fi
 
 # nvm
-if [ ! -d ~/.nvm ]; then
+if [ ! -d $HOME/.nvm ]; then
   echo "Installing nvm."
   curl https://raw.githubusercontent.com/creationix/nvm/v0.7.0/install.sh | sh
+fi
+
+# vim
+if test ! $(brew --prefix vim)
+then
+  echo "Installing vim."
+  brew install vim
+
+  # Add Theme
+  [ ! -d $HOME/.vim/colors ] && mkdir -p $HOME/.vim/colors
+  curl -s -o $HOME/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
 fi
 
 # git
@@ -58,7 +76,4 @@ read -p "Email: "
 git config --global user.email "$REPLY"
 git config --global credential.helper osxkeychain
 
-echo "Installation & configuration finished!"
-
-# source .zshrc
-./source.zsh
+echo "Installation & configuration finished! Please reload you shell!"

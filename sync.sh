@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 cd "$(dirname "$0")"
 
 git pull
@@ -11,7 +11,7 @@ function doIt() {
     --exclude "install.sh" \
     --exclude "README.md" \
     --exclude ".gitconfig" \
-    -av . ~
+    -av . $HOME
 }
 
 if [ "$1" == "--force" -o "$1" == "-f" ]; then
