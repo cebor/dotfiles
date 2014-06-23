@@ -65,6 +65,7 @@ then
 
   # Add Theme
   [ ! -d $HOME/.vim/colors ] && mkdir -p $HOME/.vim/colors
+  curl -s -o $HOME/.vim/colors/badwolf.vim https://raw.githubusercontent.com/sjl/badwolf/master/colors/badwolf.vim
   curl -s -o $HOME/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
 fi
 

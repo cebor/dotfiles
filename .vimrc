@@ -1,7 +1,6 @@
 " Syntax Highlighting
+set background=dark
 syntax on
-
-" Theme
 colorscheme molokai
 
 " Line numbers
@@ -15,3 +14,8 @@ endif
 
 " Wrap gitcommit file types at the appropriate length
 filetype indent plugin on
+
+" Set some configs
+set autoindent " Copy indent from last line when starting new line.
+set backspace=indent,eol,start
+set cursorline " Highlight current line
