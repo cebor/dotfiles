@@ -17,5 +17,5 @@ filetype indent plugin on
 
 " Set some configs
 set autoindent " Copy indent from last line when starting new line.
-set backspace=indent,eol,start
+set backspace=indent,eol,start " Backspace fix
 set cursorline " Highlight current line
