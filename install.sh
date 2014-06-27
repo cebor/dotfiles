@@ -40,7 +40,7 @@ fi
 # gnu findutils
 if test ! $(brew --prefix findutils)
 then
-  echo "Installing coreutils."
+  echo "Installing findutils."
   brew install findutils
 fi
 
