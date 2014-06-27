@@ -3,7 +3,9 @@ cd "$(dirname "$0")"
 
 # sync files
 ./sync.sh
-cp .gitconfig $HOME
+if [ ! -f $HOME/.gitconfig ]; then
+  cp .gitconfig $HOME
+fi
 
 # homebrew
 if test ! $(which brew)
@@ -54,7 +56,7 @@ fi
 # nvm
 if [ ! -d $HOME/.nvm ]; then
   echo "Installing nvm."
-  curl https://raw.githubusercontent.com/creationix/nvm/v0.7.0/install.sh | sh
+  curl https://raw.githubusercontent.com/creationix/nvm/v0.10.0/install.sh | sh
 fi
 
 # vim
@@ -71,10 +73,16 @@ fi
 
 # git
 echo "Configurating GIT ...."
-read -p "Username: "
-git config --global user.name "$REPLY"
-read -p "Email: "
-git config --global user.email "$REPLY"
+if ! grep -Fq "name" $HOME/.gitconfig
+then
+  read -p "Username: "
+  git config --global user.name "$REPLY"
+fi
+if ! grep -Fq "email" $HOME/.gitconfig
+then
+  read -p "Email: "
+  git config --global user.email "$REPLY"
+fi
 git config --global credential.helper osxkeychain
 
 echo "Installation & configuration finished! Please reload you shell!"
