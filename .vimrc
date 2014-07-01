@@ -1,6 +1,6 @@
 " Syntax Highlighting
-set background=dark
 syntax on
+set background=dark
 colorscheme molokai
 
 " Line numbers
