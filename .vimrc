@@ -1,5 +1,12 @@
+" Pathogen
+execute pathogen#infect()
+
+" 256 Colors
+let g:solarized_termcolors=256
+let g:rehash256=1
+
 " Syntax Highlighting
-syntax on
+syntax enable
 set background=dark
 colorscheme molokai
 

@@ -65,10 +65,16 @@ then
   echo "Installing vim."
   brew install vim
 
-  # Add Theme
-  [ ! -d $HOME/.vim/colors ] && mkdir -p $HOME/.vim/colors
-  curl -s -o $HOME/.vim/colors/badwolf.vim https://raw.githubusercontent.com/sjl/badwolf/master/colors/badwolf.vim
-  curl -s -o $HOME/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
+  # Create Directorys
+  mkdir -p $HOME/.vim/autoload $HOME/.vim/bundle $HOME/.vim/colors
+
+  # Pathogen
+  curl -LSso $HOME/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+
+  # Add Themes
+  git clone git://github.com/altercation/vim-colors-solarized.git $HOME/.vim/bundle/vim-colors-solarized
+  curl -LSso $HOME/.vim/colors/badwolf.vim https://raw.githubusercontent.com/sjl/badwolf/master/colors/badwolf.vim
+  curl -LSso $HOME/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
 fi
 
 # git
