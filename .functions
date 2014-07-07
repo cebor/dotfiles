@@ -11,3 +11,10 @@ function server() {
   # And serve everything as UTF-8 (although not technically correct, this doesn't break anything for binary files)
   python -c $'import SimpleHTTPServer;\nmap = SimpleHTTPServer.SimpleHTTPRequestHandler.extensions_map;\nmap[""] = "text/plain";\nfor key, value in map.items():\n\tmap[key] = value + ";charset=UTF-8";\nSimpleHTTPServer.test();' "$port"
 }
+
+# Upload file to server and copy link to clipboard
+function scpp() {
+  scp "$1" stkn.org:htdocs/static.stkn.org;
+  echo "http://static.stkn.org/$1" | pbcopy;
+  echo "Copied to clipboard: http://static.stkn.org/$1"
+}
