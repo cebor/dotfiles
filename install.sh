@@ -66,7 +66,13 @@ then
   brew install vim
 
   # Create Directorys
-  mkdir -p $HOME/.vim/autoload $HOME/.vim/bundle $HOME/.vim/colors
+  mkdir -p \
+    $HOME/.vim/autoload \
+    $HOME/.vim/bundle \
+    $HOME/.vim/colors \
+    $HOME/.vim/backups \
+    $HOME/.vim/swaps \
+    $HOME/.vim/undo
 
   # Pathogen
   curl -LSso $HOME/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim

@@ -10,6 +10,11 @@ syntax enable
 set background=dark
 colorscheme molokai
 
+" Local dirs
+set backupdir=~/.vim/backups
+set directory=~/.vim/swaps
+set undodir=~/.vim/undo
+
 " Line numbers
 set number
 
