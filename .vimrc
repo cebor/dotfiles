@@ -27,7 +27,12 @@ endif
 " Wrap gitcommit file types at the appropriate length
 filetype indent plugin on
 
+" Indent Settings
+set smartindent
+set tabstop=4
+set shiftwidth=4
+set expandtab
+
 " Set some configs
-set autoindent " Copy indent from last line when starting new line.
 set backspace=indent,eol,start " Backspace fix
 set cursorline " Highlight current line
