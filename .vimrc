@@ -24,14 +24,12 @@ if has("autocmd")
   au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 endif
 
-" Wrap gitcommit file types at the appropriate length
-filetype indent plugin on
-
 " Indent Settings
-set smartindent
+set autoindent
 set tabstop=4
 set shiftwidth=4
 set expandtab
+filetype plugin indent on
 
 " Set some configs
 set backspace=indent,eol,start " Backspace fix
