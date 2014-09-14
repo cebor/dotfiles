@@ -20,3 +20,6 @@ source $ZSH/oh-my-zsh.sh
 
 # Virtualenv Pompt
 PROMPT="\$(virtualenv_prompt_info)$PROMPT"
+
+# Java Home
+export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
