@@ -5,9 +5,9 @@ git pull
 
 function doIt() {
   rsync \
+    --exclude "$0" \
     --exclude ".git/" \
     --exclude ".DS_Store" \
-    --exclude "sync.sh" \
     --exclude "install.sh" \
     --exclude "README.md" \
     --exclude ".gitconfig" \
