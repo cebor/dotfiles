@@ -2,7 +2,7 @@
 cd "$(dirname "$0")"
 
 # sync files
-./sync.sh
+./sync.sh -f
 if [ ! -f $HOME/.gitconfig ]; then
   cp .gitconfig $HOME
 fi
