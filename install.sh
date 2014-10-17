@@ -11,7 +11,7 @@ fi
 if test ! $(which brew)
 then
   echo "Installing Homebrew."
-  ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
 # zsh
@@ -33,22 +33,19 @@ if [ ! -d ~/.oh-my-zsh ]; then
 fi
 
 # gnu coreutils
-if test ! $(brew --prefix coreutils)
-then
+if [ ! -d "$(brew --prefix coreutils)" ]; then
   echo "Installing coreutils."
   brew install coreutils
 fi
 
 # gnu findutils
-if test ! $(brew --prefix findutils)
-then
+if [ ! -d "$(brew --prefix findutils)" ]; then
   echo "Installing findutils."
   brew install findutils
 fi
 
 # python
-if test ! $(brew --prefix python)
-then
+if [ ! -d "$(brew --prefix python)" ]; then
   echo "Installing python."
   brew install python
 fi
@@ -56,12 +53,11 @@ fi
 # nvm
 if [ ! -d $HOME/.nvm ]; then
   echo "Installing nvm."
-  curl https://raw.githubusercontent.com/creationix/nvm/v0.10.0/install.sh | sh
+  curl https://raw.githubusercontent.com/creationix/nvm/v0.17.2/install.sh | bash
 fi
 
 # vim
-if test ! $(brew --prefix vim)
-then
+if [ ! -d "$(brew --prefix vim)" ]; then
   echo "Installing vim."
   brew install vim
 
