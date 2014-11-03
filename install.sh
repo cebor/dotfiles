@@ -18,8 +18,10 @@ fi
 BREWZSH="/usr/local/bin/zsh"
 if ! grep -Fxq "$BREWZSH" /etc/shells
 then
-  echo "Installing ZSH."
-  brew install zsh
+  if [ ! -d "$(brew --prefix zsh)" ]; then
+    echo "Installing ZSH."
+    brew install zsh
+  fi
   echo "$BREWZSH" | sudo tee -a  /etc/shells
   echo "Changing shell to ZSH."
   chsh -s "$BREWZSH"
