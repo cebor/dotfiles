@@ -14,6 +14,12 @@ then
   ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
+# setup & update brew
+brew doctor
+brew update
+brew upgrade
+brew cleanup
+
 # zsh
 BREWZSH="/usr/local/bin/zsh"
 if ! grep -Fxq "$BREWZSH" /etc/shells
