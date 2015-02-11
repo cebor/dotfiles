@@ -19,4 +19,6 @@ plugins=(git brew extract virtualenv virtualenvwrapper npm)
 source $ZSH/oh-my-zsh.sh
 
 # Virtualenv Pompt
-PROMPT="\$(virtualenv_prompt_info)$PROMPT"
+ZSH_THEME_VIRTUALENV_PREFIX="%B%{$fg[yellow]%}["
+ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%B"
+PROMPT="\$(virtualenv_prompt_info) $PROMPT"
