@@ -11,6 +11,7 @@ function doIt() {
     --exclude "install.sh" \
     --exclude "README.md" \
     --exclude ".gitconfig" \
+    --exclude "LICENSE" \
     -av . $HOME
 }
 
