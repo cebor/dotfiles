@@ -34,3 +34,4 @@ filetype plugin indent on
 " Set some configs
 set backspace=indent,eol,start " Backspace fix
 set cursorline " Highlight current line
+set undofile " Persistent Undo
