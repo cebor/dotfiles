@@ -61,7 +61,7 @@ fi
 # nvm
 if [ ! -d $HOME/.nvm ]; then
   echo "Installing nvm."
-  curl https://raw.githubusercontent.com/creationix/nvm/v0.23.3/install.sh | bash
+  curl https://raw.githubusercontent.com/creationix/nvm/v0.24.0/install.sh | bash
 fi
 
 # vim
