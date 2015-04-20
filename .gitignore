@@ -33,5 +33,8 @@ com_crashlytics_export_strings.xml
 # Deploy Scripts
 deploy.sh
 
+# Node
+npm-debug.log
+
 # Compiled Python files
 *.pyc
