@@ -5,7 +5,10 @@ done
 unset file
 
 # nvm
-source ~/.nvm/nvm.sh
+#source ~/.nvm/nvm.sh
+
+# z
+source ~/.plugins/z/z.sh
 
 # Set name of the theme to load.
 ZSH_THEME="robbyrussell"
