@@ -4,9 +4,6 @@ for file in ~/.{exports,aliases,functions}; do
 done
 unset file
 
-# nvm
-#source ~/.nvm/nvm.sh
-
 # z
 source ~/.plugins/z/z.sh
 
