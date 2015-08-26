@@ -58,10 +58,10 @@ if [ ! -d "$(brew --prefix python)" ]; then
   brew install python
 fi
 
-# nvm
-if [ ! -d $HOME/.nvm ]; then
-  echo "Installing nvm."
-  curl https://raw.githubusercontent.com/creationix/nvm/v0.24.0/install.sh | bash
+# node
+if [ ! -d "$(brew --prefix node)" ]; then
+  echo "Installing node."
+  brew install node
 fi
 
 # vim
