@@ -12,7 +12,7 @@ function doIt() {
     --exclude "README.md" \
     --exclude ".gitconfig" \
     --exclude "LICENSE" \
-    --exclude ".gitmodules"
+    --exclude ".gitmodules" \
     -av . $HOME
 }
 
