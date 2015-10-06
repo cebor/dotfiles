@@ -8,7 +8,7 @@ export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
 export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
 
 # Mans
-#export MANPATH="/usr/local/share/man:$MANPATH"
+export MANPATH="/usr/local/share/man:$MANPATH"
 export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
 
 # Java
