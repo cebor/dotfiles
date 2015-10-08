@@ -17,7 +17,7 @@ fi
 # setup & update brew
 brew doctor
 brew update
-brew upgrade
+brew upgrade --all
 brew cleanup
 
 # zsh
