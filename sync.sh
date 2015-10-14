@@ -6,7 +6,7 @@ git pull
 function doIt() {
   rsync \
     --exclude "$(basename "$0")" \
-    --exclude ".git/" \
+    --exclude ".git" \
     --exclude ".DS_Store" \
     --exclude "install.sh" \
     --exclude "README.md" \
