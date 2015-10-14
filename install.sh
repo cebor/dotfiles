@@ -56,6 +56,24 @@ if [ ! -d "$(brew --prefix findutils)" ]; then
   brew install findutils
 fi
 
+# wget
+if [ ! -d "$(brew --prefix wget)" ]; then
+  echo "Installing wget."
+  brew install wget
+fi
+
+# wget
+if [ ! -d "$(brew --prefix curl)" ]; then
+  echo "Installing curl."
+  brew install curl
+fi
+
+# git
+if [ ! -d "$(brew --prefix git)" ]; then
+  echo "Installing git."
+  brew install git
+fi
+
 # python
 if [ ! -d "$(brew --prefix python)" ]; then
   echo "Installing python."
@@ -85,9 +103,7 @@ if [ ! -d "$(brew --prefix vim)" ]; then
   # Pathogen
   curl -LSso $HOME/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
-  # Add Themes
-  git clone git://github.com/altercation/vim-colors-solarized.git $HOME/.vim/bundle/vim-colors-solarized
-  curl -LSso $HOME/.vim/colors/badwolf.vim https://raw.githubusercontent.com/sjl/badwolf/master/colors/badwolf.vim
+  # Add Theme
   curl -LSso $HOME/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
 fi
 
