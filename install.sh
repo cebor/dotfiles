@@ -62,7 +62,7 @@ if [ ! -d "$(brew --prefix wget)" ]; then
   brew install wget
 fi
 
-# wget
+# curl
 if [ ! -d "$(brew --prefix curl)" ]; then
   echo "Installing curl."
   brew install curl
