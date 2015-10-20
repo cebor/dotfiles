@@ -22,7 +22,6 @@ fi
 brew doctor
 brew update
 brew upgrade --all
-brew cleanup
 
 # zsh
 BREWZSH="/usr/local/bin/zsh"
@@ -127,5 +126,7 @@ then
   git config --global user.email "$REPLY"
 fi
 git config --global credential.helper osxkeychain
+
+brew cleanup
 
 echo "Installation & configuration finished! Please reload you shell!"
