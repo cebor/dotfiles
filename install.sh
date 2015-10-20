@@ -108,6 +108,9 @@ if [ ! -d "$(brew --prefix vim)" ]; then
 
   # vim-bracketed-paste
   git clone https://github.com/ConradIrwin/vim-bracketed-paste $HOME/.vim/bundle/vim-bracket-paste
+
+  # TS
+  git clone https://github.com/leafgarland/typescript-vim.git $HOME/.vim/bundle/typescript-vim
 fi
 
 # git
