@@ -2,7 +2,7 @@
 export ZSH=$HOME/.oh-my-zsh
 
 # homebrew
-export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
+export PATH="/usr/local/sbin:$PATH"
 
 # GNU Coreutils
 export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
