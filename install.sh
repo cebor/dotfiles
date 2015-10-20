@@ -105,6 +105,9 @@ if [ ! -d "$(brew --prefix vim)" ]; then
 
   # Add Theme
   curl -LSso $HOME/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
+
+  # vim-bracketed-paste
+  git clone https://github.com/ConradIrwin/vim-bracketed-paste $HOME/.vim/bundle/vim-bracket-paste
 fi
 
 # git
