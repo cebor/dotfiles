@@ -107,7 +107,7 @@ if [ ! -d "$(brew --prefix vim)" ]; then
   curl -LSso $HOME/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
 
   # vim-bracketed-paste
-  git clone https://github.com/ConradIrwin/vim-bracketed-paste $HOME/.vim/bundle/vim-bracket-paste
+  git clone https://github.com/ConradIrwin/vim-bracketed-paste.git $HOME/.vim/bundle/vim-bracketed-paste
 
   # TS
   git clone https://github.com/leafgarland/typescript-vim.git $HOME/.vim/bundle/typescript-vim
