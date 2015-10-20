@@ -8,7 +8,7 @@ let g:rehash256=1
 " Syntax Highlighting
 syntax enable
 set background=dark
-colorscheme molokai
+colorscheme solarized
 
 " Local dirs
 set backupdir=~/.vim/backups

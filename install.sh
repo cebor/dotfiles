@@ -103,7 +103,8 @@ if [ ! -d "$(brew --prefix vim)" ]; then
   # Pathogen
   curl -LSso $HOME/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
-  # Add Theme
+  # Add Themes
+  git clone git://github.com/altercation/vim-colors-solarized.git $HOME/.vim/bundle/vim-colors-solarized
   curl -LSso $HOME/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
 
   # vim-bracketed-paste
