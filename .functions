@@ -1,3 +1,6 @@
+# vsc
+code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCode" --args $* ;}
+
 # find shorthand
 function f() {
   find . -name "$1"
@@ -12,7 +15,10 @@ function server() {
 
 # Upload file to server and copy link to clipboard
 function scpp() {
-  scp "$1" stkn.org:htdocs/static.stkn.org;
+  local HOST="stkn.org"
+  local DIR="htdocs/static.stkn.org"
+  scp "$1" "$HOST:$DIR";
+  ssh "$HOST" chmod a+r "$DIR/$1"
   echo "http://static.stkn.org/$1" | pbcopy;
   echo "Copied to clipboard: http://static.stkn.org/$1"
 }
