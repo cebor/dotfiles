@@ -7,9 +7,7 @@ git submodule update
 
 # sync files
 ./sync.sh -f
-if [ ! -f $HOME/.gitconfig ]; then
-  cp .gitconfig $HOME
-fi
+[ ! -f $HOME/.gitconfig ] && cp .gitconfig $HOME
 
 # homebrew
 if test ! $(which brew)
@@ -19,18 +17,24 @@ then
 fi
 
 # setup & update brew
+brew cleanup
+brew prune
 brew doctor
 brew update
-brew upgrade --all
+brew upgrade
+
+brewInstall () {
+  if [ ! -d "$(brew --prefix $1)" ]; then
+    echo "Installing $1."
+    brew install "$1"
+  fi
+}
 
 # zsh
 BREWZSH="/usr/local/bin/zsh"
 if ! grep -Fxq "$BREWZSH" /etc/shells
 then
-  if [ ! -d "$(brew --prefix zsh)" ]; then
-    echo "Installing ZSH."
-    brew install zsh
-  fi
+  brewInstall zsh
   echo "$BREWZSH" | sudo tee -a  /etc/shells
   echo "Changing shell to ZSH."
   chsh -s "$BREWZSH"
@@ -43,54 +47,18 @@ if [ ! -d ~/.oh-my-zsh ]; then
   git clone https://github.com/robbyrussell/oh-my-zsh.git $HOME/.oh-my-zsh
 fi
 
-# gnu coreutils
-if [ ! -d "$(brew --prefix coreutils)" ]; then
-  echo "Installing coreutils."
-  brew install coreutils
-fi
-
-# gnu findutils
-if [ ! -d "$(brew --prefix findutils)" ]; then
-  echo "Installing findutils."
-  brew install findutils
-fi
-
-# wget
-if [ ! -d "$(brew --prefix wget)" ]; then
-  echo "Installing wget."
-  brew install wget
-fi
-
-# curl
-if [ ! -d "$(brew --prefix curl)" ]; then
-  echo "Installing curl."
-  brew install curl
-fi
-
-# git
-if [ ! -d "$(brew --prefix git)" ]; then
-  echo "Installing git."
-  brew install git
-fi
-
-# python
-if [ ! -d "$(brew --prefix python)" ]; then
-  echo "Installing python."
-  brew install python
-fi
-
-# node
-if [ ! -d "$(brew --prefix node)" ]; then
-  echo "Installing node."
-  brew install node
-fi
+# install all the brew stuff
+for brew in {coreutils,findutils,wget,curl,git,python,node}; do
+  brewInstall "$brew"
+done
+unset brew
 
 # vim
 if [ ! -d "$(brew --prefix vim)" ]; then
   echo "Installing vim."
   brew install vim
 
-  # Create Directorys
+  # create dirs
   mkdir -p \
     $HOME/.vim/autoload \
     $HOME/.vim/bundle \
@@ -99,22 +67,22 @@ if [ ! -d "$(brew --prefix vim)" ]; then
     $HOME/.vim/swaps \
     $HOME/.vim/undo
 
-  # Pathogen
+  # pathogen
   curl -LSso $HOME/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
-  # Add Themes
+  # themes
   git clone git://github.com/altercation/vim-colors-solarized.git $HOME/.vim/bundle/vim-colors-solarized
   curl -LSso $HOME/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
 
   # vim-bracketed-paste
   git clone https://github.com/ConradIrwin/vim-bracketed-paste.git $HOME/.vim/bundle/vim-bracketed-paste
 
-  # TS
+  # typescript
   git clone https://github.com/leafgarland/typescript-vim.git $HOME/.vim/bundle/typescript-vim
 fi
 
 # git
-echo "Configurating GIT ...."
+echo "Setup Git ..."
 if ! grep -Fq "name" $HOME/.gitconfig
 then
   read -p "Username: "
@@ -127,6 +95,8 @@ then
 fi
 git config --global credential.helper osxkeychain
 
+# cleanup
 brew cleanup
+unset brewInstall
 
 echo "Installation & configuration finished! Please reload you shell!"

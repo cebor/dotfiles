@@ -10,8 +10,8 @@ function doIt() {
     --exclude ".DS_Store" \
     --exclude "install.sh" \
     --exclude "README.md" \
-    --exclude ".gitconfig" \
     --exclude "LICENSE" \
+    --exclude ".gitconfig" \
     --exclude ".gitmodules" \
     -av . $HOME
 }
