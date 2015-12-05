@@ -32,7 +32,11 @@ brewInstall () {
 for brew in {coreutils,findutils,zsh,wget,curl,git,python,node,vim}; do
   brewInstall "$brew"
 done
+
 unset brew
+unset brewInstall
+
+brew cleanup
 
 # setup zsh
 BREWZSH="/usr/local/bin/zsh"
@@ -88,9 +92,5 @@ then
   git config --global user.email "$REPLY"
 fi
 git config --global credential.helper osxkeychain
-
-# cleanup
-brew cleanup
-unset brewInstall
 
 echo "Installation & configuration finished! Please reload you shell!"
