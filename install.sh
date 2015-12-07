@@ -10,8 +10,7 @@ git submodule update
 [ ! -f "$HOME"/.gitconfig ] && cp .gitconfig "$HOME"
 
 # brew
-if test ! "$(which brew)"
-then
+if [ ! -x "$(which brew)" ]; then
   echo "Installing Homebrew."
   ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
@@ -40,8 +39,7 @@ brew cleanup
 
 # setup zsh
 BREW_ZSH="/usr/local/bin/zsh"
-if ! grep -Fxq "$BREW_ZSH" /etc/shells
-then
+if ! grep -Fxq "$BREW_ZSH" /etc/shells; then
   echo "$BREW_ZSH" | sudo tee -a /etc/shells
   echo "Changing shell to ZSH."
   chsh -s "$BREW_ZSH"
@@ -81,13 +79,11 @@ fi
 
 # setup git
 echo "Setup Git ..."
-if ! grep -Fq "name" "$HOME"/.gitconfig
-then
+if ! grep -Fq "name" "$HOME"/.gitconfig; then
   read -p "Username: "
   git config --global user.name "$REPLY"
 fi
-if ! grep -Fq "email" "$HOME"/.gitconfig
-then
+if ! grep -Fq "email" "$HOME"/.gitconfig; then
   read -p "Email: "
   git config --global user.email "$REPLY"
 fi
