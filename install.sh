@@ -21,7 +21,7 @@ brew doctor
 brew update
 brew upgrade
 
-brewInstall () {
+brew_install () {
   if [ ! -d "$(brew --prefix "$1")" ]; then
     echo "Installing $1."
     brew install "$1"
@@ -30,23 +30,23 @@ brewInstall () {
 
 # install all the brew stuff
 for brew in {coreutils,findutils,zsh,wget,curl,git,python,node,vim}; do
-  brewInstall "$brew"
+  brew_install "$brew"
 done
 
 unset brew
-unset brewInstall
+unset brew_install
 
 brew cleanup
 
 # setup zsh
-BREWZSH="/usr/local/bin/zsh"
-if ! grep -Fxq "$BREWZSH" /etc/shells
+BREW_ZSH="/usr/local/bin/zsh"
+if ! grep -Fxq "$BREW_ZSH" /etc/shells
 then
-  echo "$BREWZSH" | sudo tee -a /etc/shells
+  echo "$BREW_ZSH" | sudo tee -a /etc/shells
   echo "Changing shell to ZSH."
-  chsh -s "$BREWZSH"
+  chsh -s "$BREW_ZSH"
 fi
-unset BREWZSH
+unset BREW_ZSH
 
 # oh-my-zsh
 if [ ! -d "$HOME"/.oh-my-zsh ]; then
