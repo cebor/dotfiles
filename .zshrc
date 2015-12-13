@@ -17,5 +17,5 @@ source $ZSH/oh-my-zsh.sh
 
 # Virtualenv Pompt
 ZSH_THEME_VIRTUALENV_PREFIX="%{$fg_bold[yellow]%}["
-ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%b"
-PROMPT="\$(virtualenv_prompt_info) $PROMPT"
+ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%b "
+PROMPT="\$(virtualenv_prompt_info)$PROMPT"
