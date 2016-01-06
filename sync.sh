@@ -9,6 +9,7 @@ function do_it() {
     --exclude ".git" \
     --exclude ".DS_Store" \
     --exclude "install.sh" \
+    --exclude "brew.sh" \
     --exclude "README.md" \
     --exclude "LICENSE" \
     --exclude ".gitconfig" \

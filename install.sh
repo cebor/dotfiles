@@ -10,41 +10,16 @@ git submodule update
 [ ! -f "$HOME"/.gitconfig ] && cp .gitconfig "$HOME"
 
 # brew
-if [ ! -x "$(which brew)" ]; then
-  echo "Installing Homebrew."
-  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-fi
-
-brew prune
-brew doctor
-brew update
-brew upgrade
-
-brew_install () {
-  if [ ! -d "$(brew --prefix "$1")" ]; then
-    echo "Installing $1."
-    brew install "$1"
-  fi
-}
-
-# install all the brew stuff
-for brew in {coreutils,findutils,zsh,wget,curl,git,python,node,vim}; do
-  brew_install "$brew"
-done
-
-unset brew
-unset brew_install
-
-brew cleanup
+./brew.sh
 
 # setup zsh
-BREW_ZSH="/usr/local/bin/zsh"
-if ! grep -Fxq "$BREW_ZSH" /etc/shells; then
-  echo "$BREW_ZSH" | sudo tee -a /etc/shells
+BREWED_ZSH="/usr/local/bin/zsh"
+if ! grep -Fxq "$BREWED_ZSH" /etc/shells; then
+  echo "$BREWED_ZSH" | sudo tee -a /etc/shells
   echo "Changing shell to ZSH."
-  chsh -s "$BREW_ZSH"
+  chsh -s "$BREWED_ZSH"
 fi
-unset BREW_ZSH
+unset BREWED_ZSH
 
 # oh-my-zsh
 if [ ! -d "$HOME"/.oh-my-zsh ]; then
