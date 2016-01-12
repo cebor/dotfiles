@@ -3,3 +3,6 @@ alias py="python"
 alias ipy="ipython"
 alias k9="kill -9"
 alias brew-upg="brew update && brew upgrade && brew cleanup && brew cask cleanup"
+
+# ncu fix
+alias ncu="PREFIX=\"/usr/local/\" ncu"
