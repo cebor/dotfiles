@@ -9,6 +9,9 @@ git submodule update
 ./sync.sh -f
 [ ! -f "$HOME"/.gitconfig ] && cp .gitconfig "$HOME"
 
+# osx settings
+./osx.sh
+
 # brew
 ./brew.sh
 
