@@ -12,7 +12,7 @@ git submodule update
 # osx settings
 sh .osx
 
-# brew
+# homebrew
 ./brew.sh
 
 # setup zsh
