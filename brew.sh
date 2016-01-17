@@ -13,6 +13,7 @@ cask_install () {
   brew cask install "$1"
 }
 
+# install homebrew
 if [ ! -x "$(which brew)" ]; then
   echo "Installing Homebrew."
   ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -27,6 +28,8 @@ brew upgrade
 for brew in {coreutils,findutils,zsh,openssl,openssh,wget,curl,rsync,git,python,node,vim}; do
   brew_install "$brew"
 done
+
+brew cask doctor
 
 # install brew casks
 for cask in {google-chrome,iterm2,atom,visual-studio-code}; do
