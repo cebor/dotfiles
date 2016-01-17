@@ -24,7 +24,7 @@ brew update
 brew upgrade
 
 # install brews
-for brew in {coreutils,findutils,zsh,openssh,wget,curl,rsync,git,python,node,vim}; do
+for brew in {coreutils,findutils,zsh,openssl,openssh,wget,curl,rsync,git,python,node,vim}; do
   brew_install "$brew"
 done
 
