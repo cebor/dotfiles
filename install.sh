@@ -10,7 +10,7 @@ git submodule update
 [ ! -f "$HOME"/.gitconfig ] && cp .gitconfig "$HOME"
 
 # osx settings
-sh .osx
+./osx.sh
 
 # homebrew
 ./brew.sh

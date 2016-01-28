@@ -24,6 +24,8 @@ brew doctor
 brew update
 brew upgrade
 
+brew tap homebrew/dupes
+
 # install brews
 for brew in {coreutils,findutils,zsh,openssl,openssh,wget,curl,rsync,git,python,node,vim}; do
   brew_install "$brew"
