@@ -5,17 +5,9 @@ git pull --rebase
 
 function do_it() {
   rsync \
-    --exclude "$(basename "$0")" \
-    --exclude ".git" \
     --exclude ".DS_Store" \
-    --exclude "install.sh" \
-    --exclude "brew.sh" \
-    --exclude ".osx" \
-    --exclude "README.md" \
-    --exclude "LICENSE" \
     --exclude ".gitconfig" \
-    --exclude ".gitmodules" \
-    -av . $HOME
+    -av git/ system/ $HOME
 }
 
 if [ "$1" == "--force" -o "$1" == "-f" ]; then

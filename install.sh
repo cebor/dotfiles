@@ -7,7 +7,7 @@ git submodule update
 
 # sync files
 ./sync.sh -f
-[ ! -f "$HOME"/.gitconfig ] && cp .gitconfig "$HOME"
+[ ! -f "$HOME"/.gitconfig ] && cp git/.gitconfig "$HOME"
 
 # osx settings
 ./osx.sh
@@ -28,6 +28,13 @@ unset BREWED_ZSH
 if [ ! -d "$HOME"/.oh-my-zsh ]; then
   echo "Installing oh-my-zsh."
   git clone https://github.com/robbyrussell/oh-my-zsh.git "$HOME"/.oh-my-zsh
+fi
+
+# z
+if [ ! -d "$HOME"/.plugins/z ]; then
+  echo "Installing z."
+  mkdir -p "$HOME"/.plugins/z
+  git clone https://github.com/rupa/z.git "$HOME"/.plugins/z
 fi
 
 # setup vim
