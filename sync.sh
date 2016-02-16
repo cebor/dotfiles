@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")"
 
-git pull --rebase
-
 function do_it() {
   rsync \
     --exclude ".DS_Store" \
