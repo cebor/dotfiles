@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")"
 
-# fetch submodules
-git submodule init
-git submodule update
-
 # sync files
 ./sync.sh -f
 [ ! -f "$HOME"/.gitconfig ] && cp git/.gitconfig "$HOME"
