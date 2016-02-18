@@ -30,6 +30,8 @@ brew tap homebrew/dupes
 for brew in {coreutils,findutils,zsh,openssl,openssh,wget,curl,rsync,git,python,ruby,node,vim}; do
   brew_install "$brew"
 done
+unset brew_install
+unset brew
 
 brew cask doctor
 
@@ -37,10 +39,7 @@ brew cask doctor
 for cask in {google-chrome,iterm2,atom,visual-studio-code}; do
   cask_install "$cask"
 done
-
-unset brew
-unset brew_install
-unset cask
 unset cask_install
+unset cask
 
 brew cleanup
