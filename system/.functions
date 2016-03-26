@@ -1,6 +1,3 @@
-# vsc
-code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCode" --args $* ;}
-
 # find shorthand
 function f() {
   find . -name "$1"
