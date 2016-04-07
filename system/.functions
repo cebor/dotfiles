@@ -19,3 +19,8 @@ function scpp() {
   echo "http://static.stkn.org/$1" | pbcopy;
   echo "Copied to clipboard: http://static.stkn.org/$1"
 }
+
+# npm bump
+function bump() {
+  npm version "$1" -m "bump version to %s"
+}
