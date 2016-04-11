@@ -16,5 +16,6 @@
 	autocrlf = input
 [push]
 	default = simple
+	followTags = true
 [svn]
 	rmdir = true
