@@ -6,6 +6,3 @@ alias brew-upg="brew update && brew upgrade && brew cleanup && brew cask cleanup
 
 # weather
 alias wttr="curl http://wttr.in/muc"
-
-# ncu fix
-alias ncu="PREFIX=\"/usr/local/\" ncu"
