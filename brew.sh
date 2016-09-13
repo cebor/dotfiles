@@ -36,7 +36,7 @@ unset brew
 brew cask doctor
 
 # install brew casks
-for cask in {google-chrome,iterm2,atom,visual-studio-code}; do
+for cask in {google-chrome,iterm2,visual-studio-code}; do
   cask_install "$cask"
 done
 unset cask_install
