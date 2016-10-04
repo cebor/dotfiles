@@ -19,3 +19,8 @@ source $ZSH/oh-my-zsh.sh
 ZSH_THEME_VIRTUALENV_PREFIX="%{$fg_bold[yellow]%}["
 ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%b "
 PROMPT="\$(virtualenv_prompt_info)$PROMPT"
+
+# locales
+LC_ALL=en_US.UTF-8
+LC_CTYPE=en_US.UTF-8
+LANG=en_US.UTF-8
