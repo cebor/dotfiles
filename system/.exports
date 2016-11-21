@@ -4,9 +4,5 @@ export ZSH=$HOME/.oh-my-zsh
 # homebrew
 export PATH="/usr/local/sbin:$PATH"
 
-# GNU Coreutils
-export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
-
 # Java
 export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
