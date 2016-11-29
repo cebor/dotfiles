@@ -25,6 +25,7 @@ brew update
 brew upgrade
 
 brew tap homebrew/dupes
+brew tap homebrew/services
 
 # install brews
 for brew in {coreutils,findutils,zsh,openssl,openssh,wget,curl,rsync,git,python,ruby,node,vim}; do
