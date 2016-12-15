@@ -70,4 +70,4 @@ if ! grep -Fq "email" "$HOME"/.gitconfig; then
 fi
 git config --global credential.helper osxkeychain
 
-echo "Installation & configuration finished! Please reload you shell!"
+echo "Installation & configuration finished! Please reload your shell!"
