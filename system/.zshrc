@@ -1,3 +1,6 @@
+# oh-my-zsh path
+export ZSH=$HOME/.oh-my-zsh
+
 # Load config files
 for file in ~/.{exports,aliases,functions}; do
     [ -r "$file" ] && source "$file"
