@@ -10,3 +10,6 @@ alias modw="brew services stop mongodb"
 
 # weather
 alias wttr="curl http://wttr.in/muc"
+
+# decrypt from clipboard with gpg
+alias dcr="pbpaste > /tmp/msg.asc && gpg -o - /tmp/msg.asc && rm /tmp/msg.asc"
