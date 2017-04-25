@@ -2,7 +2,6 @@
 alias py="python"
 alias ipy="ipython"
 alias k9="kill -9"
-alias brew-upg="brew update && brew upgrade && brew cleanup && brew cask cleanup"
 
 # mongodb
 alias moup="brew services start mongodb"
