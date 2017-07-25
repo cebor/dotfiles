@@ -24,10 +24,3 @@ function scpp() {
 function bump() {
   npm version "$1" -m "bump version to %s"
 }
-
-# decrypt from clipboard with gpg
-function dcr() {
-  pbpaste > /tmp/msg.asc
-  gpg -o - /tmp/msg.asc
-  rm -f /tmp/msg.asc
-}
