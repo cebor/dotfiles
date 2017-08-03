@@ -11,4 +11,4 @@ alias modw="brew services stop mongodb"
 alias dcr="pbpaste | gpg -d"
 
 # weather
-alias wttr="curl http://wttr.in/muc"
+alias wttr="curl http://wttr.in/munich"
