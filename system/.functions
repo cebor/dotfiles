@@ -24,3 +24,8 @@ function scpp() {
 function bump() {
   npm version "$1" -m "bump version to %s"
 }
+
+# docker clean
+function dcl() {
+  docker kill $(docker ps -q) && docker rm $(docker ps -a -q)
+}
