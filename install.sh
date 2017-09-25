@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")"
 
+xcode-select --install
+
 # sync files
 ./sync.sh -f
 [ ! -f "$HOME"/.gitconfig ] && cp git/.gitconfig "$HOME"
