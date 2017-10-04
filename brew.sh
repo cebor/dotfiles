@@ -28,7 +28,7 @@ brew tap homebrew/dupes
 brew tap homebrew/services
 
 # install brews
-for brew in {coreutils,findutils,zsh,openssl,wget,rsync,git,python,ruby,node,vim}; do
+for brew in {coreutils,findutils,zsh,openssl,wget,rsync,git,python,python3,ruby,node,vim}; do
   brew_install "$brew"
 done
 unset brew_install
@@ -37,7 +37,7 @@ unset brew
 brew cask doctor
 
 # install brew casks
-for cask in {google-chrome,iterm2,visual-studio-code,atom,docker,java,github-desktop,vlc,jdownloader,spotify,skype,teamspeak-client}; do
+for cask in {google-chrome,iterm2,visual-studio-code,atom,docker,github-desktop,vlc,jdownloader,spotify,skype,teamspeak-client}; do
   cask_install "$cask"
 done
 unset cask_install
