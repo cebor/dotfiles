@@ -28,7 +28,7 @@ brew tap homebrew/dupes
 brew tap homebrew/services
 
 # install brews
-for brew in {coreutils,findutils,zsh,openssl,wget,curl,rsync,git,python,ruby,node,vim}; do
+for brew in {coreutils,findutils,zsh,openssl,wget,rsync,git,python,ruby,node,vim}; do
   brew_install "$brew"
 done
 unset brew_install
