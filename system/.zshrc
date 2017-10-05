@@ -14,7 +14,7 @@ source ~/.plugins/z/z.sh
 ZSH_THEME="robbyrussell"
 
 # Plugins
-plugins=(git extract virtualenv virtualenvwrapper)
+plugins=(git brew extract virtualenv virtualenvwrapper)
 
 source $ZSH/oh-my-zsh.sh
 
