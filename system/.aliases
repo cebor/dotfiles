@@ -12,3 +12,6 @@ alias dcr="pbpaste | gpg -d"
 
 # weather
 alias wttr="curl http://wttr.in/munich"
+
+# softwareupdate
+alias upg="sudo softwareupdate -ia"
