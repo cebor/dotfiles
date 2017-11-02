@@ -14,4 +14,4 @@ alias dcr="pbpaste | gpg -d"
 alias wttr="curl http://wttr.in/munich"
 
 # softwareupdate
-alias upg="sudo softwareupdate -ia --verbose"
+alias upg="softwareupdate -ia --verbose"
