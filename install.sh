@@ -60,6 +60,9 @@ if [ ! -d "$HOME"/.vim ]; then
   git clone https://github.com/leafgarland/typescript-vim.git "$HOME"/.vim/bundle/typescript-vim
 fi
 
+# install venv
+pip3 install --upgrade virtualenvwrapper
+
 # setup git
 echo "Setup Git ..."
 if ! grep -Fq "name" "$HOME"/.gitconfig; then
