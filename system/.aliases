@@ -15,3 +15,6 @@ alias wttr="curl http://wttr.in/munich"
 
 # softwareupdate
 alias upg="softwareupdate -ia --verbose"
+
+# icloud
+alias ic="cd ~/Library/Mobile\ Documents/com~apple~CloudDocs"
