@@ -8,7 +8,7 @@ alias moup="brew services start mongodb"
 alias modw="brew services stop mongodb"
 
 # ecr (ecr reciever)
-alias ecr="pbpaste | gpg -e -a -r"
+alias ecr="pbpaste | gpg -e -a"
 # dcr
 alias dcr="pbpaste | gpg -d"
 
