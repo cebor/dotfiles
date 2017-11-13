@@ -63,6 +63,10 @@ fi
 # install venv
 pip3 install --upgrade virtualenvwrapper
 
+# angular-cli
+yarn global add @angular/cli
+ng set --global packageManager=yarn
+
 # setup git
 echo "Setup Git ..."
 if ! grep -Fq "name" "$HOME"/.gitconfig; then
