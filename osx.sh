@@ -19,8 +19,13 @@ defaults write -g AppleShowAllExtensions -bool true
 defaults write com.apple.dock minimize-to-application -bool true
 defaults write com.apple.dock autohide -bool true
 
-# Disable Resume system-wide
+# disable resume system-wide
 defaults write com.apple.systempreferences NSQuitAlwaysKeepsWindows -bool false
+
+# mouse & trackpad
+defaults write com.apple.driver.AppleBluetoothMultitouch.mouse MouseButtonMode -string TwoButton
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+defaults write com.apple.dock showAppExposeGestureEnabled -bool true
 
 killall Finder
 killall Dock
