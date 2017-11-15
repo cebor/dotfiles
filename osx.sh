@@ -27,5 +27,8 @@ defaults write com.apple.driver.AppleBluetoothMultitouch.mouse MouseButtonMode -
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
 defaults write com.apple.dock showAppExposeGestureEnabled -bool true
 
+# ical
+defaults write com.apple.iCal "Show Week Numbers" -bool true
+
 killall Finder
 killall Dock
