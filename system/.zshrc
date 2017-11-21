@@ -11,7 +11,7 @@ antigen bundle git
 antigen bundle extract
 antigen bundle virtualenv
 antigen bundle virtualenvwrapper
-antigen bundle z
+antigen bundle rupa/z
 
 antigen bundle zsh-users/zsh-syntax-highlighting
 antigen bundle zsh-users/zsh-autosuggestions
