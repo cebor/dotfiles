@@ -1,29 +1,24 @@
-# oh-my-zsh path
-export ZSH=$HOME/.oh-my-zsh
-
-# Load config files
 for file in ~/.{exports,aliases,functions}; do
     [ -r "$file" ] && source "$file"
 done
 unset file
 
-# z
-source ~/.plugins/z/z.sh
+source /usr/local/share/antigen/antigen.zsh
 
-# Set name of the theme to load.
-ZSH_THEME="robbyrussell"
+antigen use oh-my-zsh
 
-# Plugins
-plugins=(git brew extract virtualenv virtualenvwrapper)
+antigen bundle git
+antigen bundle extract
+antigen bundle virtualenv
+antigen bundle virtualenvwrapper
+antigen bundle z
 
-source $ZSH/oh-my-zsh.sh
+antigen bundle zsh-users/zsh-syntax-highlighting
+antigen bundle zsh-users/zsh-autosuggestions
+antigen bundle zsh-users/zsh-completions
 
-# Virtualenv Pompt
-ZSH_THEME_VIRTUALENV_PREFIX="%{$fg_bold[yellow]%}["
-ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%b "
-PROMPT="\$(virtualenv_prompt_info)$PROMPT"
+antigen theme robbyrussell
 
-# locales
-LC_ALL=en_US.UTF-8
-LC_CTYPE=en_US.UTF-8
-LANG=en_US.UTF-8
+antigen apply
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
