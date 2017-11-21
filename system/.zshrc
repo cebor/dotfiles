@@ -8,6 +8,7 @@ source /usr/local/share/antigen/antigen.zsh
 antigen use oh-my-zsh
 
 antigen bundle git
+antigen bundle brew
 antigen bundle extract
 antigen bundle virtualenv
 antigen bundle virtualenvwrapper
@@ -18,6 +19,10 @@ antigen bundle zsh-users/zsh-autosuggestions
 antigen bundle zsh-users/zsh-completions
 
 antigen theme robbyrussell
+
+# pure theme
+# antigen bundle mafredri/zsh-async
+# antigen bundle sindresorhus/pure
 
 antigen apply
 
