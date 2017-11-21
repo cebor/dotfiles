@@ -22,19 +22,6 @@ if ! grep -Fxq "$BREWED_ZSH" /etc/shells; then
 fi
 unset BREWED_ZSH
 
-# oh-my-zsh
-if [ ! -d "$HOME"/.oh-my-zsh ]; then
-  echo "Installing oh-my-zsh."
-  git clone https://github.com/robbyrussell/oh-my-zsh.git "$HOME"/.oh-my-zsh
-fi
-
-# z
-if [ ! -d "$HOME"/.plugins/z ]; then
-  echo "Installing z."
-  mkdir -p "$HOME"/.plugins/z
-  git clone https://github.com/rupa/z.git "$HOME"/.plugins/z
-fi
-
 # setup vim
 if [ ! -d "$HOME"/.vim ]; then
   # create dirs
