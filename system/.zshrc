@@ -1,4 +1,4 @@
-for file in ~/.{exports,aliases,functions}; do
+for file in ~/.dotfiles/{exports,aliases,functions,completions}; do
     [ -r "$file" ] && source "$file"
 done
 unset file
@@ -19,10 +19,6 @@ antigen bundle zsh-users/zsh-completions
 antigen bundle zsh-users/zsh-syntax-highlighting
 
 antigen theme robbyrussell
-
-# pure theme
-# antigen bundle mafredri/zsh-async
-# antigen bundle sindresorhus/pure
 
 antigen apply
 

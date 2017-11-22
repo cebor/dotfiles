@@ -53,6 +53,7 @@ pip3 install --upgrade virtualenvwrapper
 # angular-cli
 yarn global add @angular/cli
 ng set --global packageManager=yarn
+ng completion --zsh >> "$HOME"./dotfiles/completions
 
 # setup git
 echo "Setup Git ..."
