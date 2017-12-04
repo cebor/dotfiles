@@ -31,6 +31,7 @@ defaults write com.apple.dock showAppExposeGestureEnabled -bool true
 defaults write com.apple.iCal "Show Week Numbers" -bool true
 
 # iterm2
+defaults write com.googlecode.iterm2 QuitWhenAllWindowsClosed -bool true
 defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 defaults write com.googlecode.iterm2 OnlyWhenMoreTabs -bool false
 
