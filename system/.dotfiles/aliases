@@ -1,5 +1,5 @@
 # Aliases
-alias py="python"
+alias py="python3"
 alias ipy="ipython"
 alias k9="kill -9"
 

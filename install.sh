@@ -47,8 +47,10 @@ if [ ! -d "$HOME"/.vim ]; then
   git clone https://github.com/leafgarland/typescript-vim.git "$HOME"/.vim/bundle/typescript-vim
 fi
 
-# install venv
+# python stuff
+pip3 install --upgrade virtualenv
 pip3 install --upgrade virtualenvwrapper
+pip3 install --upgrade ipython
 
 # angular-cli
 yarn global add @angular/cli
