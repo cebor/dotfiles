@@ -24,7 +24,6 @@ brew doctor
 brew update
 brew upgrade
 
-brew tap homebrew/dupes
 brew tap homebrew/services
 
 # install brews
