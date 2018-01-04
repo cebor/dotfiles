@@ -20,7 +20,7 @@ defaults write com.apple.dock minimize-to-application -bool true
 defaults write com.apple.dock autohide -bool true
 
 # disable resume system-wide
-defaults write com.apple.systempreferences NSQuitAlwaysKeepsWindows -bool false
+# defaults write com.apple.systempreferences NSQuitAlwaysKeepsWindows -bool false
 
 # mouse & trackpad
 defaults -currentHost write -g com.apple.mouse.tapBehavior -bool true
