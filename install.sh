@@ -55,7 +55,7 @@ pip3 install --upgrade ipython
 # angular-cli
 yarn global add @angular/cli
 ng set --global packageManager=yarn
-ng completion --zsh >> "$HOME"/.dotfiles/completions
+ng completion --zsh >> "$HOME"/.completions
 
 # rvm
 gpg --keyserver hkp://keys.gnupg.net --recv-keys \
