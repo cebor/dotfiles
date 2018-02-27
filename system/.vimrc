@@ -11,11 +11,8 @@ set backupdir=~/.vim/backups
 set directory=~/.vim/swaps
 set undodir=~/.vim/undo
 
-" 256 Colors
-let g:solarized_termcolors=256
-let g:rehash256=1
-
 " Theme
+let g:solarized_termcolors=256
 set background=dark
 silent! colorscheme solarized
 
