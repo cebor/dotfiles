@@ -27,7 +27,7 @@ brew upgrade
 brew tap homebrew/services
 
 # install brews
-for brew in {coreutils,findutils,zsh,wget,rsync,git,python3,node,mongodb,vim,antigen,yarn,httpie,gpg,tree,watch}; do
+for brew in {coreutils,findutils,zsh,wget,rsync,git,python3,node,mongodb,vim,antigen,yarn,httpie,gpg,tree,watch,nmap,mtr}; do
   brew_install "$brew"
 done
 unset brew_install
