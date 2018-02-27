@@ -23,29 +23,7 @@ fi
 unset BREWED_ZSH
 
 # setup vim
-if [ ! -d "$HOME"/.vim ]; then
-  # create dirs
-  mkdir -p \
-    "$HOME"/.vim/autoload \
-    "$HOME"/.vim/bundle \
-    "$HOME"/.vim/colors \
-    "$HOME"/.vim/backups \
-    "$HOME"/.vim/swaps \
-    "$HOME"/.vim/undo
-
-  # pathogen
-  curl -LSso "$HOME"/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
-
-  # themes
-  git clone git://github.com/altercation/vim-colors-solarized.git "$HOME"/.vim/bundle/vim-colors-solarized
-  curl -LSso "$HOME"/.vim/colors/molokai.vim https://raw.githubusercontent.com/tomasr/molokai/master/colors/molokai.vim
-
-  # vim-bracketed-paste
-  git clone https://github.com/ConradIrwin/vim-bracketed-paste.git "$HOME"/.vim/bundle/vim-bracketed-paste
-
-  # typescript
-  git clone https://github.com/leafgarland/typescript-vim.git "$HOME"/.vim/bundle/typescript-vim
-fi
+./vim.sh
 
 # python stuff
 pip3 install --upgrade virtualenv
