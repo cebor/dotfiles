@@ -1,37 +1,29 @@
-" Pathogen
-execute pathogen#infect()
-
-" 256 Colors
-let g:solarized_termcolors=256
-let g:rehash256=1
-
-" Syntax Highlighting
-syntax enable
-set background=dark
-colorscheme solarized
+" vim-plug
+call plug#begin('~/.vim/plugged')
+Plug 'tpope/vim-sensible'
+Plug 'altercation/vim-colors-solarized'
+Plug 'ConradIrwin/vim-bracketed-paste'
+Plug 'leafgarland/typescript-vim'
+call plug#end()
 
 " Local dirs
 set backupdir=~/.vim/backups
 set directory=~/.vim/swaps
 set undodir=~/.vim/undo
 
-" Line numbers
-set number
+" 256 Colors
+let g:solarized_termcolors=256
+let g:rehash256=1
 
-" Uncomment the following to have Vim jump to the last position when
-" reopening a file
+" Theme
+set background=dark
+silent! colorscheme solarized
+
+set number " Line numbers
+set cursorline " Highlight current line
+set undofile " Persistent Undo
+
+" Start in line where you left
 if has("autocmd")
   au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 endif
-
-" Indent Settings
-set autoindent
-set tabstop=4
-set shiftwidth=4
-set expandtab
-filetype plugin indent on
-
-" Set some configs
-set backspace=indent,eol,start " Backspace fix
-set cursorline " Highlight current line
-set undofile " Persistent Undo
