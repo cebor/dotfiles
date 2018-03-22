@@ -14,11 +14,6 @@ export PATH="$PATH:$HOME/.rvm/bin"
 # venv python3
 export VIRTUALENVWRAPPER_PYTHON="/usr/local/bin/python3"
 
-# Virtualenv Pompt
-export ZSH_THEME_VIRTUALENV_PREFIX="%{$fg_bold[yellow]%}["
-export ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%b "
-export PROMPT="\$(virtualenv_prompt_info)$PROMPT"
-
 # locales
 export LC_ALL=en_US.UTF-8
 export LC_CTYPE=en_US.UTF-8
