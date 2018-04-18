@@ -1,6 +1,9 @@
 # Aliases
 alias py="python3"
 alias ipy="ipython"
+alias pymk="python3 -m venv .env"
+alias pyv="source .env/bin/activate"
+
 alias k9="kill -9"
 
 # mongodb
