@@ -16,7 +16,8 @@ let g:solarized_termcolors=256
 set background=dark
 silent! colorscheme solarized
 
-set number " Line numbers
+" Custom settings
+" set number " Line numbers
 set cursorline " Highlight current line
 set undofile " Persistent Undo
 
