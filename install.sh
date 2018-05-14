@@ -28,7 +28,6 @@ unset BREWED_ZSH
 # python stuff
 pip3 install --upgrade virtualenv
 pip3 install --upgrade virtualenvwrapper
-pip3 install --upgrade ipython
 
 # angular-cli
 yarn global add @angular/cli
