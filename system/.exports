@@ -4,9 +4,8 @@
 # GPG - use gpg without suite
 export GPG_TTY=$(tty)
 
-# coreutils
-# export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-# export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+# sbin
+export PATH="/usr/local/sbin:$PATH"
 
 # rvm
 export PATH="$PATH:$HOME/.rvm/bin"
