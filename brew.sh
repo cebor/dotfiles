@@ -27,7 +27,7 @@ brew upgrade
 brew tap homebrew/services
 
 # install brews
-for brew in {coreutils,findutils,zsh,wget,rsync,git,python,ipython,node,mongodb,vim,antigen,yarn,httpie,gpg,tree,watch,nmap,mtr,kubernetes-cli,kubernetes-helm}; do
+for brew in {coreutils,findutils,zsh,wget,rsync,git,python,ipython,ctags,node,mongodb,vim,antigen,yarn,httpie,gpg,tree,watch,nmap,mtr,kubernetes-cli,kubernetes-helm}; do
   brew_install "$brew"
 done
 unset brew_install
@@ -36,7 +36,7 @@ unset brew
 brew cask doctor
 
 # install brew casks
-for cask in {google-chrome,iterm2,visual-studio-code,atom,docker,github,vlc,spotify,skype,teamspeak-client}; do
+for cask in {google-chrome,iterm2,visual-studio-code,docker,github,vlc,spotify,skype,teamspeak-client}; do
   cask_install "$cask"
 done
 unset cask_install
