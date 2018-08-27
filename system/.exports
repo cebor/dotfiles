@@ -7,9 +7,6 @@ export GPG_TTY=$(tty)
 # sbin
 export PATH="/usr/local/sbin:$PATH"
 
-# rvm
-export PATH="$PATH:$HOME/.rvm/bin"
-
 # venv python3
 export VIRTUALENVWRAPPER_PYTHON="/usr/local/bin/python3"
 
