@@ -1,5 +1,6 @@
 # Aliases
 alias py="python3"
+alias py="python2"
 alias ipy="ipython"
 alias ipy2="ipython2"
 alias pymk="python3 -m venv .env"
