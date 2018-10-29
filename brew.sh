@@ -36,7 +36,9 @@ unset brew
 brew cask doctor
 
 # install brew casks
-for cask in {google-chrome,iterm2,visual-studio-code,docker,github,vlc,spotify,skype,teamspeak-client}; do
+brew tap homebrew/cask-versions
+
+for cask in {google-chrome,iterm2,visual-studio-code,docker-edge,github,vlc,spotify,skype,teamspeak-client}; do
   cask_install "$cask"
 done
 unset cask_install
