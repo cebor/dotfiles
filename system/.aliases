@@ -21,7 +21,7 @@ alias dcr="pbpaste | gpg -d"
 alias wttr="curl http://wttr.in/munich"
 
 # softwareupdate
-alias upg="sudo softwareupdate -ia --verbose --restart"
+alias upg="sudo softwareupdate -iaR --verbose"
 
 # icloud
 alias ic="cd ~/Library/Mobile\ Documents/com~apple~CloudDocs"
