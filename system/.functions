@@ -30,3 +30,8 @@ function dcl() {
   docker kill $(docker ps -q)
   docker rm $(docker ps -a -q)
 }
+
+# ssh tunnel: tunnel {host} {destination port} {local port}
+function tunnel() {
+  ssh -nNT -L "$3":localhost:"$2" "$1"
+}
