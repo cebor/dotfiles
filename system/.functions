@@ -31,7 +31,8 @@ function dcl() {
   docker rm $(docker ps -a -q)
 }
 
-# ssh tunnel: tunnel {host} {destination port} {local port}
+# ssh tunnel: tunnel <host> <destination port> <local port>
 function tunnel() {
+  echo "Forwarding $1:$2 to localhost:$3"
   ssh -nNT -L "$3":localhost:"$2" "$1"
 }
