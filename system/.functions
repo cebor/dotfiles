@@ -1,17 +1,17 @@
 # find shorthand
-function f() {
+f () {
   find . -name "$1"
 }
 
 # Start an HTTP server from a directory, optionally specifying the port
-function server() {
+server () {
   local port="${1:-8000}"
   open "http://localhost:${port}/"
   python -m SimpleHTTPServer
 }
 
 # Upload file to server and copy link to clipboard
-function scpp() {
+scpp () {
   local HOST="stkn.org"
   local DIR="htdocs/static.stkn.org"
   scp "$1" "$HOST:$DIR";
@@ -21,18 +21,18 @@ function scpp() {
 }
 
 # npm bump
-function bump() {
+bump () {
   npm version "$1" -m "bump version to %s"
 }
 
 # docker clean
-function dcl() {
+dcl () {
   docker kill $(docker ps -q)
   docker rm $(docker ps -a -q)
 }
 
 # ssh tunnel: tunnel <host> <destination port> <local port>
-function tunnel() {
+tunnel () {
   echo "Forwarding $1:$2 to localhost:$3"
   ssh -nNT -L "$3":localhost:"$2" "$1"
 }
