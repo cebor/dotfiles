@@ -1,3 +1,9 @@
+for file in ~/.{exports,aliases,functions}; do
+    test -e "$file" && source "$file"
+done
+unset file
+
+
 source /usr/local/share/antigen/antigen.zsh
 
 antigen use oh-my-zsh
@@ -22,3 +28,12 @@ antigen bundle zsh-users/zsh-syntax-highlighting
 antigen theme robbyrussell
 
 antigen apply
+
+# rvm
+test -e "$HOME/.rvm/scripts/rvm" && source "$HOME/.rvm/scripts/rvm"
+
+# venv prompt
+export ZSH_THEME_VIRTUALENV_PREFIX="%{$fg_bold[yellow]%}["
+export ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%b "
+export PROMPT="\$(virtualenv_prompt_info)$PROMPT"
+
