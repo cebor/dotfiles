@@ -33,6 +33,12 @@ pip3 install --upgrade virtualenvwrapper
 yarn global add @angular/cli
 ng set --global packageManager=yarn
 
+# docker completions
+etc=/Applications/Docker.app/Contents/Resources/etc
+ln -s $etc/docker.zsh-completion /usr/local/share/zsh/site-functions/_docker
+ln -s $etc/docker-machine.zsh-completion /usr/local/share/zsh/site-functions/_docker-machine
+ln -s $etc/docker-compose.zsh-completion /usr/local/share/zsh/site-functions/_docker-compose
+
 # rvm
 gpg --keyserver hkp://keys.gnupg.net --recv-keys \
   409B6B1796C275462A1703113804BB82D39DC0E3 \
