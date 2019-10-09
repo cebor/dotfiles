@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")"
 
-do_it() {
+do_it () {
   rsync \
     --exclude ".DS_Store" \
     --exclude ".gitconfig" \
