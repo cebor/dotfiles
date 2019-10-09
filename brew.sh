@@ -24,10 +24,10 @@ brew doctor
 brew update
 brew upgrade
 
-brew tap homebrew/services
+brew tap mongodb/brew
 
 # install brews
-for brew in {coreutils,findutils,zsh,wget,rsync,git,python,ipython,ctags,node,mongodb,vim,antigen,yarn,httpie,gpg,wrk,tree,watch,nmap,mtr,kubernetes-cli,kubernetes-helm}; do
+for brew in {coreutils,findutils,zsh,wget,rsync,git,python,ipython,ctags,node,vim,antigen,yarn,httpie,gpg,wrk,tree,watch,nmap,mtr,kubernetes-cli,kubernetes-helm,mongodb-community}; do
   brew_install "$brew"
 done
 unset brew_install
@@ -36,7 +36,7 @@ unset brew
 brew cask doctor
 
 # install brew casks
-brew tap homebrew/cask-versions
+brew tap homebrew/cask-versions  # for docker-edge
 
 for cask in {google-chrome,iterm2,visual-studio-code,docker-edge,github,vlc,spotify,skype,teamspeak-client,wireshark}; do
   cask_install "$cask"
