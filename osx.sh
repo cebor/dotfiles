@@ -23,12 +23,12 @@ defaults write com.apple.dock autohide -bool true
 # defaults write com.apple.systempreferences NSQuitAlwaysKeepsWindows -bool false
 
 # mouse & trackpad
-defaults -currentHost write -g com.apple.mouse.tapBehavior -bool true
-defaults write -g com.apple.mouse.tapBehavior -bool true
 defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
 defaults write com.apple.driver.AppleBluetoothMultitouch.mouse MouseButtonMode -string "TwoButton"
 defaults write com.apple.dock showAppExposeGestureEnabled -bool true
+defaults -currentHost write -g com.apple.mouse.tapBehavior -bool true
+defaults write -g com.apple.mouse.tapBehavior -bool true
 
 # ical
 defaults write com.apple.iCal "Show Week Numbers" -bool true
