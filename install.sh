@@ -29,10 +29,6 @@ sudo chsh -s "$BREWED_ZSH" "$USER"
 pip3 install --upgrade virtualenv
 pip3 install --upgrade virtualenvwrapper
 
-# angular-cli
-yarn global add @angular/cli
-ng set --global packageManager=yarn
-
 # docker completions
 etc=/Applications/Docker.app/Contents/Resources/etc
 ln -s $etc/docker.zsh-completion /usr/local/share/zsh/site-functions/_docker
