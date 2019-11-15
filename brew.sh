@@ -19,7 +19,6 @@ if [ ! -x "$(which brew)" ]; then
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
-brew prune
 brew doctor
 brew update
 brew upgrade
@@ -38,7 +37,7 @@ brew cask doctor
 # install brew casks
 brew tap homebrew/cask-versions  # for docker-edge
 
-for cask in {google-chrome,iterm2,visual-studio-code,docker-edge,github,vlc,spotify,skype,teamspeak-client,wireshark}; do
+for cask in {google-chrome,iterm2,visual-studio-code,docker,github,vlc,spotify,skype,teamspeak-client,wireshark}; do
   cask_install "$cask"
 done
 unset cask_install
