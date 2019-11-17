@@ -5,7 +5,7 @@ do_it () {
   rsync \
     --exclude ".DS_Store" \
     --exclude ".gitconfig" \
-    -av git/ system/ $HOME
+    -av git/ system/ "$HOME"
 }
 
 if [ "$1" == "--force" -o "$1" == "-f" ]; then

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-cd "$(dirname "$0")"
 
 read -p "Hostname: "
 sudo scutil --set ComputerName "$REPLY" && \

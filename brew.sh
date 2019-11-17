@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-cd "$(dirname "$0")"
 
 brew_install () {
   if [ ! -d "$(brew --prefix "$1")" ]; then
