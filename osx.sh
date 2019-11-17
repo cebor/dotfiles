@@ -18,6 +18,7 @@ defaults write -g AppleShowAllExtensions -bool true
 # dock
 defaults write com.apple.dock minimize-to-application -bool true
 defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock "show-recents" -bool false
 
 # disable resume system-wide
 # defaults write com.apple.systempreferences NSQuitAlwaysKeepsWindows -bool false
