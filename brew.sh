@@ -28,8 +28,6 @@ brew tap mongodb/brew
 for brew in {coreutils,findutils,zsh,wget,rsync,git,python,ipython,ctags,node,vim,antigen,yarn,httpie,gpg,wrk,tree,watch,nmap,mtr,kubernetes-cli,kubernetes-helm,mongodb-community}; do
   brew_install "$brew"
 done
-unset brew_install
-unset brew
 
 brew cask doctor
 
@@ -39,7 +37,5 @@ brew tap homebrew/cask-versions  # for docker-edge
 for cask in {google-chrome,iterm2,visual-studio-code,docker,github,vlc,spotify,skype,whatsapp,teamspeak-client,wireshark}; do
   cask_install "$cask"
 done
-unset cask_install
-unset cask
 
 brew cleanup
