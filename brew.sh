@@ -31,9 +31,6 @@ done
 
 brew cask doctor
 
-# install brew casks
-brew tap homebrew/cask-versions  # for docker-edge
-
 for cask in {google-chrome,iterm2,visual-studio-code,docker,github,vlc,spotify,skype,whatsapp,teamspeak-client,wireshark}; do
   cask_install "$cask"
 done
