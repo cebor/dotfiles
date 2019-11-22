@@ -18,7 +18,7 @@ antigen bundle rvm
 
 # extra plugins
 antigen bundle rupa/z
-antigen bundle unixorn/autoupdate-antigen.zshplugin
+# antigen bundle unixorn/autoupdate-antigen.zshplugin
 
 # should be loaded last
 antigen bundle zsh-users/zsh-autosuggestions
