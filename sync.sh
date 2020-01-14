@@ -17,4 +17,3 @@ else
     do_it
   fi
 fi
-unset do_it
