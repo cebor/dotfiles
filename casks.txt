@@ -1,0 +1,11 @@
+google-chrome
+iterm2
+visual-studio-code
+docker
+github
+vlc
+spotify
+skype
+whatsapp
+teamspeak-client
+wireshark
