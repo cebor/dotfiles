@@ -1,6 +1,7 @@
 for file in ~/.{exports,aliases,functions}; do
     test -e "$file" && source "$file"
 done
+unset file
 
 source /usr/local/share/antigen/antigen.zsh
 
