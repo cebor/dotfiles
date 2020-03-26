@@ -12,7 +12,6 @@ antigen bundle git
 antigen bundle brew
 antigen bundle extract
 antigen bundle virtualenv
-antigen bundle virtualenvwrapper
 antigen bundle rvm
 
 # extra plugins
