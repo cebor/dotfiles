@@ -24,10 +24,6 @@ sudo chsh -s "$BREWED_ZSH" "$USER"
 # setup vim
 ./vim.sh
 
-# python stuff
-pip3 install --upgrade virtualenv
-pip3 install --upgrade virtualenvwrapper
-
 # docker completions
 etc=/Applications/Docker.app/Contents/Resources/etc
 ln -s $etc/docker.zsh-completion /usr/local/share/zsh/site-functions/_docker
