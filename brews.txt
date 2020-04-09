@@ -21,3 +21,4 @@ mtr
 kubernetes-cli
 kubernetes-helm
 mongodb-community
+awscli
