@@ -15,7 +15,7 @@ xcode-select --install
 
 # setup zsh
 echo "Changing shell to ZSH."
-sudo chsh -s "$BREWED_ZSH" "$USER"
+sudo chsh -s /usr/local/bin/zsh "$USER"
 
 # setup vim
 ./vim.sh
