@@ -14,10 +14,6 @@ xcode-select --install
 ./brew.sh
 
 # setup zsh
-BREWED_ZSH="/usr/local/bin/zsh"
-if ! grep -Fxq "$BREWED_ZSH" /etc/shells; then
-  echo "$BREWED_ZSH" | sudo tee -a /etc/shells
-fi
 echo "Changing shell to ZSH."
 sudo chsh -s "$BREWED_ZSH" "$USER"
 
