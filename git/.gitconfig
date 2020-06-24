@@ -1,23 +1,10 @@
-[color]
-	ui = true
-[alias]
-	st = status
-	ci = commit
-	co = checkout
-	br = branch
-	l = log --graph --decorate
-	ls = log --stat --decorate
-[merge]
-	summary = true
 [core]
 	excludesfile = ~/.gitignore_global
 	attributesfile = ~/.gitattributes_global
 	editor = vim
 	autocrlf = input
 [pull]
-	rebase = false
+	rebase = true
 [push]
 	default = simple
 	followTags = true
-[svn]
-	rmdir = true
