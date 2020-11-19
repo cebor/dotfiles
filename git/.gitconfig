@@ -3,8 +3,6 @@
 	attributesfile = ~/.gitattributes_global
 	editor = vim
 	autocrlf = input
-[pull]
-	rebase = true
 [push]
 	default = simple
 	followTags = true
