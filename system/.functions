@@ -16,8 +16,8 @@ scpp () {
   local DIR="htdocs/static.stkn.org"
   scp "$1" "$HOST:$DIR";
   ssh "$HOST" chmod a+r "$DIR/$1"
-  echo "http://static.stkn.org/$1" | pbcopy;
-  echo "Copied to clipboard: http://static.stkn.org/$1"
+  echo "https://static.stkn.org/$1" | pbcopy;
+  echo "Copied to clipboard: https://static.stkn.org/$1"
 }
 
 # npm bump
