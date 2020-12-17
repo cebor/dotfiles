@@ -9,4 +9,3 @@ skype
 whatsapp
 teamspeak-client
 wireshark
-google-cloud-sdk
