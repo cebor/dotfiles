@@ -16,6 +16,9 @@ xcode-select --install
 # setup zsh
 echo "Changing shell to ZSH."
 sudo chsh -s /usr/local/bin/zsh "$USER"
+# fix compaudit for zsh autocompletes
+chmod go-w /usr/local/share/zsh
+chmod go-w /usr/local/share/zsh/site-functions
 
 # setup vim
 ./vim.sh
