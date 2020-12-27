@@ -9,7 +9,7 @@ brew_install () {
 
 cask_install () {
   echo "Installing $1."
-  brew cask install "$1"
+  brew install --cask "$1"
 }
 
 if [ ! -x "$(which brew)" ]; then
