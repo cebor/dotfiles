@@ -36,3 +36,9 @@ tunnel () {
   echo "Forwarding $1:$2 to localhost:$3"
   ssh -nNT -L "$3":localhost:"$2" "$1"
 }
+
+# generate password
+pwgen () {
+  length=$1
+  openssl rand -base64 $length | tr -d '\n' | colrm $((++length))
+}
