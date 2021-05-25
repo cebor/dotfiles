@@ -39,6 +39,6 @@ tunnel () {
 
 # generate password
 pwgen () {
-  length=$1
+  length=${1:-16}
   openssl rand -base64 $length | tr -d '\n' | colrm $((++length))
 }
