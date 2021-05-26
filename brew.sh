@@ -20,8 +20,6 @@ fi
 brew update
 brew upgrade
 
-brew tap mongodb/brew
-
 while read brew; do
   brew_install "$brew"
 done <brews.txt
