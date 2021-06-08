@@ -10,3 +10,4 @@ whatsapp
 teamspeak-client
 wireshark
 caffeine
+homebrew/cask-drivers/yubico-yubikey-manager
