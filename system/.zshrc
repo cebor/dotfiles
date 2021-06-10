@@ -31,6 +31,6 @@ antigen apply
 test -e "$HOME/.rvm/scripts/rvm" && source "$HOME/.rvm/scripts/rvm"
 
 # venv prompt
-export ZSH_THEME_VIRTUALENV_PREFIX="%{$fg_bold[yellow]%}["
-export ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%b "
-export PROMPT="\$(virtualenv_prompt_info)$PROMPT"
+ZSH_THEME_VIRTUALENV_PREFIX="%{$fg_bold[yellow]%}["
+ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%b "
+PROMPT="\$(virtualenv_prompt_info)$PROMPT"
