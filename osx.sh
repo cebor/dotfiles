@@ -36,6 +36,7 @@ defaults write com.apple.iCal "Show Week Numbers" -bool true
 defaults write com.googlecode.iterm2 QuitWhenAllWindowsClosed -bool true
 defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 defaults write com.googlecode.iterm2 OnlyWhenMoreTabs -bool false
+defaults write com.googlecode.iterm2 DoNotSetCtype -bool true   # fix LC_CTYPE errors on linux remotes
 
 killall Finder
 killall Dock
