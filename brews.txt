@@ -21,5 +21,4 @@ mtr
 kubernetes-cli
 kubernetes-helm
 awscli
-rustup-init
 mongodb/brew/mongodb-community
