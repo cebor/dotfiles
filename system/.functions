@@ -43,6 +43,7 @@ pwgen () {
   openssl rand -base64 $length | tr -d '\n' | colrm $((++length))
 }
 
+# soucre python venv
 svenv () {
   while [ $("pwd") != "/" ]; do
     if [ -f "venv/bin/activate" ]; then
