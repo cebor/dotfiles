@@ -45,7 +45,7 @@ pwgen () {
 
 # soucre python venv
 svenv () {
-  while [ $("pwd") != "/" ]; do
+  while [ "$(pwd)" != "/" ]; do
     if [ -f "venv/bin/activate" ]; then
         source "venv/bin/activate"
         break
