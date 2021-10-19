@@ -21,4 +21,3 @@ mtr
 kubernetes-cli
 kubernetes-helm
 awscli
-mongodb/brew/mongodb-community

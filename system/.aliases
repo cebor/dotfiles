@@ -9,10 +9,6 @@ alias pyv="source .env/bin/activate"
 
 alias k9="kill -9"
 
-# mongodb
-alias moup="brew services start mongodb-community"
-alias modw="brew services stop mongodb-community"
-
 # ecr (ecr reciever)
 alias ecr="pbpaste | gpg -e -a"
 # dcr
