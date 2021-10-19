@@ -45,6 +45,7 @@ pwgen () {
 
 # soucre python venv
 svenv () {
+  CURRENT_DIR="$(pwd)"
   while [ "$(pwd)" != "/" ]; do
     if [ -f "venv/bin/activate" ]; then
         source "venv/bin/activate"
@@ -56,4 +57,5 @@ svenv () {
         cd ..
     fi
   done
+  cd "$CURRENT_DIR"
 }
