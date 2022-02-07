@@ -7,8 +7,8 @@ xcode-select --install
 ./sync.sh -f
 [ ! -f "$HOME"/.gitconfig ] && cp git/.gitconfig "$HOME"
 
-# osx settings
-./osx.sh
+# macos settings
+./macos.sh
 
 # homebrew
 ./brew.sh
