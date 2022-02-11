@@ -7,7 +7,7 @@ f () {
 server () {
   local port="${1:-8000}"
   open "http://localhost:${port}/"
-  python -m SimpleHTTPServer
+  python3 -m http.server
 }
 
 # Upload file to server and copy link to clipboard
