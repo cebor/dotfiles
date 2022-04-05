@@ -13,6 +13,8 @@ alias k9="kill -9"
 alias ecr="pbpaste | gpg -e -a"
 # dcr
 alias dcr="pbpaste | gpg -d"
+# sign: use -u {user} to sign with a different user
+alias sign="pbpaste | gpg --clearsign"
 
 # weather
 alias wttr="curl http://wttr.in/munich"
