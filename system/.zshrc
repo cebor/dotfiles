@@ -11,7 +11,6 @@ antigen use oh-my-zsh
 antigen bundle git
 antigen bundle brew
 antigen bundle extract
-antigen bundle virtualenv
 antigen bundle rvm
 
 # extra plugins
@@ -29,8 +28,3 @@ antigen apply
 
 # rvm
 test -e "$HOME/.rvm/scripts/rvm" && source "$HOME/.rvm/scripts/rvm"
-
-# venv prompt
-ZSH_THEME_VIRTUALENV_PREFIX="%{$fg_bold[yellow]%}["
-ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}%b "
-PROMPT="\$(virtualenv_prompt_info)$PROMPT"
