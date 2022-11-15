@@ -25,6 +25,3 @@ antigen bundle zsh-users/zsh-syntax-highlighting
 antigen theme robbyrussell
 
 antigen apply
-
-# rvm
-test -e "$HOME/.rvm/scripts/rvm" && source "$HOME/.rvm/scripts/rvm"
