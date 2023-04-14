@@ -11,4 +11,4 @@ signal
 teamspeak-client
 wireshark
 caffeine
-homebrew/cask-drivers/yubico-yubikey-manager
+yubico-yubikey-manager
