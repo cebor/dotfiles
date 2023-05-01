@@ -1,6 +1,7 @@
 google-chrome
 iterm2
 visual-studio-code
+obsidian
 docker
 github
 vlc
@@ -12,3 +13,4 @@ teamspeak-client
 wireshark
 caffeine
 yubico-yubikey-manager
+homebrew/cask-fonts/font-hack-nerd-font
