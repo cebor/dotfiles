@@ -5,10 +5,10 @@ alias ipy="ipython"
 alias pymk="python3 -m venv .venv"
 alias pyv="svenv"
 
-alias vi="nvim"
-alias vim="nvim"
-alias view="nvim -R"
-alias vimdiff="nvim -d"
+# alias vi="nvim"
+# alias vim="nvim"
+# alias view="nvim -R"
+# alias vimdiff="nvim -d"
 
 alias k9="kill -9"
 

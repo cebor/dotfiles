@@ -20,6 +20,9 @@ sudo chsh -s /usr/local/bin/zsh "$USER"
 chmod go-w /usr/local/share/zsh
 chmod go-w /usr/local/share/zsh/site-functions
 
+# setup vim
+./vim.sh
+
 # setup astrovim (nvim)
 git clone --depth 1 https://github.com/AstroNvim/AstroNvim ~/.config/nvim
 
