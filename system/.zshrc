@@ -11,17 +11,17 @@ antigen use oh-my-zsh
 antigen bundle git
 antigen bundle brew
 antigen bundle extract
-antigen bundle rvm
 
 # extra plugins
 antigen bundle rupa/z
-# antigen bundle unixorn/autoupdate-antigen.zshplugin
+#antigen bundle unixorn/autoupdate-antigen.zshplugin
 
 # should be loaded last
 antigen bundle zsh-users/zsh-autosuggestions
 antigen bundle zsh-users/zsh-completions
 antigen bundle zsh-users/zsh-syntax-highlighting
 
-antigen theme robbyrussell
+#antigen theme robbyrussell
+antigen theme spaceship-prompt/spaceship-prompt
 
 antigen apply
