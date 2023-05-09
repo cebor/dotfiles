@@ -14,7 +14,7 @@ xcode-select --install
 ./brew.sh
 
 # setup zsh
-echo "Changing shell to ZSH."
+echo "Changing shell to brewed ZSH."
 sudo chsh -s /usr/local/bin/zsh "$USER"
 # fix compaudit for zsh autocompletes
 chmod go-w /usr/local/share/zsh
