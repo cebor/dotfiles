@@ -1,14 +1,8 @@
-# Java
-# export JAVA_HOME=$(/usr/libexec/java_home -v 10)
-
 # GPG - use gpg without suite
 export GPG_TTY=$(tty)
 
 # sbin
 export PATH="/usr/local/sbin:$PATH"
-
-# venv python3
-export VIRTUALENVWRAPPER_PYTHON="/usr/local/bin/python3"
 
 # locales
 export LANG=en_US.UTF-8
