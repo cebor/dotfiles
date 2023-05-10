@@ -9,6 +9,7 @@ ipython
 ctags
 node
 nvim
+helix
 antigen
 yarn
 httpie
