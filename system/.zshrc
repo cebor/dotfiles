@@ -22,6 +22,8 @@ antigen bundle zsh-users/zsh-completions
 antigen bundle zsh-users/zsh-syntax-highlighting
 
 #antigen theme robbyrussell
-antigen theme spaceship-prompt/spaceship-prompt
+#antigen theme spaceship-prompt/spaceship-prompt
 
 antigen apply
+
+eval "$(starship init zsh)"

@@ -1,6 +1,7 @@
 coreutils
 findutils
 zsh
+starship
 wget
 rsync
 git
