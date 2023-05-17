@@ -31,6 +31,11 @@ etc=/Applications/Docker.app/Contents/Resources/etc
 ln -s $etc/docker.zsh-completion /usr/local/share/zsh/site-functions/_docker
 ln -s $etc/docker-compose.zsh-completion /usr/local/share/zsh/site-functions/_docker-compose
 
+# rust
+curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+rustup completions zsh > /usr/local/share/zsh/site-functions/_rustup
+ln -s "$HOME"/.rustup/toolchains/stable-x86_64-apple-darwin/share/zsh/site-functions/_cargo /usr/local/share/zsh/site-functions/_cargo
+
 # setup git
 echo "Setup Git ..."
 if ! grep -Fq "name" "$HOME"/.gitconfig; then
