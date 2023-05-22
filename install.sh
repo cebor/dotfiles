@@ -20,12 +20,6 @@ sudo chsh -s /usr/local/bin/zsh "$USER"
 chmod go-w /usr/local/share/zsh
 chmod go-w /usr/local/share/zsh/site-functions
 
-# setup vim
-./vim.sh
-
-# setup astrovim (nvim)
-git clone --depth 1 https://github.com/AstroNvim/AstroNvim ~/.config/nvim
-
 # docker completions
 etc=/Applications/Docker.app/Contents/Resources/etc
 ln -s $etc/docker.zsh-completion /usr/local/share/zsh/site-functions/_docker
@@ -35,6 +29,9 @@ ln -s $etc/docker-compose.zsh-completion /usr/local/share/zsh/site-functions/_do
 curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 rustup completions zsh > /usr/local/share/zsh/site-functions/_rustup
 ln -s "$HOME"/.rustup/toolchains/stable-x86_64-apple-darwin/share/zsh/site-functions/_cargo /usr/local/share/zsh/site-functions/_cargo
+
+# setup vim
+./vim.sh
 
 # setup git
 echo "Setup Git ..."
