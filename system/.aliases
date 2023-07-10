@@ -4,6 +4,7 @@ alias py3="python3"
 alias ipy="ipython"
 alias pymk="python3 -m venv .venv"
 alias pyv="svenv"
+alias gpa="gp && gp gitlab"
 
 alias k9="kill -9"
 
@@ -15,7 +16,7 @@ alias dcr="pbpaste | gpg -d"
 alias sign="pbpaste | gpg --clearsign"
 
 # weather
-alias wttr="curl http://wttr.in/munich"
+alias wttr="curl http://wttr.in/Bruckmühl"
 
 # softwareupdate
 alias upg="sudo softwareupdate -iaR --verbose"
