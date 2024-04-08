@@ -20,12 +20,12 @@ fi
 brew update
 brew upgrade
 
-while read brew; do
-  brew_install "$brew"
+while read brew_entry; do
+  brew_install "$brew_entry"
 done <brews.txt
 
-while read cask; do
-  cask_install "$cask"
+while read cask_entry; do
+  cask_install "$cask_entry"
 done <casks.txt
 
 brew cleanup
