@@ -2,14 +2,14 @@
 zsh-users/zsh-completions
 belak/zsh-utils path:completion
 
+# plugins
+rupa/z
+
 # ohmyzsh
 ohmyzsh/ohmyzsh path:lib
 ohmyzsh/ohmyzsh path:plugins/git
 ohmyzsh/ohmyzsh path:plugins/brew
 ohmyzsh/ohmyzsh path:plugins/extract
-
-# plugins
-rupa/z
 
 # utils
 zsh-users/zsh-autosuggestions
