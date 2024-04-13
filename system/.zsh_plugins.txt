@@ -1,6 +1,6 @@
 # completions
-belak/zsh-utils path:completion
 zsh-users/zsh-completions
+belak/zsh-utils path:completion
 
 # ohmyzsh
 ohmyzsh/ohmyzsh path:lib
