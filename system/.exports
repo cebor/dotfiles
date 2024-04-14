@@ -1,8 +1,5 @@
 # GPG - use gpg without suite
 export GPG_TTY=$(tty)
 
-# sbin
-export PATH="/usr/local/sbin:$PATH"
-
 # locales
 export LANG=en_US.UTF-8

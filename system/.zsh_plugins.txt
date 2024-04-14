@@ -1,5 +1,5 @@
 # completions
-zsh-users/zsh-completions
+zsh-users/zsh-completions path:src kind:fpath
 belak/zsh-utils path:completion
 
 # plugins
