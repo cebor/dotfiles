@@ -21,6 +21,7 @@ brew "mtr"
 brew "wrk"
 brew "kubernetes-cli"
 brew "helm"
+brew "yq"
 
 cask "firefox"
 cask "iterm2"
