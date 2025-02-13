@@ -6,7 +6,7 @@ f () {
 # Start an HTTP server from a directory, optionally specifying the port
 server () {
   local port="${1:-8000}"
-  (sleep 2 && open "http://localhost:${port}/" & disown
+  (sleep 2 && open "http://localhost:${port}") & disown
   python3 -m http.server "${port}"
 }
 
