@@ -20,7 +20,7 @@ brew "nmap"
 brew "mtr"
 brew "wrk"
 brew "kubernetes-cli"
-brew "kubernetes-helm"
+brew "helm"
 
 cask "firefox"
 cask "iterm2"
