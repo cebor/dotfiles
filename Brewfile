@@ -34,9 +34,9 @@ cask "signal"
 cask "wireshark"
 cask "textual"
 cask "yubico-yubikey-manager"
+cask "domzilla-caffeine"
 cask "homebrew/cask-fonts/font-symbols-only-nerd-font"
 cask "homebrew/cask-fonts/font-hack-nerd-font"
 
-mas "Amphetamine", id: 937984704
 mas "AusweisApp", id: 948660805
 mas "WireGuard", id: 1451685025
