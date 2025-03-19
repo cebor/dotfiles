@@ -1,0 +1,9 @@
+[servers.libera]
+nickname = "cebor"
+server = "stkn.org"
+port = 3000
+use_tls = true
+password_file = "/Users/felix/.config/halloy/password"
+
+[sidebar]
+buffer_action = "replace-pane"
