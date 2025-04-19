@@ -1,11 +1,12 @@
 # completions
+mattmc3/ez-compinit
 zsh-users/zsh-completions path:src kind:fpath
-belak/zsh-utils path:completion
 
 # plugins
 rupa/z
 
 # ohmyzsh
+getantidote/use-omz
 ohmyzsh/ohmyzsh path:lib
 ohmyzsh/ohmyzsh path:plugins/git
 ohmyzsh/ohmyzsh path:plugins/brew
