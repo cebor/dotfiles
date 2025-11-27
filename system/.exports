@@ -3,3 +3,6 @@ export GPG_TTY=$(tty)
 
 # locales
 export LANG=en_US.UTF-8
+
+# omz
+export DISABLE_AUTO_UPDATE=true
