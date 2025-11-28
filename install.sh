@@ -1,35 +1,53 @@
 #!/usr/bin/env bash
+# Full installation script - installs dotfiles and packages
 cd "$(dirname "$0")"
 
-xcode-select --install
+echo "=== Dotfiles Installation ==="
+echo
+
+# Run bootstrap if system is not set up yet
+if ! command -v brew &>/dev/null || ! xcode-select -p &>/dev/null; then
+  echo "Running bootstrap..."
+  ./bootstrap.sh
+  if [ $? -ne 0 ]; then
+    echo "Bootstrap failed. Please fix any issues and try again."
+    exit 1
+  fi
+  echo
+fi
+
+echo "✓ System bootstrapped"
+echo
 
 # sync files
+echo "Syncing dotfiles..."
 ./sync.sh -f
-[ ! -f "$HOME"/.gitconfig ] && cp git/.gitconfig "$HOME"
+echo "✓ Dotfiles synced"
+
+# Apply git config
+echo
+echo "Configuring git..."
+./git.sh
+echo "✓ Git configured"
 
 # macos settings
+echo
+echo "Applying macOS settings..."
 ./macos.sh
+echo "✓ macOS settings applied"
 
 # homebrew
+echo
+echo "Installing Homebrew packages..."
 ./brew.sh
-
-# setup zsh
-echo "Changing shell to brewed ZSH."
-sudo chsh -s "$(brew --prefix)/bin/zsh" "$USER"
+echo "✓ Packages installed"
 
 # setup vim
+echo
+echo "Setting up vim..."
 ./vim.sh
+echo "✓ Vim configured"
 
-# setup git
-echo "Setup Git ..."
-if ! grep -Fq "name" "$HOME"/.gitconfig; then
-  read -p "Username: "
-  git config --global user.name "$REPLY"
-fi
-if ! grep -Fq "email" "$HOME"/.gitconfig; then
-  read -p "Email: "
-  git config --global user.email "$REPLY"
-fi
-git config --global credential.helper osxkeychain
-
-echo "Installation & configuration finished! Please reload your shell!"
+echo
+echo "=== Installation Complete ==="
+echo "Please reload your shell: exec zsh"

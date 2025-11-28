@@ -43,19 +43,37 @@ pwgen () {
   openssl rand -base64 $length | tr -d '\n' | colrm $((++length))
 }
 
-# soucre python venv
+# source python venv - walks up tree to find and activate virtual environment
 svenv () {
+  # Deactivate current venv if active
+  if [ -n "$VIRTUAL_ENV" ]; then
+    deactivate 2>/dev/null
+  fi
+
   CURRENT_DIR="$(pwd)"
+  FOUND=0
+
   while [ "$(pwd)" != "/" ]; do
+    # Check for standard venv
     if [ -f "venv/bin/activate" ]; then
-        source "venv/bin/activate"
-        break
+      source "venv/bin/activate"
+      FOUND=1
+      break
     elif [ -f ".venv/bin/activate" ]; then
-        source ".venv/bin/activate"
-        break
+      source ".venv/bin/activate"
+      FOUND=1
+      break
     else
-        cd ..
+      cd ..
     fi
   done
+
   cd "$CURRENT_DIR"
+
+  if [ $FOUND -eq 1 ]; then
+    echo "✓ Activated virtual environment: $VIRTUAL_ENV"
+  else
+    echo "✗ No virtual environment found"
+    return 1
+  fi
 }

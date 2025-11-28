@@ -8,20 +8,26 @@ This is a macOS dotfiles configuration system using a **two-phase structure**:
 
 ### Key Components
 
-- `install.sh` - Main orchestrator: runs all setup scripts in sequence
+- `bootstrap.sh` - One-time setup: Xcode CLI tools, Homebrew, shell change, git user (run once)
+- `install.sh` - Full installation: auto-runs bootstrap if needed, then syncs dotfiles and installs packages
+- `update.sh` - Regular updates: sync dotfiles, update packages, reconfigure vim and git (safe to re-run)
 - `sync.sh` - Syncs dotfiles from `git/` and `system/` to home directory using rsync (excludes `.DS_Store` and `.gitconfig`)
+- `git.sh` - Applies git config settings from template (preserves user.name/email)
 - `brew.sh` - Installs/updates Homebrew and applies `Brewfile`
 - `macos.sh` - Configures macOS defaults via `defaults write` commands
-- `vim.sh` - Sets up vim directories and installs vim-plug
+- `vim.sh` - Sets up vim directories and installs/updates vim-plug
+
 
 ## Critical Workflows
 
-### Installation Flow
-1. Install Xcode CLI tools → 2. Sync dotfiles → 3. Apply macOS settings → 4. Install Homebrew packages → 5. Configure shell (switch to brewed zsh) → 6. Setup vim → 7. Configure git credentials
+### First-Time Setup
+Just run `./install.sh` - it auto-detects if bootstrap is needed and runs it, then completes full installation. Finish with `exec zsh` to reload shell.
 
-Run full setup: `./install.sh`
+### Regular Updates
+Run `./update.sh` to sync dotfiles, update packages, and reconfigure git/vim (safe to re-run anytime)
 
 ### Testing Changes
+- Dry-run preview: `./sync.sh -d` or `./sync.sh --dry-run`
 - Dotfile changes: `./sync.sh -f` (force sync without confirmation)
 - Brew packages: `brew bundle` (reads `Brewfile`)
 - macOS settings: `./macos.sh` (requires logout/restart to fully apply)
@@ -43,9 +49,10 @@ Uses **antidote** plugin manager loading from `.zsh_plugins.txt` (omz plugins + 
 - No error handling by design - scripts fail fast
 
 ### Dotfile Organization
-- `git/` - Git-specific config (`.gitconfig`, `.gitignore_global`, `.gitattributes_global`)
+- `git/` - Git-specific config (`.gitignore_global`, `.gitattributes_global`) - **no .gitconfig file**
 - `system/` - Shell and application dotfiles (zsh, vim, tmux, ssh)
-- Git user.name/email configured interactively during `install.sh`, not synced
+- Git config applied via `git.sh` using `git config --global` commands
+- Git user.name/email set during `bootstrap.sh` using `[ -z "$(git config --global user.name)" ]` check, preserved by `git.sh`
 
 ### Homebrew Pattern
 `Brewfile` uses three sections:
@@ -73,17 +80,19 @@ Uses **antidote** plugin manager loading from `.zsh_plugins.txt` (omz plugins + 
 - Uses macOS keychain for git credentials
 
 ### Custom Functions to Preserve
-- `svenv()` - Walks directory tree upward to find and activate Python venv
+- `svenv()` - Smart venv activation: walks tree upward, supports venv/.venv/poetry/pipenv, shows visual feedback
 - `scpp()` - Uploads file to stkn.org and copies URL to clipboard
 - `tunnel()` - SSH port forwarding wrapper
 - `pwgen()` - Generates passwords using openssl
 
 ## Common Tasks
 
-Adding a new package: Edit `Brewfile` → run `brew bundle`
+**Adding a new package**: Edit `Brewfile` → run `brew bundle` or `./update.sh`
 
-Adding an alias: Edit `system/.aliases` → run `./sync.sh -f` → reload shell
+**Adding an alias**: Edit `system/.aliases` → run `./sync.sh -f` → reload shell
 
-Modifying macOS setting: Edit `macos.sh` → run `./macos.sh` → restart affected app
+**Modifying macOS setting**: Edit `macos.sh` → run `./macos.sh` → restart affected app
 
-Adding zsh plugin: Edit `system/.zsh_plugins.txt` → reload shell (antidote auto-loads)
+**Adding zsh plugin**: Edit `system/.zsh_plugins.txt` → reload shell (antidote auto-loads)
+
+**Preview changes**: Run `./sync.sh -d` to see what would be synced without making changes
