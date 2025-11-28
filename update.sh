@@ -19,7 +19,10 @@ echo
 
 # Update Homebrew and packages
 echo "Updating Homebrew packages..."
-./brew.sh
+brew update
+brew upgrade
+brew bundle
+brew cleanup
 echo "✓ Packages updated"
 echo
 

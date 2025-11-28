@@ -39,7 +39,10 @@ echo "✓ macOS settings applied"
 # homebrew
 echo
 echo "Installing Homebrew packages..."
-./brew.sh
+brew update
+brew upgrade
+brew bundle
+brew cleanup
 echo "✓ Packages installed"
 
 # setup vim

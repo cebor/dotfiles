@@ -9,13 +9,12 @@ This is a macOS dotfiles configuration system using a **two-phase structure**:
 ### Key Components
 
 - `bootstrap.sh` - One-time setup: Xcode CLI tools, Homebrew, shell change, git user (run once)
-- `install.sh` - Full installation: auto-runs bootstrap if needed, then syncs dotfiles and installs packages
-- `update.sh` - Regular updates: sync dotfiles, update packages, reconfigure vim and git (safe to re-run)
-- `sync.sh` - Syncs dotfiles from `git/` and `system/` to home directory using rsync (excludes `.DS_Store` and `.gitconfig`)
-- `git.sh` - Applies git config settings from template (preserves user.name/email)
-- `brew.sh` - Installs/updates Homebrew and applies `Brewfile`
+- `install.sh` - Full installation: auto-detects bootstrap needs, syncs dotfiles, installs packages, configures git/vim/macOS
+- `update.sh` - Regular maintenance: sync dotfiles, update packages, reconfigure vim and git (safe to re-run)
+- `sync.sh` - Syncs dotfiles from `git/` and `system/` to `$HOME` using rsync (excludes `.DS_Store`)
+- `git.sh` - Applies git config via `git config --global` commands (preserves user.name/email)
 - `macos.sh` - Configures macOS defaults via `defaults write` commands
-- `vim.sh` - Sets up vim directories and installs/updates vim-plug
+- `vim.sh` - Creates vim directories and installs/updates vim-plug plugins
 
 
 ## Critical Workflows
@@ -44,15 +43,19 @@ Uses **antidote** plugin manager loading from `.zsh_plugins.txt` (omz plugins + 
 
 ### Shell Scripts
 - All scripts use `#!/usr/bin/env bash` shebang
-- Scripts cd to their own directory: `cd "$(dirname "$0")"`
-- User prompts for destructive operations (except with `-f`/`--force`)
-- No error handling by design - scripts fail fast
+- Scripts self-locate: `cd "$(dirname "$0")"`
+- User prompts for destructive operations (except with `-f`/`--force` flags)
+- No error handling by design - scripts fail fast on errors
+- Functions use descriptive names: `sync_dotfiles()`, `confirm_sync()`, `main()`
+- Use `case` statements for argument parsing, not nested `if-elif`
+- Main entry point pattern: define functions, then call `main "$@"`
 
 ### Dotfile Organization
 - `git/` - Git-specific config (`.gitignore_global`, `.gitattributes_global`) - **no .gitconfig file**
-- `system/` - Shell and application dotfiles (zsh, vim, tmux, ssh)
-- Git config applied via `git.sh` using `git config --global` commands
-- Git user.name/email set during `bootstrap.sh` using `[ -z "$(git config --global user.name)" ]` check, preserved by `git.sh`
+- `system/` - Shell and application dotfiles (`.zshrc`, `.vimrc`, `.tmux.conf`, `.ssh/`)
+- Git config applied via `git.sh` using `git config --global` commands (not a static file)
+- Git user.name/email set once in `bootstrap.sh` using `[ -z "$(git config --global user.name)" ]` check, preserved by `git.sh`
+- Rsync excludes `.DS_Store` automatically when syncing
 
 ### Homebrew Pattern
 `Brewfile` uses three sections:
@@ -80,10 +83,12 @@ Uses **antidote** plugin manager loading from `.zsh_plugins.txt` (omz plugins + 
 - Uses macOS keychain for git credentials
 
 ### Custom Functions to Preserve
-- `svenv()` - Smart venv activation: walks tree upward, supports venv/.venv/poetry/pipenv, shows visual feedback
-- `scpp()` - Uploads file to stkn.org and copies URL to clipboard
-- `tunnel()` - SSH port forwarding wrapper
-- `pwgen()` - Generates passwords using openssl
+- `svenv()` - Smart venv activation: walks upward from current dir, finds venv/.venv, activates with `✓/✗` feedback
+- `scpp()` - File upload: `scp` to stkn.org, sets permissions, copies URL to clipboard via `pbcopy`
+- `tunnel()` - SSH port forwarding: `ssh -nNT -L local:localhost:remote host`
+- `pwgen()` - Password generation: `openssl rand -base64` with configurable length
+- `server()` - HTTP server: `python3 -m http.server` with auto-open browser
+- `f()` - Find shorthand: `find . -name "$1"`
 
 ## Common Tasks
 
@@ -96,3 +101,5 @@ Uses **antidote** plugin manager loading from `.zsh_plugins.txt` (omz plugins + 
 **Adding zsh plugin**: Edit `system/.zsh_plugins.txt` → reload shell (antidote auto-loads)
 
 **Preview changes**: Run `./sync.sh -d` to see what would be synced without making changes
+
+**Reload shell**: After syncing dotfiles, run `exec zsh` to apply changes immediately
