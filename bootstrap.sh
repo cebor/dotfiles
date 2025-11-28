@@ -53,4 +53,3 @@ echo "✓ Git configured"
 
 echo
 echo "=== Bootstrap Complete ==="
-echo "Run './update.sh' to sync dotfiles and install packages."
