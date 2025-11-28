@@ -9,8 +9,7 @@ This is a macOS dotfiles configuration system using a **two-phase structure**:
 ### Key Components
 
 - `bootstrap.sh` - One-time setup: Xcode CLI tools, Homebrew, shell change, git user (run once)
-- `install.sh` - Full installation: auto-detects bootstrap needs, syncs dotfiles, installs packages, configures git/vim/macOS
-- `update.sh` - Regular maintenance: sync dotfiles, update packages, reconfigure vim and git (safe to re-run)
+- `install.sh` - Full installation and updates: auto-detects bootstrap needs, syncs dotfiles, installs/updates packages, configures git/vim/macOS (safe to re-run)
 - `sync.sh` - Syncs dotfiles from `git/` and `system/` to `$HOME` using rsync (excludes `.DS_Store`)
 - `git.sh` - Applies git config via `git config --global` commands (preserves user.name/email)
 - `macos.sh` - Configures macOS defaults via `defaults write` commands
@@ -23,7 +22,7 @@ This is a macOS dotfiles configuration system using a **two-phase structure**:
 Just run `./install.sh` - it auto-detects if bootstrap is needed and runs it, then completes full installation. Finish with `exec zsh` to reload shell.
 
 ### Regular Updates
-Run `./update.sh` to sync dotfiles, update packages, and reconfigure git/vim (safe to re-run anytime)
+Run `./install.sh` to sync dotfiles, update packages, and reconfigure git/vim/macOS (safe to re-run anytime). For quick dotfile-only syncs, use `./sync.sh -f`.
 
 ### Testing Changes
 - Dry-run preview: `./sync.sh -d` or `./sync.sh --dry-run`
@@ -92,7 +91,7 @@ Uses **antidote** plugin manager loading from `.zsh_plugins.txt` (omz plugins + 
 
 ## Common Tasks
 
-**Adding a new package**: Edit `Brewfile` → run `brew bundle` or `./update.sh`
+**Adding a new package**: Edit `Brewfile` → run `brew bundle` or `./install.sh`
 
 **Adding an alias**: Edit `system/.aliases` → run `./sync.sh -f` → reload shell
 

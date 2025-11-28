@@ -16,7 +16,9 @@ exec zsh          # Reload shell
 ### Regular Updates
 
 ```bash
-./update.sh       # Sync dotfiles and update packages
+./install.sh      # Safe to re-run - updates packages and syncs dotfiles
+# Or for quick dotfile-only syncs:
+./sync.sh -f      # Sync dotfiles without package updates
 ```
 
 ## What's Included
@@ -61,10 +63,9 @@ See [`.aliases`](system/.aliases) and [`.functions`](system/.functions) for all 
 | Script | Purpose | When to Use |
 |--------|---------|-------------|
 | `bootstrap.sh` | One-time system setup (Homebrew, shell, git config) | First installation only (or run automatically by install.sh) |
-| `install.sh` | Full installation - auto-runs bootstrap if needed | First-time setup (one command does it all) |
-| `update.sh` | Sync dotfiles, update packages, reconfigure git/vim | Regular maintenance |
-| `sync.sh` | Sync dotfiles only (supports `-f`, `-d` flags) | Testing dotfile changes |
-| `git.sh` | Apply git config settings (preserves user.name/email) | Called by install.sh and update.sh |
+| `install.sh` | Full installation - auto-runs bootstrap if needed, installs/updates packages | First-time setup AND regular updates (safe to re-run) |
+| `sync.sh` | Sync dotfiles only (supports `-f`, `-d` flags) | Quick dotfile-only syncs or testing changes |
+| `git.sh` | Apply git config settings (preserves user.name/email) | Called by install.sh |
 
 ### Script Flags
 
@@ -88,7 +89,7 @@ Files in `git/` and `system/` are synced to `$HOME` via rsync.
 
 ## Customization
 
-1. **Add a package**: Edit `Brewfile` → run `brew bundle` or `./update.sh`
+1. **Add a package**: Edit `Brewfile` → run `brew bundle` or `./install.sh`
 2. **Add an alias**: Edit `system/.aliases` → run `./sync.sh -f` → reload shell
 3. **Add a zsh plugin**: Edit `system/.zsh_plugins.txt` → reload shell
 4. **Modify macOS settings**: Edit `macos.sh` → run `./macos.sh` → restart affected app
@@ -121,7 +122,7 @@ See [`macos.sh`](macos.sh) for all system preferences.
 
 ### Update Everything
 ```bash
-./update.sh  # Syncs dotfiles, updates packages, reconfigures git/vim
+./install.sh  # Syncs dotfiles, updates packages, reconfigures git/vim/macOS
 ```
 
 ## Requirements
