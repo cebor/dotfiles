@@ -3,7 +3,7 @@ for file in ~/.{exports,aliases,functions}; do
 done
 unset file
 
-source "$(brew --prefix)/opt/antidote/share/antidote/antidote.zsh"
+source "/opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
 antidote load
 
 eval "$(starship init zsh)"
