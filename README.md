@@ -62,10 +62,10 @@ See [`.aliases`](system/.aliases) and [`.functions`](system/.functions) for all 
 
 | Script | Purpose | When to Use |
 |--------|---------|-------------|
-| `bootstrap.sh` | One-time system setup (Homebrew, shell, git config) | First installation only (or run automatically by install.sh) |
-| `install.sh` | Full installation - auto-runs bootstrap if needed, installs/updates packages | First-time setup AND regular updates (safe to re-run) |
+| `bootstrap.sh` | One-time system setup (Xcode CLI tools, Homebrew) | First installation only (or run automatically by install.sh) |
+| `install.sh` | Full installation - auto-runs bootstrap if needed, installs/updates packages, sets brewed zsh as default shell | First-time setup AND regular updates (safe to re-run) |
 | `sync.sh` | Sync dotfiles only (supports `-f`, `-d` flags) | Quick dotfile-only syncs or testing changes |
-| `git.sh` | Apply git config settings (preserves user.name/email) | Called by install.sh |
+| `git.sh` | Apply git config settings, prompts for user.name/email if not set | Called by install.sh |
 
 ### Script Flags
 

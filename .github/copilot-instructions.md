@@ -8,10 +8,10 @@ This is a macOS dotfiles configuration system using a **two-phase structure**:
 
 ### Key Components
 
-- `bootstrap.sh` - One-time setup: Xcode CLI tools, Homebrew, shell change, git user (run once)
-- `install.sh` - Full installation and updates: auto-detects bootstrap needs, syncs dotfiles, installs/updates packages, configures git/vim/macOS (safe to re-run)
+- `bootstrap.sh` - One-time setup: Xcode CLI tools, Homebrew (run once)
+- `install.sh` - Full installation and updates: auto-detects bootstrap needs, syncs dotfiles, installs/updates packages, changes shell to brewed zsh, configures git/vim/macOS (safe to re-run)
 - `sync.sh` - Syncs dotfiles from `git/` and `system/` to `$HOME` using rsync (excludes `.DS_Store`)
-- `git.sh` - Applies git config via `git config --global` commands (preserves user.name/email)
+- `git.sh` - Applies git config via `git config --global` commands, prompts for user.name/email if not set
 - `macos.sh` - Configures macOS defaults via `defaults write` commands
 - `vim.sh` - Creates vim directories and installs/updates vim-plug plugins
 
@@ -53,7 +53,7 @@ Uses **antidote** plugin manager loading from `.zsh_plugins.txt` (omz plugins + 
 - `git/` - Git-specific config (`.gitignore_global`, `.gitattributes_global`) - **no .gitconfig file**
 - `system/` - Shell and application dotfiles (`.zshrc`, `.vimrc`, `.tmux.conf`, `.ssh/`)
 - Git config applied via `git.sh` using `git config --global` commands (not a static file)
-- Git user.name/email set once in `bootstrap.sh` using `[ -z "$(git config --global user.name)" ]` check, preserved by `git.sh`
+- Git user.name/email prompted in `git.sh` if not already set (using `[ -z "$(git config --global user.name)" ]` check)
 - Rsync excludes `.DS_Store` automatically when syncing
 
 ### Homebrew Pattern
