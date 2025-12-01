@@ -26,5 +26,12 @@ else
   echo "✓ Homebrew already installed"
 fi
 
+# Add Homebrew to PATH for current session
+if [ -x /opt/homebrew/bin/brew ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -x /usr/local/bin/brew ]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
 echo
 echo "=== Bootstrap Complete ==="
