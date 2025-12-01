@@ -91,7 +91,7 @@ Files in `git/` and `system/` are synced to `$HOME` via rsync.
 
 1. **Add a package**: Edit `Brewfile` → run `brew bundle` or `./install.sh`
 2. **Add an alias**: Edit `system/.aliases` → run `./sync.sh -f` → reload shell
-3. **Add a zsh plugin**: Edit `system/.zsh_plugins.txt` → reload shell
+3. **Add a zsh plugin**: Edit `system/.zsh_plugins.txt` → run `./sync.sh -f` → reload shell
 4. **Modify macOS settings**: Edit `macos.sh` → run `./macos.sh` → restart affected app
 
 ## Configuration Highlights
