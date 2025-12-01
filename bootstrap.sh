@@ -7,7 +7,7 @@ echo "=== Dotfiles Bootstrap ==="
 echo "This script performs one-time system setup."
 echo
 
-# Install Xcode Command Line Tools
+# install Xcode Command Line Tools
 if ! xcode-select -p &>/dev/null; then
   echo "Installing Xcode Command Line Tools..."
   xcode-select --install
@@ -17,7 +17,7 @@ else
   echo "✓ Xcode Command Line Tools already installed"
 fi
 
-# Install Homebrew
+# install Homebrew
 if [ ! -x "$(which brew)" ]; then
   echo "Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -26,7 +26,7 @@ else
   echo "✓ Homebrew already installed"
 fi
 
-# Add Homebrew to PATH for current session
+# add Homebrew to PATH for current session
 if [ -x /opt/homebrew/bin/brew ]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 elif [ -x /usr/local/bin/brew ]; then

@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 echo "=== Dotfiles Installation ==="
 echo
 
-# Run bootstrap if system is not set up yet
+# run bootstrap if system is not set up yet
 if ! command -v brew &>/dev/null || ! xcode-select -p &>/dev/null; then
   echo "Running bootstrap..."
   ./bootstrap.sh
@@ -25,7 +25,7 @@ echo "Syncing dotfiles..."
 ./sync.sh -f
 echo "✓ Dotfiles synced"
 
-# Apply git config
+# apply git config
 echo
 echo "Configuring git..."
 ./git.sh
@@ -46,7 +46,7 @@ brew bundle
 brew cleanup
 echo "✓ Packages installed"
 
-# Setup brewed ZSH as default shell
+# setup brewed ZSH as default shell
 BREWED_ZSH="$(brew --prefix)/bin/zsh"
 if [ ! -x "$BREWED_ZSH" ]; then
   echo "⚠ Brewed zsh not found - skipping shell change"

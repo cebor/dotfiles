@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# Change to script directory
+# Script to sync dotfiles to home directory
 cd "$(dirname "$0")"
 
-# Sync dotfiles from git/ and system/ to home directory
+# sync dotfiles from git/ and system/ to home directory
 sync_dotfiles() {
   local dry_run_flag=""
 
@@ -21,14 +21,14 @@ sync_dotfiles() {
     git/ system/ "$HOME"
 }
 
-# Prompt user for confirmation
+# prompt user for confirmation
 confirm_sync() {
   read -p "This may overwrite existing files in your home directory. Are you sure? (y/n) " -n 1
   echo
   [[ $REPLY =~ ^[Yy]$ ]]
 }
 
-# Main execution
+# main execution
 main() {
   case "$1" in
     --force|-f)
