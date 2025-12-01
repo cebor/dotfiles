@@ -8,8 +8,8 @@ This is a macOS dotfiles configuration system using a **two-phase structure**:
 
 ### Key Components
 
-- `bootstrap.sh` - One-time setup: Xcode CLI tools, Homebrew (run once)
-- `install.sh` - Full installation and updates: auto-detects bootstrap needs, syncs dotfiles, installs/updates packages, changes shell to brewed zsh, configures git/vim/macOS (safe to re-run)
+- `bootstrap.sh` - One-time setup: Xcode CLI tools, Homebrew, adds brew to PATH (run once)
+- `install.sh` - Full installation: auto-detects bootstrap needs, syncs dotfiles, installs packages, changes shell to brewed zsh, configures git/vim/macOS (safe to re-run)
 - `sync.sh` - Syncs dotfiles from `git/` and `system/` to `$HOME` using rsync (excludes `.DS_Store`)
 - `git.sh` - Applies git config via `git config --global` commands, prompts for user.name/email if not set
 - `macos.sh` - Configures macOS defaults via `defaults write` commands
