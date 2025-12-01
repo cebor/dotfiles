@@ -48,7 +48,9 @@ echo "✓ Packages installed"
 
 # Setup brewed ZSH as default shell
 BREWED_ZSH="$(brew --prefix)/bin/zsh"
-if [ "$SHELL" != "$BREWED_ZSH" ]; then
+if [ ! -x "$BREWED_ZSH" ]; then
+  echo "⚠ Brewed zsh not found - skipping shell change"
+elif [ "$SHELL" != "$BREWED_ZSH" ]; then
   echo "Changing default shell to brewed ZSH..."
   if ! grep -q "$BREWED_ZSH" /etc/shells; then
     echo "$BREWED_ZSH" | sudo tee -a /etc/shells
