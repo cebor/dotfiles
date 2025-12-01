@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # Full installation script - installs dotfiles and packages
 cd "$(dirname "$0")"
 

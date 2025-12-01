@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # Bootstrap script - run once for initial system setup
 cd "$(dirname "$0")"
 
