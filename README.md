@@ -7,7 +7,7 @@ Personal macOS configuration and dotfiles management system.
 ### First-Time Setup
 
 ```bash
-git clone https://gitlab.stkn.org/felix/dotfiles.git ~/.dotfiles
+git clone <repository-url> ~/.dotfiles
 cd ~/.dotfiles
 ./install.sh      # Automatically runs bootstrap if needed, then installs everything
 exec zsh          # Reload shell
