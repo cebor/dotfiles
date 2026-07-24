@@ -18,4 +18,7 @@ elif [ -e "$HOME/.antidote/antidote.zsh" ]; then
 fi
 antidote load
 
+# omz brew plugin only where Homebrew exists (macOS)
+command -v brew &>/dev/null && antidote bundle ohmyzsh/ohmyzsh path:plugins/brew
+
 command -v starship &>/dev/null && eval "$(starship init zsh)"
