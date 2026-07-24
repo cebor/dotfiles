@@ -78,11 +78,5 @@ if command -v batcat >/dev/null 2>&1 && ! command -v bat >/dev/null 2>&1; then
   ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
 fi
 
-# halloy config hardcodes a macOS path; rewrite it for this host if present
-HALLOY_CONFIG="$HOME/.config/halloy/config.toml"
-if [ -f "$HALLOY_CONFIG" ]; then
-  sed -i "s#/Users/felix/#$HOME/#g" "$HALLOY_CONFIG"
-fi
-
 echo
 echo "=== Linux packages installed ==="

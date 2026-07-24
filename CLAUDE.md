@@ -84,4 +84,3 @@ source `lib/os.sh` or spawn heavy subshells. Use `[[ "$OSTYPE" == ... ]]` globs 
 - `system/.ssh/config` uses `IgnoreUnknown UseKeychain` so the macOS-only `UseKeychain`
   option doesn't error on Linux OpenSSH.
 - Git credentials: macOS keychain on macOS; libsecret or a 1h credential cache on Linux.
-- `system/.config/halloy/config.toml` hardcodes a macOS path; `linux.sh` rewrites it to `$HOME` after sync.
