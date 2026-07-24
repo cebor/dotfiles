@@ -7,6 +7,7 @@ alias pyv="svenv"
 alias gpa="gp && gp gitlab"
 
 alias k9="kill -9"
+alias ol="ollama"
 
 # ecr (ecr reciever)
 alias ecr="pbpaste | gpg -e -a"
@@ -18,8 +19,15 @@ alias sign="pbpaste | gpg --clearsign"
 # weather
 alias wttr="curl http://wttr.in/Bruckmühl"
 
-# softwareupdate
-alias upg="sudo softwareupdate -iaR --verbose"
+# system update
+if [[ "$OSTYPE" == darwin* ]]; then
+  alias upg="sudo softwareupdate -iaR --verbose"
+else
+  alias apt="sudo apt"
+  # upg -> interactive; upgy / upg -y -> non-interactive
+  upg() { sudo apt update && sudo apt full-upgrade "$@" && sudo apt autoremove "$@"; }
+  alias upgy="upg -y"
+fi
 
-# icloud
-alias ic="cd ~/Library/Mobile\ Documents/com~apple~CloudDocs"
+# icloud (macOS only)
+[[ "$OSTYPE" == darwin* ]] && alias ic="cd ~/Library/Mobile\ Documents/com~apple~CloudDocs"

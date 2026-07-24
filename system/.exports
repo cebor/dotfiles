@@ -6,3 +6,9 @@ export LANG=en_US.UTF-8
 
 # omz
 export DISABLE_AUTO_UPDATE=true
+
+# snap binaries on PATH (Linux)
+[ -d /snap/bin ] && export PATH="$PATH:/snap/bin"
+
+# WSL: default browser (used by the `open` shim / xdg)
+grep -qi microsoft /proc/version 2>/dev/null && export BROWSER=wslview

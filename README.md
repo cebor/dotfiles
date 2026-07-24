@@ -1,6 +1,10 @@
 # Dotfiles
 
-Personal macOS configuration and dotfiles management system.
+Personal cross-platform (macOS + Linux) configuration and dotfiles management system.
+
+The platform is auto-detected via `uname`. On macOS packages come from Homebrew
+(`Brewfile`); on Linux (Debian/Ubuntu, tested on WSL2) from apt (`packages/apt.txt`)
+plus a few upstream installers in `linux.sh`.
 
 ## Quick Start
 
@@ -9,8 +13,9 @@ Personal macOS configuration and dotfiles management system.
 ```bash
 git clone <repository-url> ~/.dotfiles
 cd ~/.dotfiles
-./install.sh      # Automatically runs bootstrap if needed, then installs everything
-exec zsh          # Reload shell
+./install.sh          # Auto-detects the OS, runs bootstrap if needed, installs everything
+# ./install.sh --linux  # Force the Linux path (overrides auto-detection)
+exec zsh              # Reload shell
 ```
 
 ### Regular Updates
@@ -29,13 +34,15 @@ exec zsh          # Reload shell
 - Oh My Zsh plugins (git, brew, extract)
 - Enhanced utilities (zsh-autosuggestions, zsh-syntax-highlighting, z)
 
-### Applications (via Homebrew)
+### Applications
 - Development: helix, vim, git, python, node, docker
 - Networking: httpie, nmap, mtr, wrk
 - Kubernetes: kubectl, helm, yq
-- GUI apps: iTerm2, VS Code, Firefox, Obsidian, and more
+- GUI apps (macOS only): iTerm2, VS Code, Firefox, Obsidian, and more
 
-See [`Brewfile`](Brewfile) for the complete list.
+See [`Brewfile`](Brewfile) (macOS) and [`packages/apt.txt`](packages/apt.txt) (Linux)
+for the complete lists. Tools not in apt (antidote, starship, helix, node, kubectl,
+helm, yq) are installed by [`linux.sh`](linux.sh).
 
 ### Custom Functions & Aliases
 
@@ -62,8 +69,10 @@ See [`.aliases`](system/.aliases) and [`.functions`](system/.functions) for all 
 
 | Script | Purpose | When to Use |
 |--------|---------|-------------|
-| `bootstrap.sh` | One-time system setup (Xcode CLI tools, Homebrew) | First installation only (or run automatically by install.sh) |
-| `install.sh` | Full installation - auto-runs bootstrap if needed, installs/updates packages, sets brewed zsh as default shell | First-time setup AND regular updates (safe to re-run) |
+| `macos-bootstrap.sh` | One-time macOS system setup (Xcode CLI tools, Homebrew) | macOS first installation only (or run automatically by install.sh) |
+| `install.sh` | Full installation - auto-detects OS, runs bootstrap if needed, installs/updates packages, sets zsh as default shell (`--linux` forces the Linux path) | First-time setup AND regular updates (safe to re-run) |
+| `linux.sh` | Linux (apt) package install + upstream installers for tools not in apt | Called by install.sh on Linux |
+| `macos.sh` | macOS system defaults (Finder, Dock, trackpad) | Called by install.sh on macOS |
 | `sync.sh` | Sync dotfiles only (supports `-f`, `-d` flags) | Quick dotfile-only syncs or testing changes |
 | `git.sh` | Apply git config settings, prompts for user.name/email if not set | Called by install.sh |
 
@@ -80,16 +89,18 @@ See [`.aliases`](system/.aliases) and [`.functions`](system/.functions) for all 
 dotfiles/
 ├── git/          # Git-specific config (.gitignore_global, .gitattributes_global)
 ├── system/       # Shell and app dotfiles (.zshrc, .vimrc, .tmux.conf, etc.)
+├── lib/          # Shared helpers (os.sh - OS detection)
+├── packages/     # apt.txt - Linux package list
 ├── *.sh          # Setup and maintenance scripts
-├── Brewfile      # Homebrew package definitions
-└── .github/      # AI agent instructions
+├── Brewfile      # Homebrew package definitions (macOS)
+└── CLAUDE.md     # AI agent instructions
 ```
 
 Files in `git/` and `system/` are synced to `$HOME` via rsync.
 
 ## Customization
 
-1. **Add a package**: Edit `Brewfile` → run `brew bundle` or `./install.sh`
+1. **Add a package**: Edit `Brewfile` (macOS) or `packages/apt.txt` (Linux) → run `./install.sh`
 2. **Add an alias**: Edit `system/.aliases` → run `./sync.sh -f` → reload shell
 3. **Add a zsh plugin**: Edit `system/.zsh_plugins.txt` → run `./sync.sh -f` → reload shell
 4. **Modify macOS settings**: Edit `macos.sh` → run `./macos.sh` → restart affected app
@@ -99,7 +110,7 @@ Files in `git/` and `system/` are synced to `$HOME` via rsync.
 ### Git
 - Default editor: **helix** (`hx`)
 - Default branch: `main`
-- Credentials stored in macOS keychain
+- Credentials: macOS keychain on macOS; libsecret or a 1h credential cache on Linux
 
 ### Vim
 - Plugin manager: vim-plug
@@ -127,8 +138,9 @@ See [`macos.sh`](macos.sh) for all system preferences.
 
 ## Requirements
 
-- macOS (tested on recent versions)
-- Xcode Command Line Tools (installed by `bootstrap.sh`)
+- macOS (recent versions), or Linux (Debian/Ubuntu, tested on WSL2)
+- macOS: Xcode Command Line Tools (installed by `macos-bootstrap.sh`)
+- Linux: `sudo` access for apt
 - Internet connection for initial setup
 
 ## License
