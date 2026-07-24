@@ -7,6 +7,9 @@ export LANG=en_US.UTF-8
 # omz
 export DISABLE_AUTO_UPDATE=true
 
+# user-local binaries (starship etc. on Linux)
+[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
+
 # snap binaries on PATH (Linux)
 [ -d /snap/bin ] && export PATH="$PATH:/snap/bin"
 
