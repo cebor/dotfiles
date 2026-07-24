@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Bootstrap script - run once for initial system setup
+# macOS bootstrap - run once for initial system setup (Xcode CLI tools + Homebrew)
 cd "$(dirname "$0")"
 
 echo "=== Dotfiles Bootstrap ==="

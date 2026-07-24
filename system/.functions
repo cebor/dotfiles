@@ -1,3 +1,29 @@
+# cross-platform clipboard shims (defined only when missing, i.e. non-macOS)
+if ! command -v pbcopy >/dev/null 2>&1; then
+  if command -v win32yank.exe >/dev/null 2>&1; then          # WSL, best CRLF handling
+    pbcopy()  { win32yank.exe -i --crlf; }
+    pbpaste() { win32yank.exe -o --lf; }
+  elif command -v clip.exe >/dev/null 2>&1; then             # WSL fallback
+    pbcopy()  { clip.exe; }
+    pbpaste() { powershell.exe -NoProfile -Command Get-Clipboard | sed 's/\r$//'; }
+  elif command -v wl-copy >/dev/null 2>&1; then              # Wayland
+    pbcopy()  { wl-copy; }
+    pbpaste() { wl-paste; }
+  elif command -v xclip >/dev/null 2>&1; then                # X11
+    pbcopy()  { xclip -selection clipboard; }
+    pbpaste() { xclip -selection clipboard -o; }
+  fi
+fi
+
+# cross-platform `open` shim
+if ! command -v open >/dev/null 2>&1; then
+  if command -v wslview >/dev/null 2>&1; then                # WSL: opens Windows default app
+    open() { wslview "$@"; }
+  elif command -v xdg-open >/dev/null 2>&1; then
+    open() { xdg-open "$@"; }
+  fi
+fi
+
 # find shorthand
 f () {
   find . -name "$1"

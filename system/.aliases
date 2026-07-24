@@ -18,8 +18,12 @@ alias sign="pbpaste | gpg --clearsign"
 # weather
 alias wttr="curl http://wttr.in/Bruckmühl"
 
-# softwareupdate
-alias upg="sudo softwareupdate -iaR --verbose"
+# system update
+if [[ "$OSTYPE" == darwin* ]]; then
+  alias upg="sudo softwareupdate -iaR --verbose"
+else
+  alias upg="sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y"
+fi
 
-# icloud
-alias ic="cd ~/Library/Mobile\ Documents/com~apple~CloudDocs"
+# icloud (macOS only)
+[[ "$OSTYPE" == darwin* ]] && alias ic="cd ~/Library/Mobile\ Documents/com~apple~CloudDocs"

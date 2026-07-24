@@ -1,0 +1,33 @@
+# apt package list for Linux (Debian/Ubuntu) - parallels the brew lines in Brewfile.
+# One package per line, '#' comments and blank lines are ignored.
+# Tools not available in apt (antidote, starship, helix, node, kubectl, helm, yq)
+# are installed separately in linux.sh.
+
+# Core / shell
+zsh
+coreutils
+findutils
+wget
+rsync
+git
+tree
+procps            # provides `watch`
+gnupg             # gpg
+
+# Python
+python3
+python3-venv
+python3-pip
+ipython3
+
+# Dev tooling
+universal-ctags   # ctags
+httpie
+
+# Networking
+nmap
+mtr-tiny          # mtr (the `mtr` metapackage pulls in GTK)
+wrk               # in universe on Ubuntu (not packaged on Debian)
+
+# Misc
+bat               # binary is `batcat` on Debian/Ubuntu (symlinked to `bat` in linux.sh)
