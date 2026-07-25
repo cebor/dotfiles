@@ -1,0 +1,3 @@
+# `setup/git.sh` sets core.autocrlf=input, which would normalise the two literal
+# carriage returns the `Icon` rule needs (macOS names folder-icon files `Icon\r`).
+home/.gitignore_global -text
