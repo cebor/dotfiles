@@ -1,0 +1,290 @@
+#!/usr/bin/env bash
+#
+# dot — single entrypoint for these dotfiles.
+#
+#   ./dot install     everything: bootstrap, sync, packages, configure
+#   ./dot sync        symlink home/ into $HOME
+#   ./dot packages    install packages for this platform
+#   ./dot configure   apply configuration (git, shell, vim, macOS defaults)
+#   ./dot doctor      report what is missing or out of sync
+#
+# No `set -euo pipefail` on purpose: a step that fails should warn and let the
+# rest of the run continue. Failures are counted and reported at the end.
+
+# -P, so the root is the canonical path even when the repo is reached through a
+# symlink. Without it `~/dotfiles/dot` and `~/code/dotfiles/dot` produce two
+# different link targets for the same file, and each run undoes the other's links.
+DOTFILES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+
+# shellcheck source=lib/os.sh
+source "$DOTFILES_ROOT/lib/os.sh"
+# shellcheck source=lib/log.sh
+source "$DOTFILES_ROOT/lib/log.sh"
+# shellcheck source=lib/link.sh
+source "$DOTFILES_ROOT/lib/link.sh"
+
+DRY_RUN=""
+ASSUME_YES=""
+
+usage() {
+  cat <<'EOF'
+Usage: ./dot <command> [options]
+
+Commands:
+  install            Full setup: bootstrap → sync → packages → configure
+  sync               Symlink home/ into $HOME (dotfiles and configs only)
+  packages           Install packages: Brewfile on macOS, apt + upstream on Linux
+  configure [step]   Apply configuration; step = git | shell | vim | macos
+  doctor             Health check: links, tools, shell, git identity
+  help               Show this help
+
+Options:
+  -n, --dry-run      Show what would happen without changing anything
+  -y, --yes          Assume yes; never prompt
+  -h, --help         Show this help
+      --linux        Force the Linux path (overrides platform detection)
+      --unlink       sync only: remove the symlinks we created
+      --status       sync only: report link state without writing
+
+Examples:
+  ./dot install              # first run on a new machine, and for updates
+  ./dot sync                 # after editing anything under home/
+  ./dot sync --status        # what drifted?
+  ./dot configure git        # just re-apply the git config
+EOF
+}
+
+cmd_sync() {
+  local mode=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --status|--unlink)
+        [ -n "$mode" ] && die "sync: $mode and $1 cannot be combined"
+        mode="$1"
+        ;;
+      *) die "unknown sync option: $1 (--status | --unlink)" ;;
+    esac
+    shift
+  done
+
+  case "$mode" in
+    --status) section "Link status"; link_status; return $? ;;
+    --unlink) section "Removing dotfile links"; link_unlink; return $? ;;
+  esac
+  section "Syncing dotfiles"
+  link_tree
+}
+
+cmd_configure() {
+  [ $# -le 1 ] || die "configure takes at most one step (got: $*)"
+
+  # shellcheck source=setup/git.sh
+  source "$DOTFILES_ROOT/setup/git.sh"
+  # shellcheck source=setup/shell.sh
+  source "$DOTFILES_ROOT/setup/shell.sh"
+  # shellcheck source=setup/vim.sh
+  source "$DOTFILES_ROOT/setup/vim.sh"
+  # shellcheck source=setup/macos-defaults.sh
+  source "$DOTFILES_ROOT/setup/macos-defaults.sh"
+
+  case "$1" in
+    git)    setup_git ;;
+    shell)  setup_shell ;;
+    vim)    setup_vim ;;
+    macos)  setup_macos_defaults ;;
+    # Every step runs even if an earlier one failed, but the failure still has to
+    # reach the exit code. A bare sequence would return the status of its last
+    # command, and `if is_macos; …; fi` is 0 on Linux no matter what setup_git did.
+    "")     local rc=0
+            setup_git   || rc=1
+            setup_shell || rc=1
+            setup_vim   || rc=1
+            # plain `is_macos && …` would make the whole command fail on Linux
+            if is_macos; then setup_macos_defaults || rc=1; fi
+            return "$rc"
+            ;;
+    *)      die "unknown configure step: $1 (git | shell | vim | macos)" ;;
+  esac
+}
+
+cmd_packages() {
+  [ $# -eq 0 ] || die "packages takes no options (got: $*)"
+
+  # shellcheck source=setup/packages.sh
+  source "$DOTFILES_ROOT/setup/packages.sh"
+  setup_packages
+}
+
+cmd_install() {
+  [ $# -eq 0 ] || die "install takes no options (got: $*)"
+
+  # a step that soft-fails must not make `install` look successful when the same
+  # step run on its own (`./dot configure git`) would have exited non-zero
+  local rc=0
+
+  printf '%s%sdotfiles — %s%s\n' "$C_BOLD" "$C_BLUE" "$OS" "$C_RESET"
+  [ -n "$DRY_RUN" ] && info "dry run: nothing will be modified"
+
+  # before the gate below, not after: an existing Homebrew that is merely not on
+  # this process's PATH would otherwise look uninstalled and send bootstrap off
+  # to run the Homebrew installer over it
+  is_macos && brew_shellenv
+
+  if is_macos && { ! has brew || ! xcode-select -p &>/dev/null; }; then
+    # shellcheck source=setup/bootstrap.sh
+    source "$DOTFILES_ROOT/setup/bootstrap.sh"
+    setup_bootstrap || die "bootstrap incomplete"
+  fi
+
+  # every phase runs even when an earlier one failed — that is the whole point of
+  # not using `set -e` here — but the failure still has to reach the exit code
+  cmd_sync      || rc=1
+  cmd_packages  || rc=1
+  cmd_configure || rc=1
+
+  # the warning/error counts themselves are reported by main, for every command
+  section "Done"
+  if [ "$LOG_ERRORS" -eq 0 ] && [ "$LOG_WARNINGS" -eq 0 ]; then
+    ok "Reload your shell: exec zsh"
+  else
+    info "Reload your shell once the issues above are sorted: exec zsh"
+  fi
+  return "$rc"
+}
+
+cmd_doctor() {
+  [ $# -eq 0 ] || die "doctor takes no options (got: $*)"
+
+  local issues=0
+
+  # same reason as in cmd_install: an existing Homebrew that is merely not on this
+  # process's PATH must not be reported as missing — every brew-installed tool
+  # below would follow it into a list of things `./dot packages` cannot fix.
+  is_macos && brew_shellenv
+
+  section "Platform"
+  info "os:    $OS$(is_wsl && printf ' (WSL)')"
+  # the passwd entry, not $SHELL — the latter keeps the old value until re-login
+  local login_shell
+  login_shell="$(login_shell_path)"
+  info "shell: ${login_shell:-unknown}"
+  case "$login_shell" in
+    *zsh) ok "login shell is zsh" ;;
+    # neither getent nor dscl answered — "not zsh" would be a claim we cannot make
+    "")   warn "could not determine the login shell"; issues=1 ;;
+    *)    warn "login shell is not zsh — run ./dot configure shell"; issues=1 ;;
+  esac
+
+  section "Links"
+  link_status || issues=1
+
+  section "Tools"
+  # a spot check of the things other parts of this repo assume exist, not a
+  # mirror of Brewfile/apt.txt — `./dot packages` is the authority on those
+  local tool missing="" tools_ok=1
+  for tool in zsh git vim tmux curl starship node kubectl helm yq bat; do
+    has "$tool" || missing="$missing $tool"
+  done
+  is_macos && { has brew || missing="$missing brew"; }
+  # home/.exports sets BROWSER=wslview, and the `open` shim relies on it
+  is_wsl && { has wslview || missing="$missing wslview"; }
+
+  # helix is the one tool `./dot packages` cannot install everywhere: outside
+  # Ubuntu there is no apt package, so it deliberately skips it (see
+  # setup/packages-linux.sh). Sending the user to `./dot packages` there would
+  # point at something that will never fix it.
+  if has hx; then
+    :
+  elif is_linux && ! is_ubuntu; then
+    warn "helix not installed — no Debian apt package, install it from the GitHub releases"
+    issues=1
+    tools_ok=""
+  else
+    missing="$missing hx"
+  fi
+
+  if [ -n "$missing" ]; then
+    warn "not installed:$missing — run ./dot packages"
+    issues=1
+    tools_ok=""
+  fi
+  [ -n "$tools_ok" ] && ok "all expected tools present"
+
+  if has brew && [ -e "$(brew --prefix)/opt/antidote/share/antidote/antidote.zsh" ]; then
+    ok "antidote (homebrew keg)"
+  elif [ -e "$HOME/.antidote/antidote.zsh" ]; then
+    ok "antidote (~/.antidote)"
+  else
+    warn "antidote not found — zsh plugins will not load"
+    issues=1
+  fi
+
+  section "Git"
+  # both halves, the same condition setup_git ends on — testing only the mail
+  # would put a ✓ on `  <you@example.com>` with an empty name, for exactly the
+  # state `./dot configure git` calls incomplete
+  local git_name git_email
+  git_name="$(git config --global user.name)"
+  git_email="$(git config --global user.email)"
+  if [ -n "$git_name" ] && [ -n "$git_email" ]; then
+    ok "$git_name <$git_email>"
+  else
+    warn "git identity incomplete — run ./dot configure git"
+    issues=1
+  fi
+  local helper
+  helper="$(git config --global credential.helper)"
+  if [ -n "$helper" ]; then
+    info "credential.helper: $helper"
+  else
+    warn "credential.helper not set — run ./dot configure git"
+    issues=1
+  fi
+
+  section "Result"
+  if [ "$issues" -eq 0 ]; then
+    ok "everything looks good"
+    return 0
+  fi
+  warn "issues found — see above"
+  return 1
+}
+
+main() {
+  local command="" args=() status=0
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -n|--dry-run) DRY_RUN=1 ;;
+      -y|--yes)     ASSUME_YES=1 ;;
+      --linux)      export DOTFILES_OS=linux; detect_os ;;
+      -h|--help)    usage; return 0 ;;
+      -*)           args+=("$1") ;;
+      *)            if [ -z "$command" ]; then command="$1"; else args+=("$1"); fi ;;
+    esac
+    shift
+  done
+
+  case "$command" in
+    # doctor and help report themselves and own their exit code
+    doctor)          cmd_doctor "${args[@]}"; return $? ;;
+    help|"")         usage; return 0 ;;
+    install)         cmd_install "${args[@]}" ;;
+    sync)            cmd_sync "${args[@]}" ;;
+    packages)        cmd_packages "${args[@]}" ;;
+    configure)       cmd_configure "${args[@]}" ;;
+    *)               err "unknown command: $command"; usage; return 1 ;;
+  esac
+  status=$?
+
+  # Nothing aborts on its own (see the note at the top), so the run summary and
+  # the exit code are decided here — once, the same way for every command.
+  if [ "$LOG_ERRORS" -gt 0 ]; then
+    err "$LOG_ERRORS error(s), $LOG_WARNINGS warning(s) — see above"
+    return 1
+  fi
+  [ "$LOG_WARNINGS" -gt 0 ] && warn "$LOG_WARNINGS warning(s) — see above"
+  return "$status"
+}
+
+main "$@"

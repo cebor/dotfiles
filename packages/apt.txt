@@ -1,18 +1,24 @@
 # apt package list for Linux (Debian/Ubuntu) - parallels the brew lines in Brewfile.
 # One package per line, '#' comments and blank lines are ignored.
 # Tools not available in apt (antidote, starship, helix, node, kubectl, helm, yq)
-# are installed separately in linux.sh.
+# are installed separately in setup/packages-linux.sh.
 
 # Core / shell
 zsh
+tmux
 coreutils
 findutils
+curl              # required by the upstream installers in setup/packages-linux.sh
+software-properties-common  # add-apt-repository, for the helix PPA
 wget
 rsync
 git
 tree
 procps            # provides `watch`
 gnupg             # gpg
+
+# Editors
+vim               # helix is installed separately (see below)
 
 # Python
 python3
@@ -30,4 +36,12 @@ mtr-tiny          # mtr (the `mtr` metapackage pulls in GTK)
 wrk               # in universe on Ubuntu (not packaged on Debian)
 
 # Misc
-bat               # binary is `batcat` on Debian/Ubuntu (symlinked to `bat` in linux.sh)
+bat               # binary is `batcat` on Debian/Ubuntu (symlinked to `bat` in setup/packages-linux.sh)
+
+# Not listed on purpose:
+# - xclip / wl-clipboard back the pbcopy/pbpaste shims, but only outside WSL —
+#   under WSL the shims use win32yank.exe/clip.exe. setup/packages-linux.sh
+#   installs them conditionally, the same way it does wslu for the WSL case.
+# - git-credential-libsecret is not an apt package on Debian/Ubuntu. setup/git.sh
+#   probes for it and falls back to the 1 h credential cache, so git works
+#   either way.
