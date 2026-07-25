@@ -3,6 +3,8 @@ getantidote/use-omz
 ohmyzsh/ohmyzsh path:lib
 ohmyzsh/ohmyzsh path:plugins/git
 ohmyzsh/ohmyzsh path:plugins/extract
+# has_brew is defined in .zshrc — macOS only
+ohmyzsh/ohmyzsh path:plugins/brew conditional:has_brew
 
 # plugins
 rupa/z
