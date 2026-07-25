@@ -1,148 +1,174 @@
-# Dotfiles
+# dotfiles
 
-Personal cross-platform (macOS + Linux) configuration and dotfiles management system.
+Personal dotfiles for **macOS** and **WSL2 (Debian/Ubuntu)**. One entrypoint, symlinked configs,
+the same command on both platforms.
 
-The platform is auto-detected via `uname`. On macOS packages come from Homebrew
-(`Brewfile`); on Linux (Debian/Ubuntu, tested on WSL2) from apt (`packages/apt.txt`)
-plus a few upstream installers in `linux.sh`.
+The platform is detected at runtime, so `./dot install` does the right thing on either machine.
+Configs are **symlinked** out of this repo into `$HOME`, which means editing `~/.zshrc` edits the
+repo — no copy step to forget, and `git status` shows exactly what drifted.
 
-## Quick Start
+## Quick start
 
-### First-Time Setup
-
-```bash
-git clone <repository-url> ~/.dotfiles
-cd ~/.dotfiles
-./install.sh          # Auto-detects the OS, runs bootstrap if needed, installs everything
-# ./install.sh --linux  # Force the Linux path (overrides auto-detection)
-exec zsh              # Reload shell
+```sh
+git clone git@github.com:cebor/dotfiles.git ~/code/dotfiles
+cd ~/code/dotfiles
+./dot install
+exec zsh
 ```
 
-### Regular Updates
+`./dot install` is idempotent — it is also the regular update command.
 
-```bash
-./install.sh      # Safe to re-run - updates packages and syncs dotfiles
-# Or for quick dotfile-only syncs:
-./sync.sh -f      # Sync dotfiles without package updates
+> The repo has to stay where you cloned it: the symlinks point back at it by absolute path.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `./dot install` | Everything: bootstrap → sync → packages → configure |
+| `./dot sync` | Symlink `home/` into `$HOME` — dotfiles and configs only |
+| `./dot packages` | Install packages: `Brewfile` on macOS, apt + upstream installers on Linux |
+| `./dot configure` | Apply configuration: git, login shell, vim, macOS defaults |
+| `./dot doctor` | Health check: links, tools, login shell, git identity |
+| `./dot help` | Usage summary |
+
+| Option | Effect |
+| --- | --- |
+| `-n`, `--dry-run` | Print what would happen; change nothing |
+| `-y`, `--yes` | Never prompt — questions keep their default (hostname unchanged, git identity left unset with a warning). Destructive prompts are skipped, not auto-confirmed |
+| `--linux` | Force the Linux path regardless of detection |
+| `--status` | `sync` only: report link state, write nothing |
+| `--unlink` | `sync` only: remove the symlinks again |
+
+`configure` also takes a single step: `./dot configure git|shell|vim|macos`.
+
+## How it works
+
+Three phases, each runnable on its own:
+
+1. **sync** — every file under `home/` is symlinked to the same relative path in `$HOME`.
+   Files are linked, directories are mirrored as real directories, so `~/.config` and `~/.ssh`
+   stay yours and other tools can keep writing into them.
+2. **packages** — `brew bundle` against `packages/Brewfile` on macOS; `packages/apt.txt` plus
+   upstream installers (antidote, starship, helix, node, kubectl, helm, yq) on Linux.
+3. **configure** — imperative settings that are not files: `git config --global`, the login shell,
+   vim-plug, and `defaults write` on macOS.
+
+**The repo is the source of truth.** `~/.zshrc` is a link into `home/.zshrc`, so:
+
+```sh
+hx ~/.zshrc            # really edits ~/code/dotfiles/home/.zshrc
+cd ~/code/dotfiles && git diff
 ```
 
-## What's Included
+Nothing is ever overwritten silently. When `sync` finds a real file where a link should go, it moves
+it to `~/.dotfiles-backup/<timestamp>/` first and tells you if the content differed — and if that
+backup cannot be written, the file is left alone instead of being linked over. Files removed or
+renamed inside `home/` have their stale links cleaned up on the next `sync`, tracked through a
+manifest at `~/.local/state/dotfiles/manifest`.
 
-### Shell Configuration
-- **Zsh** with [antidote](https://getantidote.github.io/) plugin manager
-- **Starship** prompt
-- Oh My Zsh plugins (git, brew, extract)
-- Enhanced utilities (zsh-autosuggestions, zsh-syntax-highlighting, z)
-
-### Applications
-- Development: helix, vim, git, python, node, docker
-- Networking: httpie, nmap, mtr, wrk
-- Kubernetes: kubectl, helm, yq
-- GUI apps (macOS only): iTerm2, VS Code, Firefox, Obsidian, and more
-
-See [`Brewfile`](Brewfile) (macOS) and [`packages/apt.txt`](packages/apt.txt) (Linux)
-for the complete lists. Tools not in apt (antidote, starship, helix, node, kubectl,
-helm, yq) are installed by [`linux.sh`](linux.sh).
-
-### Custom Functions & Aliases
-
-**Smart Python venv activation:**
-```bash
-svenv  # Finds and activates venv/.venv/poetry/pipenv in parent directories
-```
-
-**File sharing:**
-```bash
-scpp file.txt  # Upload to stkn.org and copy URL to clipboard
-```
-
-**Utilities:**
-```bash
-server 8080       # Start HTTP server on port 8080
-tunnel host 3306 3307  # SSH port forwarding
-pwgen 20          # Generate 20-character password
-```
-
-See [`.aliases`](system/.aliases) and [`.functions`](system/.functions) for all shortcuts.
-
-## Scripts
-
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `macos-bootstrap.sh` | One-time macOS system setup (Xcode CLI tools, Homebrew) | macOS first installation only (or run automatically by install.sh) |
-| `install.sh` | Full installation - auto-detects OS, runs bootstrap if needed, installs/updates packages, sets zsh as default shell (`--linux` forces the Linux path) | First-time setup AND regular updates (safe to re-run) |
-| `linux.sh` | Linux (apt) package install + upstream installers for tools not in apt | Called by install.sh on Linux |
-| `macos.sh` | macOS system defaults (Finder, Dock, trackpad) | Called by install.sh on macOS |
-| `sync.sh` | Sync dotfiles only (supports `-f`, `-d` flags) | Quick dotfile-only syncs or testing changes |
-| `git.sh` | Apply git config settings, prompts for user.name/email if not set | Called by install.sh |
-
-### Script Flags
-
-```bash
-./sync.sh -d      # Dry-run: preview changes without syncing
-./sync.sh -f      # Force: skip confirmation prompt
-```
-
-## Project Structure
+## Project structure
 
 ```
-dotfiles/
-├── git/          # Git-specific config (.gitignore_global, .gitattributes_global)
-├── system/       # Shell and app dotfiles (.zshrc, .vimrc, .tmux.conf, etc.)
-├── lib/          # Shared helpers (os.sh - OS detection)
-├── packages/     # apt.txt - Linux package list
-├── *.sh          # Setup and maintenance scripts
-├── Brewfile      # Homebrew package definitions (macOS)
-└── CLAUDE.md     # AI agent instructions
+.
+├── dot                    # the only entrypoint
+├── home/                  # mirrored 1:1 into $HOME
+│   ├── .zshrc             #   sources .exports/.aliases/.functions, then antidote + starship
+│   ├── .exports           #   environment variables
+│   ├── .aliases           #   command shortcuts
+│   ├── .functions         #   shell functions + cross-platform pbcopy/pbpaste/open shims
+│   ├── .zsh_plugins.txt   #   antidote plugin list
+│   ├── .vimrc .tmux.conf .latexmkrc .gitignore_global
+│   ├── .ssh/config
+│   └── .config/           #   helix, pycodestyle
+├── lib/                   # sourced helpers, never executed
+│   ├── os.sh              #   platform detection, `has`, brew shellenv, arch mapping
+│   ├── log.sh             #   section/info/ok/warn/err, prompts, dry-run `run`
+│   └── link.sh            #   symlink engine: link, backup, prune, status
+├── setup/                 # one file per step, one function each
+│   ├── bootstrap.sh       #   macOS: Xcode CLI tools + Homebrew
+│   ├── packages.sh        #   dispatches to brew bundle or packages-linux.sh
+│   ├── packages-linux.sh  #   apt list + upstream installers
+│   ├── git.sh shell.sh vim.sh
+│   └── macos-defaults.sh  #   defaults write / scutil
+└── packages/
+    ├── Brewfile           #   brew, cask, mas
+    └── apt.txt            #   apt list, '#' comments allowed
 ```
 
-Files in `git/` and `system/` are synced to `$HOME` via rsync.
+## What's included
+
+**Shell** — zsh with [antidote](https://github.com/mattmc3/antidote) for plugins and
+[starship](https://starship.rs) for the prompt. Plugins: oh-my-zsh `lib`/`git`/`extract`,
+`rupa/z`, plus zsh-completions, zsh-autosuggestions and zsh-syntax-highlighting.
+
+**Editors** — [helix](https://helix-editor.com) (`hx`) is the primary editor and git's `core.editor`;
+vim is configured with vim-plug, Solarized and persistent undo.
+
+**Custom functions** (`home/.functions`):
+
+```sh
+svenv                    # walk upward, find and activate venv/.venv
+scpp report.pdf          # scp to stkn.org, fix perms, copy the URL to the clipboard
+server                   # python3 -m http.server + open the browser
+tunnel host 3306 3307    # ssh forwarding: host's port 3306 -> localhost:3307
+pwgen 32                 # openssl rand -base64
+f '*.conf'               # find . -name
+```
+
+On Linux, `pbcopy`, `pbpaste` and `open` are defined as shims (win32yank / clip.exe / wl-copy /
+xclip, and wslview / xdg-open) so the same functions work in WSL.
+
+## Platform differences
+
+| | macOS | Linux / WSL2 |
+| --- | --- | --- |
+| Packages | `packages/Brewfile` (brew, cask, mas) | `packages/apt.txt` + upstream installers |
+| Bootstrap | Xcode CLI tools + Homebrew | none needed |
+| Git credentials | `osxkeychain` | libsecret, else 1 h cache |
+| Clipboard | native `pbcopy`/`pbpaste` | shims in `home/.functions` |
+| Browser | native `open` | `wslview` (WSL) / `xdg-open` |
+| `bat` | `bat` | ships as `batcat`, symlinked to `~/.local/bin/bat` |
+| SSH `UseKeychain` | honoured | ignored via `IgnoreUnknown` |
+| System settings | `setup/macos-defaults.sh` | n/a |
+
+OS differences inside config files are handled inline (`[[ "$OSTYPE" == darwin* ]]`), so every
+config exists exactly once.
 
 ## Customization
 
-1. **Add a package**: Edit `Brewfile` (macOS) or `packages/apt.txt` (Linux) → run `./install.sh`
-2. **Add an alias**: Edit `system/.aliases` → run `./sync.sh -f` → reload shell
-3. **Add a zsh plugin**: Edit `system/.zsh_plugins.txt` → run `./sync.sh -f` → reload shell
-4. **Modify macOS settings**: Edit `macos.sh` → run `./macos.sh` → restart affected app
+| Task | Steps |
+| --- | --- |
+| Add an alias | edit `home/.aliases` → `exec zsh` (it is already linked) |
+| Add a config file | put it at its `$HOME` path under `home/` → `./dot sync` |
+| Add a package | edit `packages/Brewfile` or `packages/apt.txt` → `./dot packages` |
+| Add a zsh plugin | edit `home/.zsh_plugins.txt` → `exec zsh` |
+| Change a macOS setting | edit `setup/macos-defaults.sh` → `./dot configure macos` |
 
-## Configuration Highlights
-
-### Git
-- Default editor: **helix** (`hx`)
-- Default branch: `main`
-- Credentials: macOS keychain on macOS; libsecret or a 1h credential cache on Linux
-
-### Vim
-- Plugin manager: vim-plug
-- Theme: Solarized Dark
-- Persistent undo, automatic position restore
-
-### macOS
-- Finder: show path bar, status bar, all extensions
-- Dock: minimize to application, auto-hide
-- Trackpad: tap to click enabled
-
-See [`macos.sh`](macos.sh) for all system preferences.
+Editing anything already linked needs no sync — `./dot sync` is only for **new**, renamed or
+deleted files.
 
 ## Maintenance
 
-### Preview Changes
-```bash
-./sync.sh -d  # See what would change without applying
+```sh
+./dot doctor           # is anything missing or unlinked?
+./dot sync --status    # link state only, no writes
+./dot sync --unlink    # remove all links, then offer to restore the newest backup
+./dot install -n       # dry run the whole thing
 ```
 
-### Update Everything
-```bash
-./install.sh  # Syncs dotfiles, updates packages, reconfigures git/vim/macOS
-```
+Backups of replaced files live in `~/.dotfiles-backup/<timestamp>/` and are never deleted
+automatically.
+
+Coming from the older rsync-based layout, `$HOME` still holds real copies rather than links — the
+first `./dot sync` backs each one up before linking. One leftover it cannot clean up is
+`~/.gitattributes_global`: the file is gone from the repo and `./dot configure git` drops the
+matching `core.attributesfile` setting, but the empty file in `$HOME` is yours to delete.
 
 ## Requirements
 
-- macOS (recent versions), or Linux (Debian/Ubuntu, tested on WSL2)
-- macOS: Xcode Command Line Tools (installed by `macos-bootstrap.sh`)
-- Linux: `sudo` access for apt
-- Internet connection for initial setup
+macOS or Debian/Ubuntu (incl. WSL2), `git`, `curl`, and `sudo` rights for package installation.
+Everything else is installed by `./dot install`.
 
 ## License
 
-MIT - See [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).

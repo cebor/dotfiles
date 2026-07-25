@@ -4,83 +4,179 @@ Guidance for working in this repository.
 
 ## Architecture Overview
 
-Cross-platform (macOS + Linux) dotfiles system with a **two-phase structure**:
-- **Configuration files** in `git/` and `system/` — copied (not symlinked) to `$HOME` via rsync
-- **Setup scripts** at the repo root — orchestrate installation and system configuration
+Cross-platform (macOS + WSL2/Debian) dotfiles with a **single entrypoint**. Three phases, each
+runnable on its own, plus two wrappers around them:
 
-The platform is **auto-detected** at install time (`uname` via `lib/os.sh`), so the same
-`./install.sh` works on both OSes. `./install.sh --linux` forces the Linux path.
+- `./dot sync` — symlinks `home/` into `$HOME` (dotfiles and configs only)
+- `./dot packages` — `brew bundle` on macOS, apt + upstream installers on Linux
+- `./dot configure` — imperative settings: git, login shell, vim-plug, macOS defaults
+- `./dot install` — bootstrap (macOS only, when needed) → sync → packages → configure
+- `./dot doctor` — read-only health check
 
-### Key Components
+The platform is auto-detected (`uname` via `lib/os.sh`); `--linux` forces the Linux path via the
+exported `$DOTFILES_OS`.
 
-- `lib/os.sh` - Shared OS detection. Sourced by scripts; exports `$OS` (`macos`|`linux`|`unknown`). Honors `$DOTFILES_OS` as an override (that's how `--linux` works).
-- `install.sh` - Full installation. Auto-detects OS, branches every OS-specific step on `$OS`, safe to re-run.
-- `macos-bootstrap.sh` - **macOS only**, gated by `install.sh`: Xcode CLI tools + Homebrew.
-- `macos.sh` - **macOS only**, gated by `install.sh`: `defaults write` / `scutil` system settings.
-- `linux.sh` - **Linux only**: installs `packages/apt.txt` via apt, then upstream installers for tools not in apt.
-- `sync.sh` - Copies `git/` + `system/` to `$HOME` via rsync (excludes `.DS_Store`). OS-agnostic.
-- `git.sh` - `git config --global` settings; OS-conditional credential helper; prompts for user.name/email if unset.
-- `vim.sh` - Creates vim dirs, installs/updates vim-plug. OS-agnostic.
+### Key components
+
+- `dot` — the only executable. Parses global flags, sources `lib/*.sh` once, then sources the
+  needed `setup/*.sh` and calls its function. Everything else is sourced, never executed.
+  `main` owns the run summary and the exit code for every mutating command: non-zero when
+  `$LOG_ERRORS > 0` or the command itself returned non-zero, warnings reported but not fatal.
+  `doctor` and `help` report themselves and return early.
+- `lib/os.sh` — `$OS` (`macos`|`linux`|`unknown`), `is_macos`/`is_linux`/`is_wsl`/`is_ubuntu`,
+  `has`, `brew_shellenv`, `arch_name`, `login_shell_path`. Honors `$DOTFILES_OS`.
+- `lib/log.sh` — `section`/`info`/`blank`/`ok`/`skip`/`warn`/`err`/`die`, `confirm`, `ask`, `run`
+  (executes, or prints under `$DRY_RUN`), `try` (`run` + `warn` on failure) and `ok_run` (`ok` with
+  a second wording for the dry run). Counts warnings/errors for the run summary.
+- `lib/link.sh` — the symlink engine: `link_tree`, `link_status`, `link_unlink`, `link_files`, plus
+  the two read-only manifest queries `link_stale` and `link_orphans`.
+- `setup/*.sh` — one step each: `bootstrap`, `packages`, `packages-linux`, `git`, `shell`, `vim`,
+  `macos-defaults`.
+
+### Symlink model
+
+`home/` mirrors `$HOME` 1:1. **Files are symlinked, directories are mirrored as real directories** —
+so `~/.config` and `~/.ssh` stay real dirs that other tools can write into. Only real files are
+linked: `link_files` skips symlinks (`-type f`) and the `.gitignore` patterns `.DS_Store` / `*.swp`,
+so a stray macOS turd in `home/` never lands in `$HOME`.
+
+- The repo is the source of truth: editing `~/.zshrc` edits `home/.zshrc`.
+- A real file in the way is moved to `~/.dotfiles-backup/<timestamp>/` before linking, with a
+  warning if its content differed from the repo. If the backup fails the file is left untouched —
+  `ln -f` must never be the thing that deletes the only copy.
+- `_link_state` classifies before anything is touched, and its branch order is load-bearing: the
+  `self` state (`$dest -ef $src`, i.e. a directory above `$dest` links into `home/`) has to be
+  tested after `-L` — a correct link is `-ef` its source too — and before `-e`, which would call it
+  an ordinary conflict and back up the repo's own file.
+- A manifest at `~/.local/state/dotfiles/manifest` lets the next sync prune links whose source was
+  renamed or deleted. Those links are invisible to `link_files`, so the manifest is the only record
+  that will ever find them again: `link_stale` reads it (and `link_status`/`doctor` report what it
+  finds, otherwise a leftover link would never be mentioned), and both `link_tree` and `link_unlink`
+  carry entries they failed to remove into the new manifest rather than dropping them.
+- `link_orphans` is the other half of that read: a manifest entry whose source is gone from `home/`
+  and whose link points **outside** the current `$LINK_SRC` — what a moved repo leaves behind, and
+  also what a link somebody made by hand at the same path looks like. The two are indistinguishable
+  from here, so these are only ever reported and carried into the new manifest, never removed.
+  Dropping them instead would lose the only record of them, which is the loss the manifest exists
+  to prevent.
+- Editing an already-linked file needs **no** sync. `./dot sync` is only for new/renamed/deleted files.
 
 ### Package sources
-- **macOS**: `Brewfile` (`brew` CLI tools, `cask` GUI apps, `mas` App Store — casks/mas are macOS-only).
-- **Linux**: `packages/apt.txt` (apt list). Tools not in apt are installed by `linux.sh`: antidote (git clone `~/.antidote`), starship (official installer), helix (Ubuntu PPA), node (NodeSource current), kubectl (pkgs.k8s.io), helm, yq. `wslu` installed only under WSL.
 
-## Critical Workflows
-
-- **First-time setup / regular updates**: `./install.sh` (safe to re-run), then `exec zsh`.
-- **Quick dotfile sync**: `./sync.sh -f`. **Preview**: `./sync.sh -d`.
-- **Packages**: macOS `brew bundle`; Linux `./linux.sh`.
-
-### Shell Configuration Structure
-`system/.zshrc` sources three modular files, then sets up antidote + starship:
-1. `.exports` - Environment variables (GPG_TTY, LANG)
-2. `.aliases` - Command shortcuts (OS-guarded ones use `[[ "$OSTYPE" == darwin* ]]`)
-3. `.functions` - Shell functions, including cross-platform `pbcopy`/`pbpaste`/`open` shims (defined only when the macOS native is missing)
-
-`.zshrc` locates antidote from the Homebrew keg on macOS and from `~/.antidote` on Linux;
-`brew shellenv` and `starship` are guarded so the file loads cleanly on both OSes.
+- **macOS**: `packages/Brewfile` (`brew` CLI, `cask` GUI, `mas` App Store — casks/mas are macOS-only).
+- **Linux**: `packages/apt.txt`, then upstream installers in `setup/packages-linux.sh`: antidote
+  (git clone `~/.antidote`), starship, helix (Ubuntu PPA), node (NodeSource), kubectl (pkgs.k8s.io),
+  helm, yq. Platform-conditional there rather than in `apt.txt`: `wslu` only under WSL,
+  `xclip`/`wl-clipboard` only outside it (the shims use `win32yank.exe`/`clip.exe` under WSL).
+  The kubectl repo carries a single minor, so its guard is the pin in
+  `/etc/apt/sources.list.d/kubernetes.list`, not `has kubectl` — otherwise a bump of
+  `$kubernetes_minor` would never reach a machine that already has kubectl.
 
 ## Project Conventions
 
-### Shell Scripts
-- `#!/usr/bin/env bash` shebang; scripts self-locate with `cd "$(dirname "$0")"`.
-- **No `set -euo pipefail`** by design — steps may soft-fail with a warning rather than abort.
-- OS-specific scripts source `lib/os.sh` and branch on `$OS`; sub-scripts inherit the `--linux` override via the exported `$DOTFILES_OS`.
-- Linux installers in `linux.sh` are guarded (`command -v` / dir checks) so the script is idempotent.
-- User prompts for destructive ops (except with `-f`/`--force`). `case` for arg parsing.
+### Shell scripts
+
+- `#!/usr/bin/env bash`. `$DOTFILES_ROOT` is set once by `dot`; scripts never `cd` and never
+  self-locate — they use `$DOTFILES_ROOT`.
+- Each `setup/*.sh` defines **exactly one function** (`setup_git`, `setup_vim`, …) and does nothing
+  at source time.
+- **No `set -euo pipefail`** by design — a step may soft-fail with a warning and let the run
+  continue. `dot` reports the warning/error counts at the end.
+- Because nothing aborts on its own, **every mutating command must be checked**: `try foo` (or
+  `run foo || warn …`) for the recoverable case, `err`/`return 1` for the rest. Never print `ok` for
+  something that may not have happened — a silent ✓ over a failed command is the bug this convention
+  exists to prevent. A step with many small mutations snapshots `$LOG_WARNINGS` at the top and only
+  prints its closing `ok` when the count is unchanged (see `setup/git.sh`,
+  `setup/macos-defaults.sh`); a step with distinguishable failures keeps its own `failed` counter
+  (see `setup/packages-linux.sh`).
+- Use `lib/log.sh` for all output; no bare `echo`. Wrap mutating commands in `run`/`try` so
+  `--dry-run` works (`run` returns the command's status, and `0` under `$DRY_RUN`). Never put a
+  redirect on the `run` call itself (`run foo >/dev/null`) — that swallows the dry-run echo; put it
+  inside a `run bash -c '…'` instead.
+- A dry run **writes nothing at all**, not even under `$TMPDIR` (see the `/dev/null` manifest in
+  `link_tree`), and it reports in the conditional: `would remove`, never `removed`. `run` is a
+  no-op under `$DRY_RUN` and returns 0, so any `ok` after it has to carry the tense itself:
+  `ok_run "yq installed" "would install yq"` for a single message, a local `did="would remove"`
+  where a loop reuses the wording (see `_prune`, `link_unlink`). A bare `ok` after a `run` is only
+  correct when it states something that was true before the run, too.
+- The whole run report goes to **stdout**, `warn` and `err` included, so `./dot install | tee log`
+  captures it in order. **stderr** carries only the interactive prompts — `ask` cannot share stdout
+  (its stdout is the answer) and a prompt has to stay visible when stdout is piped.
+- A command that aggregates steps must collect their statuses in a local `rc` (`setup_git || rc=1`)
+  and `return "$rc"`. A bare sequence returns only its last command — and `if is_macos; …; fi` is
+  0 on Linux — so a failed step would vanish from the exit code (see `cmd_configure`, `cmd_install`).
+- Use `has foo` instead of `command -v foo >/dev/null`; `is_macos`/`is_linux`/`is_wsl`/`is_ubuntu`
+  instead of ad-hoc `uname`/`/proc/version`/`/etc/os-release` checks.
+- `case` for arg parsing; every command rejects options it does not understand rather than
+  ignoring them.
+- Prompts go through `confirm`/`ask`, which handle `$ASSUME_YES`, `$DRY_RUN` and a missing terminal
+  centrally — callers never re-check those just to decide *whether* to prompt. `confirm` answers
+  **no** when it cannot ask; `ask` returns empty, so callers must handle an empty answer.
+  Destructive prompts are additionally gated on `[ -z "$ASSUME_YES" ]` — and only on that. A
+  missing terminal and `$DRY_RUN` already answer no inside `confirm`, but `--yes` answers *yes*,
+  which for "restore this backup over `$HOME`?" is the one case where the shared default is the
+  wrong one (see `link_unlink`).
+- An empty `ask` answer means "the user left it blank" only when we were actually allowed to ask.
+  A step must not fail the run over a question it was told not to ask — `./dot install -y` on a
+  fresh machine would otherwise exit 1 because the git identity is unset. Where that distinction
+  matters, re-derive it once (`setup/git.sh`'s `$interactive`) and warn in both cases,
+  but `return 1` only in the interactive one. `./dot doctor` is what keeps the gap visible.
 
 ### Keep sourced shell files fast
-`.aliases` / `.functions` are sourced on every interactive shell start — they must **not**
-source `lib/os.sh` or spawn heavy subshells. Use `[[ "$OSTYPE" == ... ]]` globs and `command -v`.
 
-### Dotfile Organization
-- `git/` - `.gitignore_global`, `.gitattributes_global` — **no static .gitconfig** (applied imperatively by `git.sh`).
-- `system/` - shell + app dotfiles (`.zshrc`, `.vimrc`, `.tmux.conf`, `.ssh/`, `.config/`).
-- Git config applied via `git.sh` (`git config --global`), user.name/email prompted if unset.
+`home/.aliases` and `home/.functions` are sourced on every interactive shell start — they must
+**not** source `lib/*.sh` or spawn heavy subshells. Use `[[ "$OSTYPE" == ... ]]` globs and
+`command -v`.
 
-### Editor / Style
-- Primary editor: **helix** (`hx`). Vim configured with vim-plug, Solarized, persistent undo.
-- EditorConfig: 2-space indent, LF line endings.
+### Dotfile organization
+
+- `home/` — everything that maps into `$HOME`, at its real relative path.
+- OS differences stay **inline** in the config files, not in per-OS overlay directories.
+- Git config is applied imperatively by `setup/git.sh`; there is no static `.gitconfig`.
+  `user.name`/`user.email` are prompted only when unset.
+- `home/.gitignore_global` contains two **literal carriage returns** after `Icon` (macOS names
+  folder-icon files `Icon\r`). `.editorconfig` and `.gitattributes` both carve out an exception for
+  it — do not "clean up" that line, and check with `od -c` after editing.
+- Zsh plugins that only apply to one OS go in `home/.zsh_plugins.txt` with antidote's
+  `conditional:<func>` annotation, with the function defined in `home/.zshrc` before `antidote load`
+  (see `conditional:has_brew`). A bare `antidote bundle …` in `.zshrc` does **not** load anything —
+  it prints the load script to stdout.
+
+### Editor / style
+
+Primary editor **helix** (`hx`); vim uses vim-plug, Solarized, persistent undo. `setup/git.sh`
+points `core.editor` at `hx` only when it is actually installed and falls back to vim — on plain
+Debian `./dot packages` cannot install helix, and a `core.editor` that does not exist breaks every
+`git commit`.
+EditorConfig: 2-space indent, LF.
 
 ## Custom Functions to Preserve
-- `svenv()` - walks upward to find and activate `venv`/`.venv`, with `✓/✗` feedback.
-- `scpp()` - `scp` to stkn.org, sets perms, copies URL to clipboard via `pbcopy` (shim on Linux).
-- `tunnel()` - SSH port forwarding.
-- `pwgen()` - `openssl rand -base64` with configurable length.
-- `server()` - `python3 -m http.server` with auto-open browser via `open` (shim on Linux).
-- `f()` - `find . -name "$1"`.
+
+- `svenv()` — walks upward to find and activate `venv`/`.venv`, with `✓/✗` feedback.
+- `scpp()` — `scp` to stkn.org, sets perms, copies URL to clipboard via `pbcopy` (shim on Linux).
+- `tunnel()` — SSH port forwarding.
+- `pwgen()` — `openssl rand -base64` with configurable length.
+- `server()` — `python3 -m http.server` with auto-open browser via `open` (shim on Linux).
+- `f()` — `find . -name "$1"`.
 
 ## Common Tasks
 
-- **Add a package**: edit `Brewfile` (macOS) or `packages/apt.txt` (Linux) → `./install.sh`.
-- **Add an alias**: edit `system/.aliases` → `./sync.sh -f` → reload shell.
-- **Add a zsh plugin**: edit `system/.zsh_plugins.txt` → `./sync.sh -f` → reload shell.
-- **Modify a macOS setting**: edit `macos.sh` → `./macos.sh` → restart affected app.
-- **Reload shell**: `exec zsh`.
+- **Add a package**: edit `packages/Brewfile` or `packages/apt.txt` → `./dot packages`.
+- **Add an alias**: edit `home/.aliases` → `exec zsh` (already linked, no sync needed).
+- **Add a new config file**: place it under `home/` at its `$HOME` path → `./dot sync`.
+- **Add a zsh plugin**: edit `home/.zsh_plugins.txt` → `exec zsh`.
+- **Modify a macOS setting**: edit `setup/macos-defaults.sh` → `./dot configure macos`.
+- **Check the setup**: `./dot doctor`, or `./dot sync --status` for links only.
 
 ## Platform Gotchas
-- On Debian/Ubuntu, `bat` ships as `batcat` — `linux.sh` symlinks it to `bat` in `~/.local/bin`.
-- `system/.ssh/config` uses `IgnoreUnknown UseKeychain` so the macOS-only `UseKeychain`
-  option doesn't error on Linux OpenSSH.
-- Git credentials: macOS keychain on macOS; libsecret or a 1h credential cache on Linux.
+
+- On Debian/Ubuntu `bat` ships as `batcat` — `setup/packages-linux.sh` symlinks it into
+  `~/.local/bin`.
+- `home/.ssh/config` uses `IgnoreUnknown UseKeychain` so the macOS-only option does not break Linux
+  OpenSSH. `link_tree` chmods `~/.ssh` to 700 after linking.
+- Git credentials: keychain on macOS; libsecret or a 1 h cache on Linux.
+- helix has no Debian apt package, only an Ubuntu PPA, so `./dot packages` cannot install it on
+  plain Debian. `doctor` therefore reports it separately — pointing at `./dot packages` there
+  would send you at something that will never fix it.
+- The repo must not be moved after `sync` — links point at it by absolute path. If it moves, re-run
+  `./dot sync` (stale links are detected and replaced).
