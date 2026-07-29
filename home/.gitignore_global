@@ -42,3 +42,6 @@ npm-debug.log
 
 # Compiled Python files
 *.pyc
+
+# Claude Code
+.claude/settings.local.json
