@@ -4,14 +4,9 @@ Guidance for working in this repository.
 
 ## Architecture Overview
 
-Cross-platform (macOS + WSL2/Debian) dotfiles with a **single entrypoint**. Three phases, each
-runnable on its own, plus two wrappers around them:
-
-- `./dot sync` — symlinks `home/` into `$HOME` (dotfiles and configs only)
-- `./dot packages` — `brew bundle` on macOS, apt + upstream installers on Linux
-- `./dot configure` — imperative settings: git, login shell, vim-plug, macOS defaults
-- `./dot install` — bootstrap (macOS only, when needed) → sync → packages → configure
-- `./dot doctor` — read-only health check
+Cross-platform (macOS + WSL2/Debian) dotfiles with a **single entrypoint**: three phases
+(`sync`, `packages`, `configure`), each runnable on its own, wrapped by `install` (all three, with
+the macOS bootstrap first when needed) and the read-only `doctor`. `./dot help` has the full usage.
 
 The platform is auto-detected (`uname` via `lib/os.sh`); `--linux` forces the Linux path via the
 exported `$DOTFILES_OS`.
@@ -23,17 +18,13 @@ exported `$DOTFILES_OS`.
   `main` owns the run summary and the exit code for every mutating command: non-zero when
   `$LOG_ERRORS > 0` or the command itself returned non-zero, warnings reported but not fatal.
   `doctor` and `help` report themselves and return early.
-- `lib/os.sh` — `$OS` (`macos`|`linux`|`unknown`), `is_macos`/`is_linux`/`is_wsl`/`is_ubuntu`,
-  `has`, `brew_shellenv`, `arch_name`, `current_user`, `login_shell_path`. Honors `$DOTFILES_OS`.
-  `current_user` is `id -un`, not `$USER` — `su`, `sudo -i`, cron and containers leave `$USER`
-  unset, and an empty user name is what turns `chsh` into a failed run.
-- `lib/log.sh` — `section`/`info`/`blank`/`ok`/`skip`/`warn`/`err`/`die`, `confirm`, `ask`, `run`
-  (executes, or prints under `$DRY_RUN`), `try` (`run` + `warn` on failure) and `ok_run` (`ok` with
-  a second wording for the dry run). Counts warnings/errors for the run summary.
-- `lib/link.sh` — the symlink engine: `link_tree`, `link_status`, `link_unlink`, `link_files`, plus
-  the two read-only manifest queries `link_stale` and `link_orphans`.
-- `setup/*.sh` — one step each: `bootstrap`, `packages`, `packages-linux`, `git`, `shell`, `vim`,
-  `macos-defaults`.
+- `lib/os.sh` — platform detection and the predicates the rest of the repo is written in. Honors
+  `$DOTFILES_OS`. `current_user` is `id -un`, not `$USER` — `su`, `sudo -i`, cron and containers
+  leave `$USER` unset, and an empty user name is what turns `chsh` into a failed run.
+- `lib/log.sh` — all output, plus `run`/`try`/`ok_run` for mutating commands and `confirm`/`ask`
+  for prompts. Counts warnings/errors for the run summary.
+- `lib/link.sh` — the symlink engine, plus the two read-only manifest queries `link_stale` and
+  `link_orphans`.
 
 ### Symlink model
 
