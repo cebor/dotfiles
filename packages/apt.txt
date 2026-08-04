@@ -23,6 +23,7 @@ wget
 rsync
 tree
 procps            # provides `watch`
+locales           # locale-gen, for the LANG in home/.exports (see setup/locale.sh)
 
 # Prerequisites. Also installed before the apt sources are added — the source
 # setup needs curl/gpg, and the antidote clone needs git — but listed here so the

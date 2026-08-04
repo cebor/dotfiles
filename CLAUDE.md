@@ -165,6 +165,10 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
 - OS differences stay **inline** in the config files, not in per-OS overlay directories.
 - Git config is applied imperatively by `setup/git.sh`; there is no static `.gitconfig`.
   `user.name`/`user.email` are prompted only when unset.
+- `home/.exports` is the single source of truth for `LANG`. `setup/locale.sh` parses the value back
+  out of that file rather than reading `$LANG` from the environment — the process running `./dot`
+  need never have sourced it. Anything else that needs the locale should go through
+  `_locale_wanted`, not hardcode a name.
 - `home/.gitignore_global` contains two **literal carriage returns** after `Icon` (macOS names
   folder-icon files `Icon\r`). `.editorconfig` and `.gitattributes` both carve out an exception for
   it — do not "clean up" that line, and check with `od -c` after editing.
@@ -199,6 +203,7 @@ EditorConfig: 2-space indent, LF.
 - **Add a new config file**: place it under `home/` at its `$HOME` path → `./dot sync`.
 - **Add a zsh plugin**: edit `home/.zsh_plugins.txt` → `exec zsh`.
 - **Modify a macOS setting**: edit `setup/macos-defaults.sh` → `./dot configure macos`.
+- **Change the locale**: edit `LANG` in `home/.exports` → `./dot configure locale`.
 - **Check the setup**: `./dot doctor`, or `./dot sync --status` for links only.
 
 ## Platform Gotchas
@@ -209,6 +214,26 @@ EditorConfig: 2-space indent, LF.
 - `home/.ssh/config` uses `IgnoreUnknown UseKeychain` so the macOS-only option does not break Linux
   OpenSSH. `link_tree` chmods `~/.ssh` to 700 after linking.
 - Git credentials: keychain on macOS; libsecret or a 1 h cache on Linux.
+- glibc ships only `C`, `C.UTF-8` and `POSIX` precompiled, so the `LANG=en_US.UTF-8` from
+  `home/.exports` names a locale that does not exist on a fresh Debian/Ubuntu — and on every WSL
+  image, whose `/etc/default/locale` says `C.UTF-8`. `setlocale()` then falls back to `C`: perl
+  warns on every apt run with a maintainer script, and UTF-8 ctype is silently gone. `setup/locale.sh`
+  enables the line in `/etc/locale.gen` and runs `locale-gen "$lang"`; `doctor` reports the gap.
+  The argument is load-bearing: a **bare** `locale-gen` first `rm -rf`s `/usr/lib/locale/*` and the
+  locale-archive and rebuilds the whole file, so it would delete locales it did not create. The
+  in-place edit stays anyway — `locale-gen`'s positional argument is undocumented (`locale-gen(8)`
+  synopsis is `locale-gen [--keep-existing]`), and the line is what makes the locale survive the
+  next bare run. The other two candidates are dead ends: `dpkg-reconfigure locales` drives a debconf
+  *multiselect* that replaces the whole list, and `/var/lib/locales/supported.d/` is off-limits per
+  its man page.
+  It deliberately does *not* call `update-locale` — `/etc/default/locale` is the system-wide default
+  for login sessions and services, and `.exports` already owns `LANG` for this user's shells.
+  macOS needs none of this and the step skips there, which is also why `LANG` cannot just be set to
+  `C.UTF-8` to sidestep the whole problem: BSD libc has no such locale, so the Mac would fall back
+  to `C` — the worse failure, and a silent one. `en_US.UTF-8` is the portable common denominator.
+- The two `locale -a` spellings differ from `LANG`'s: glibc normalizes the charset (`en_US.utf8`),
+  the canonical name does not (`en_US.UTF-8`). `_locale_normalize` lowercases and drops dashes so
+  the comparison works on both platforms; never compare the two strings directly.
 - helix has no Debian apt package, only an Ubuntu PPA, so `./dot packages` cannot install it on
   plain Debian. `doctor` therefore reports it separately — pointing at `./dot packages` there
   would send you at something that will never fix it.

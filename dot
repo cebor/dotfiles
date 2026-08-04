@@ -5,7 +5,7 @@
 #   ./dot install     everything: bootstrap, sync, packages, configure
 #   ./dot sync        symlink home/ into $HOME
 #   ./dot packages    install packages for this platform
-#   ./dot configure   apply configuration (git, shell, vim, macOS defaults)
+#   ./dot configure   apply configuration (locale, git, shell, vim, macOS defaults)
 #   ./dot doctor      report what is missing or out of sync
 #
 # No `set -euo pipefail` on purpose: a step that fails should warn and let the
@@ -34,8 +34,8 @@ Commands:
   install            Full setup: bootstrap → sync → packages → configure
   sync               Symlink home/ into $HOME (dotfiles and configs only)
   packages           Install packages: Brewfile on macOS, apt sources + apt.txt on Linux
-  configure [step]   Apply configuration; step = git | shell | vim | macos
-  doctor             Health check: links, tools, shell, git identity
+  configure [step]   Apply configuration; step = locale | git | shell | vim | macos
+  doctor             Health check: links, tools, shell, locale, git identity
   help               Show this help
 
 Options:
@@ -78,6 +78,8 @@ cmd_sync() {
 cmd_configure() {
   [ $# -le 1 ] || die "configure takes at most one step (got: $*)"
 
+  # shellcheck source=setup/locale.sh
+  source "$DOTFILES_ROOT/setup/locale.sh"
   # shellcheck source=setup/git.sh
   source "$DOTFILES_ROOT/setup/git.sh"
   # shellcheck source=setup/shell.sh
@@ -88,6 +90,7 @@ cmd_configure() {
   source "$DOTFILES_ROOT/setup/macos-defaults.sh"
 
   case "$1" in
+    locale) setup_locale ;;
     git)    setup_git ;;
     shell)  setup_shell ;;
     vim)    setup_vim ;;
@@ -95,15 +98,19 @@ cmd_configure() {
     # Every step runs even if an earlier one failed, but the failure still has to
     # reach the exit code. A bare sequence would return the status of its last
     # command, and `if is_macos; …; fi` is 0 on Linux no matter what setup_git did.
+    #
+    # locale goes first: it fixes the encoding the rest of the run — and every
+    # shell started after it — reads and writes text in.
     "")     local rc=0
-            setup_git   || rc=1
-            setup_shell || rc=1
-            setup_vim   || rc=1
+            setup_locale || rc=1
+            setup_git    || rc=1
+            setup_shell  || rc=1
+            setup_vim    || rc=1
             # plain `is_macos && …` would make the whole command fail on Linux
             if is_macos; then setup_macos_defaults || rc=1; fi
             return "$rc"
             ;;
-    *)      die "unknown configure step: $1 (git | shell | vim | macos)" ;;
+    *)      die "unknown configure step: $1 (locale | git | shell | vim | macos)" ;;
   esac
 }
 
@@ -157,6 +164,11 @@ cmd_doctor() {
 
   local issues=0
 
+  # for _locale_wanted / _locale_available below — sourcing a setup file runs
+  # nothing, they all define functions and do nothing at source time
+  # shellcheck source=setup/locale.sh
+  source "$DOTFILES_ROOT/setup/locale.sh"
+
   # same reason as in cmd_install: an existing Homebrew that is merely not on this
   # process's PATH must not be reported as missing — every brew-installed tool
   # below would follow it into a list of things `./dot packages` cannot fix.
@@ -174,6 +186,25 @@ cmd_doctor() {
     "")   warn "could not determine the login shell"; issues=1 ;;
     *)    warn "login shell is not zsh — run ./dot configure shell"; issues=1 ;;
   esac
+
+  # The LANG home/.exports exports has to exist on this machine, or setlocale()
+  # falls back to C: perl warns on every apt run and nothing handles UTF-8
+  # correctly. glibc only ships C/C.UTF-8, so on a fresh Linux box this is the
+  # normal state until `./dot configure locale` has run. Reported rather than
+  # inferred from $LANG — this process may not have sourced .exports at all.
+  local want_locale
+  want_locale="$(_locale_wanted)"
+  if [ -z "$want_locale" ]; then
+    :
+  elif _locale_available "$want_locale"; then
+    ok "locale $want_locale available"
+  elif is_linux; then
+    warn "locale $want_locale is not generated — run ./dot configure locale"
+    issues=1
+  else
+    warn "locale $want_locale is not available on this system — check home/.exports"
+    issues=1
+  fi
 
   section "Links"
   link_status || issues=1
