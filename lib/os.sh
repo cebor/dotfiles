@@ -39,14 +39,22 @@ brew_shellenv() {
   fi
 }
 
+# The account this run belongs to. Deliberately not $USER: login(1) sets it, but
+# `su`, `sudo -i`, cron and a docker container do not, and an empty name turns
+# `chsh -s "$shell" "$USER"` into an error the passwd lookup cannot even explain.
+# `id -un` asks the kernel and is always right.
+current_user() { id -un; }
+
 # The shell recorded for this user, which is what `chsh` changes. Deliberately
 # not $SHELL: that keeps the pre-chsh value until the next login, so using it
 # would make every re-run ask for a sudo password again.
 login_shell_path() {
+  local user
+  user="$(current_user)"
   if has getent; then
-    getent passwd "$USER" 2>/dev/null | cut -d: -f7
+    getent passwd "$user" 2>/dev/null | cut -d: -f7
   elif has dscl; then
-    dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}'
+    dscl . -read "/Users/$user" UserShell 2>/dev/null | awk '{print $2}'
   fi
 }
 

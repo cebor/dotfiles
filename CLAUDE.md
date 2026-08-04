@@ -24,7 +24,9 @@ exported `$DOTFILES_OS`.
   `$LOG_ERRORS > 0` or the command itself returned non-zero, warnings reported but not fatal.
   `doctor` and `help` report themselves and return early.
 - `lib/os.sh` — `$OS` (`macos`|`linux`|`unknown`), `is_macos`/`is_linux`/`is_wsl`/`is_ubuntu`,
-  `has`, `brew_shellenv`, `arch_name`, `login_shell_path`. Honors `$DOTFILES_OS`.
+  `has`, `brew_shellenv`, `arch_name`, `current_user`, `login_shell_path`. Honors `$DOTFILES_OS`.
+  `current_user` is `id -un`, not `$USER` — `su`, `sudo -i`, cron and containers leave `$USER`
+  unset, and an empty user name is what turns `chsh` into a failed run.
 - `lib/log.sh` — `section`/`info`/`blank`/`ok`/`skip`/`warn`/`err`/`die`, `confirm`, `ask`, `run`
   (executes, or prints under `$DRY_RUN`), `try` (`run` + `warn` on failure) and `ok_run` (`ok` with
   a second wording for the dry run). Counts warnings/errors for the run summary.
@@ -128,7 +130,8 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
   and `return "$rc"`. A bare sequence returns only its last command — and `if is_macos; …; fi` is
   0 on Linux — so a failed step would vanish from the exit code (see `cmd_configure`, `cmd_install`).
 - Use `has foo` instead of `command -v foo >/dev/null`; `is_macos`/`is_linux`/`is_wsl`/`is_ubuntu`
-  instead of ad-hoc `uname`/`/proc/version`/`/etc/os-release` checks.
+  instead of ad-hoc `uname`/`/proc/version`/`/etc/os-release` checks; `current_user` instead of
+  `$USER`.
 - `case` for arg parsing; every command rejects options it does not understand rather than
   ignoring them.
 - Prompts go through `confirm`/`ask`, which handle `$ASSUME_YES`, `$DRY_RUN` and a missing terminal

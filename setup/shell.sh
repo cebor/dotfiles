@@ -41,7 +41,7 @@ setup_shell() {
     fi
   fi
 
-  if run sudo chsh -s "$target" "$USER"; then
+  if run sudo chsh -s "$target" "$(current_user)"; then
     ok_run "default shell set to $target (takes effect on next login)" \
            "would set the default shell to $target"
   else
