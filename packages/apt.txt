@@ -1,24 +1,40 @@
 # apt package list for Linux (Debian/Ubuntu) - parallels the brew lines in Brewfile.
-# One package per line, '#' comments and blank lines are ignored.
-# Tools not available in apt (antidote, starship, helix, node, kubectl, helm, yq)
-# are installed separately in setup/packages-linux.sh.
+#
+# Line format:  name [@tag] [# comment]
+#
+# Blank lines and '#' comments are ignored. An optional tag restricts the line to
+# machines it applies to; untagged lines apply everywhere:
+#
+#   @wsl      only under WSL
+#   @!wsl     only outside WSL
+#   @ubuntu   only on Ubuntu (not on plain Debian)
+#
+# This list is the only place package names live. setup/packages-linux.sh sets up
+# the apt sources first (WakeMeOps, the helix PPA, NodeSource) and then installs
+# everything here in one go. Only what apt cannot provide at all is installed
+# separately there: antidote (git clone) and starship (upstream installer).
 
 # Core / shell
 zsh
 tmux
 coreutils
 findutils
-curl              # required by the upstream installers in setup/packages-linux.sh
-software-properties-common  # add-apt-repository, for the helix PPA
 wget
 rsync
 git
 tree
 procps            # provides `watch`
+
+# Repo prerequisites. Also installed before the sources are added (the repo setup
+# itself needs them), but listed here so the list stays the full picture.
+curl
+ca-certificates
 gnupg             # gpg
+software-properties-common  # add-apt-repository, for the helix PPA
 
 # Editors
-vim               # helix is installed separately (see below)
+vim
+helix @ubuntu     # PPA (see setup/packages-linux.sh); no Debian package exists
 
 # Python
 python3
@@ -29,19 +45,29 @@ ipython3
 # Dev tooling
 universal-ctags   # ctags
 httpie
+nodejs            # NodeSource repo, added by setup/packages-linux.sh
+
+# Kubernetes / ops (WakeMeOps repo — none of these are packaged by Debian)
+kubectl
+helm
+yq                # mikefarah's Go yq; Debian's `yq` is the unrelated python jq wrapper
 
 # Networking
 nmap
 mtr-tiny          # mtr (the `mtr` metapackage pulls in GTK)
 wrk               # in universe on Ubuntu (not packaged on Debian)
 
+# Clipboard, for the pbcopy/pbpaste shims in home/.functions. Under WSL the shims
+# go through win32yank.exe/clip.exe instead, so the X11/Wayland tooling there would
+# only drag in dependencies nothing ever calls.
+xclip        @!wsl
+wl-clipboard @!wsl
+
 # Misc
-bat               # binary is `batcat` on Debian/Ubuntu (symlinked to `bat` in setup/packages-linux.sh)
+bat               # from WakeMeOps as `bat`; Debian's own package installs `batcat`
+wslu @wsl         # wslview, used by the `open` shim in home/.functions
 
 # Not listed on purpose:
-# - xclip / wl-clipboard back the pbcopy/pbpaste shims, but only outside WSL —
-#   under WSL the shims use win32yank.exe/clip.exe. setup/packages-linux.sh
-#   installs them conditionally, the same way it does wslu for the WSL case.
 # - git-credential-libsecret is not an apt package on Debian/Ubuntu. setup/git.sh
 #   probes for it and falls back to the 1 h credential cache, so git works
 #   either way.

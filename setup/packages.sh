@@ -2,7 +2,7 @@
 
 # Package installation, dispatched by platform:
 #   macOS -> packages/Brewfile via `brew bundle`
-#   Linux -> setup/packages-linux.sh (apt list + upstream installers)
+#   Linux -> setup/packages-linux.sh (apt sources, then packages/apt.txt)
 
 setup_packages() {
   section "Installing packages"

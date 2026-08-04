@@ -33,7 +33,7 @@ Usage: ./dot <command> [options]
 Commands:
   install            Full setup: bootstrap → sync → packages → configure
   sync               Symlink home/ into $HOME (dotfiles and configs only)
-  packages           Install packages: Brewfile on macOS, apt + upstream on Linux
+  packages           Install packages: Brewfile on macOS, apt sources + apt.txt on Linux
   configure [step]   Apply configuration; step = git | shell | vim | macos
   doctor             Health check: links, tools, shell, git identity
   help               Show this help
@@ -209,6 +209,15 @@ cmd_doctor() {
     tools_ok=""
   fi
   [ -n "$tools_ok" ] && ok "all expected tools present"
+
+  # `yq` is the one name where the WakeMeOps repo competes with a Debian package
+  # that carries a different tool: Debian's `yq` is a python wrapper around jq.
+  # Nothing pins the two apart — apt just prefers the higher version — so check
+  # which one actually landed rather than assume.
+  if is_linux && has yq && ! yq --version 2>/dev/null | grep -qE 'mikefarah|version v?4'; then
+    warn "yq is not mikefarah's v4 — Debian's python yq shadowed it, check the WakeMeOps repo"
+    issues=1
+  fi
 
   if has brew && [ -e "$(brew --prefix)/opt/antidote/share/antidote/antidote.zsh" ]; then
     ok "antidote (homebrew keg)"

@@ -64,13 +64,34 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
 ### Package sources
 
 - **macOS**: `packages/Brewfile` (`brew` CLI, `cask` GUI, `mas` App Store — casks/mas are macOS-only).
-- **Linux**: `packages/apt.txt`, then upstream installers in `setup/packages-linux.sh`: antidote
-  (git clone `~/.antidote`), starship, helix (Ubuntu PPA), node (NodeSource), kubectl (pkgs.k8s.io),
-  helm, yq. Platform-conditional there rather than in `apt.txt`: `wslu` only under WSL,
-  `xclip`/`wl-clipboard` only outside it (the shims use `win32yank.exe`/`clip.exe` under WSL).
-  The kubectl repo carries a single minor, so its guard is the pin in
-  `/etc/apt/sources.list.d/kubernetes.list`, not `has kubectl` — otherwise a bump of
-  `$kubernetes_minor` would never reach a machine that already has kubectl.
+- **Linux**: sources first, packages second. `setup/packages-linux.sh` adds every third-party apt
+  source up front, then **one** `apt-get install` pulls the whole of `packages/apt.txt`. Only what
+  apt cannot carry at all comes after: antidote (git clone `~/.antidote`) and starship (upstream
+  installer).
+  - Sources: **WakeMeOps** (`deb.wakemeops.com`, components `devops terminal`) for `kubectl`,
+    `helm`, `yq` and `bat`; the **helix PPA** (Ubuntu only — no Debian *and* no Ubuntu package
+    named `helix` exists); **NodeSource** for `nodejs`.
+  - Each `_apt_repo_*` is guarded by its sources file, never by `has <tool>`: WakeMeOps on the
+    exact `Components:` line (so changing the component list reaches machines that already have
+    the repo), NodeSource on `nodesource.list` (so a node from nvm cannot stop the repo from
+    being added). A `has` guard would freeze both on whatever the machine got first.
+  - WakeMeOps sits at apt's default priority 500, unpinned. That is a deliberate choice, and
+    `yq` is where it bites: Debian ships a *different* tool under that name (a python wrapper
+    around jq, 3.x). Only the version comparison keeps mikefarah's 4.x in front, so `./dot doctor`
+    checks which `yq` actually landed rather than assume.
+  - Prerequisites (`curl`, `ca-certificates`, `gnupg`, plus `software-properties-common` on
+    Ubuntu) are installed *before* the sources, because the source setup itself needs them. They
+    stay listed in `apt.txt` as well — installing them twice costs nothing, and that list has to
+    remain the full picture.
+- `packages/apt.txt` is the only place Linux package names live. Line format:
+  `name [@tag] [# comment]`, with the optional tag one of `@wsl`, `@!wsl` or `@ubuntu` — that is
+  how `wslu` stays WSL-only, `xclip`/`wl-clipboard` non-WSL-only (the shims use
+  `win32yank.exe`/`clip.exe` under WSL) and `helix` Ubuntu-only. `_apt_read_list` parses it into
+  the global `$APT_PACKAGES` rather than echoing its result: in a `pkgs="$(_apt_read_list)"` the
+  `warn` for an unknown tag would land in `$pkgs` as if it were a package name, and its
+  `$LOG_WARNINGS` increment would die with the subshell. An unknown tag warns and drops the line —
+  a typo'd tag is indistinguishable from a real one, and installing anyway would be the wrong
+  guess as often as not.
 
 ## Project Conventions
 
@@ -78,8 +99,9 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
 
 - `#!/usr/bin/env bash`. `$DOTFILES_ROOT` is set once by `dot`; scripts never `cd` and never
   self-locate — they use `$DOTFILES_ROOT`.
-- Each `setup/*.sh` defines **exactly one function** (`setup_git`, `setup_vim`, …) and does nothing
-  at source time.
+- Each `setup/*.sh` defines **exactly one public function** (`setup_git`, `setup_vim`, …) and does
+  nothing at source time. Private helpers carry a `_` prefix, as in `lib/link.sh` (`_link_state`,
+  `_prune`) and `setup/packages-linux.sh` (`_apt_read_list`, `_apt_repo_*`).
 - **No `set -euo pipefail`** by design — a step may soft-fail with a warning and let the run
   continue. `dot` reports the warning/error counts at the end.
 - Because nothing aborts on its own, **every mutating command must be checked**: `try foo` (or
@@ -161,7 +183,9 @@ EditorConfig: 2-space indent, LF.
 
 ## Common Tasks
 
-- **Add a package**: edit `packages/Brewfile` or `packages/apt.txt` → `./dot packages`.
+- **Add a package**: edit `packages/Brewfile` or `packages/apt.txt` → `./dot packages`. If it only
+  applies to some Linux machines, tag the `apt.txt` line (`@wsl`, `@!wsl`, `@ubuntu`); if it needs
+  an apt source that is not there yet, add an `_apt_repo_*` in `setup/packages-linux.sh` first.
 - **Add an alias**: edit `home/.aliases` → `exec zsh` (already linked, no sync needed).
 - **Add a new config file**: place it under `home/` at its `$HOME` path → `./dot sync`.
 - **Add a zsh plugin**: edit `home/.zsh_plugins.txt` → `exec zsh`.
@@ -170,8 +194,9 @@ EditorConfig: 2-space indent, LF.
 
 ## Platform Gotchas
 
-- On Debian/Ubuntu `bat` ships as `batcat` — `setup/packages-linux.sh` symlinks it into
-  `~/.local/bin`.
+- `bat` comes from WakeMeOps under its real name. Only when that repo is unreachable does the name
+  resolve to Debian's own package, whose binary is `batcat` (a clash with bacula's `bat`) —
+  `setup/packages-linux.sh` keeps the `~/.local/bin/bat` symlink as the fallback for exactly that.
 - `home/.ssh/config` uses `IgnoreUnknown UseKeychain` so the macOS-only option does not break Linux
   OpenSSH. `link_tree` chmods `~/.ssh` to 700 after linking.
 - Git credentials: keychain on macOS; libsecret or a 1 h cache on Linux.

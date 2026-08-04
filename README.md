@@ -26,7 +26,7 @@ exec zsh
 | --- | --- |
 | `./dot install` | Everything: bootstrap → sync → packages → configure |
 | `./dot sync` | Symlink `home/` into `$HOME` — dotfiles and configs only |
-| `./dot packages` | Install packages: `Brewfile` on macOS, apt + upstream installers on Linux |
+| `./dot packages` | Install packages: `Brewfile` on macOS, apt sources + `apt.txt` on Linux |
 | `./dot configure` | Apply configuration: git, login shell, vim, macOS defaults |
 | `./dot doctor` | Health check: links, tools, login shell, git identity |
 | `./dot help` | Usage summary |
@@ -48,8 +48,9 @@ Three phases, each runnable on its own:
 1. **sync** — every file under `home/` is symlinked to the same relative path in `$HOME`.
    Files are linked, directories are mirrored as real directories, so `~/.config` and `~/.ssh`
    stay yours and other tools can keep writing into them.
-2. **packages** — `brew bundle` against `packages/Brewfile` on macOS; `packages/apt.txt` plus
-   upstream installers (antidote, starship, helix, node, kubectl, helm, yq) on Linux.
+2. **packages** — `brew bundle` against `packages/Brewfile` on macOS; on Linux the apt sources
+   ([WakeMeOps](https://docs.wakemeops.com/), the helix PPA, NodeSource) first, then everything in
+   `packages/apt.txt` in one go, then antidote and starship, which apt cannot provide.
 3. **configure** — imperative settings that are not files: `git config --global`, the login shell,
    vim-plug, and `defaults write` on macOS.
 
@@ -87,12 +88,12 @@ manifest at `~/.local/state/dotfiles/manifest`.
 ├── setup/                 # one file per step, one function each
 │   ├── bootstrap.sh       #   macOS: Xcode CLI tools + Homebrew
 │   ├── packages.sh        #   dispatches to brew bundle or packages-linux.sh
-│   ├── packages-linux.sh  #   apt list + upstream installers
+│   ├── packages-linux.sh  #   apt sources, then the apt list, then the rest
 │   ├── git.sh shell.sh vim.sh
 │   └── macos-defaults.sh  #   defaults write / scutil
 └── packages/
     ├── Brewfile           #   brew, cask, mas
-    └── apt.txt            #   apt list, '#' comments allowed
+    └── apt.txt            #   apt list: name [@tag] [# comment]
 ```
 
 ## What's included
@@ -122,12 +123,12 @@ xclip, and wslview / xdg-open) so the same functions work in WSL.
 
 | | macOS | Linux / WSL2 |
 | --- | --- | --- |
-| Packages | `packages/Brewfile` (brew, cask, mas) | `packages/apt.txt` + upstream installers |
+| Packages | `packages/Brewfile` (brew, cask, mas) | `packages/apt.txt` (+ WakeMeOps, helix PPA, NodeSource) |
 | Bootstrap | Xcode CLI tools + Homebrew | none needed |
 | Git credentials | `osxkeychain` | libsecret, else 1 h cache |
 | Clipboard | native `pbcopy`/`pbpaste` | shims in `home/.functions` |
 | Browser | native `open` | `wslview` (WSL) / `xdg-open` |
-| `bat` | `bat` | ships as `batcat`, symlinked to `~/.local/bin/bat` |
+| `bat` | `bat` | `bat` from WakeMeOps; Debian's own ships as `batcat`, symlinked to `~/.local/bin/bat` |
 | SSH `UseKeychain` | honoured | ignored via `IgnoreUnknown` |
 | System settings | `setup/macos-defaults.sh` | n/a |
 

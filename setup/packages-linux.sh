@@ -1,8 +1,114 @@
 #!/usr/bin/env bash
 
 # Linux package installation (Debian/Ubuntu) — the counterpart to `brew bundle`.
-# First the apt list from packages/apt.txt, then the tools apt does not carry
-# in a usable version. Every step is guarded, so re-running is cheap.
+#
+# Sources first, packages second: every third-party apt source is added up front
+# (WakeMeOps, the helix PPA, NodeSource), then a single apt-get install pulls the
+# whole of packages/apt.txt. Only what apt cannot carry at all is installed after
+# that — antidote (git clone) and starship (upstream installer).
+#
+# Every step is guarded, so re-running is cheap.
+
+# The apt names that apply to this machine, filled by _apt_read_list.
+APT_PACKAGES=()
+
+# Read packages/apt.txt into $APT_PACKAGES, dropping the lines whose tag does not
+# match this machine. Line format: `name [@tag] [# comment]`.
+#
+# Fills a global instead of echoing its result, on purpose: with
+# `pkgs="$(_apt_read_list)"` the warn below would land in $pkgs as if it were a
+# package name, and its $LOG_WARNINGS increment would die with the subshell.
+# `while … done < file` runs in the current shell, so array and counter both live.
+_apt_read_list() {
+  local line name tag
+  APT_PACKAGES=()
+  while IFS= read -r line; do
+    line="${line%%#*}"            # drop the comment, if any
+    # unquoted read: collapses the padding, and leaves $name empty on a blank line
+    read -r name tag _ <<<"$line"
+    [ -n "$name" ] || continue
+    case "$tag" in
+      "")      ;;
+      @wsl)    is_wsl    || continue ;;
+      '@!wsl') is_wsl    && continue ;;
+      @ubuntu) is_ubuntu || continue ;;
+      # not a silent skip: a typo'd tag is indistinguishable from a real one, and
+      # installing the package everywhere would be the wrong guess as often as not
+      *) warn "apt.txt: unknown tag $tag on $name — skipped"; continue ;;
+    esac
+    APT_PACKAGES+=("$name")
+  done < "$DOTFILES_ROOT/packages/apt.txt"
+}
+
+# WakeMeOps — a signed Debian repo (https://docs.wakemeops.com) carrying kubectl,
+# helm, yq and bat, which apt would otherwise not provide in a usable version.
+# Only the two components we want; the installer's default is all five
+# (dev devops secops terminal desktop).
+#
+# The guard is the components line, not `has kubectl` — the same reason the
+# kubernetes repo this replaces was guarded by its sources file: a change to
+# $components has to reach machines that already have the repo, and `has` would
+# leave them on the old set forever.
+_apt_repo_wakemeops() {
+  local components="devops terminal"
+  local sources="/etc/apt/sources.list.d/wakemeops.sources"
+  if grep -qxF "Components: $components" "$sources" 2>/dev/null; then
+    skip "wakemeops repo ($components)"
+    return 0
+  fi
+
+  info "Adding the WakeMeOps repo ($components)..."
+  # the installer writes its keyring straight into /etc/apt/keyrings without
+  # creating the directory — it ships with Debian 12 / Ubuntu 22.04 and later,
+  # but not with anything older
+  if run sudo mkdir -p /etc/apt/keyrings &&
+     run bash -c "set -o pipefail
+       curl -fsSL https://raw.githubusercontent.com/upciti/wakemeops/main/assets/install_repository \
+         | sudo bash -s '$components'"; then
+    return 0
+  fi
+  err "could not add the WakeMeOps repo — kubectl, helm, yq and bat will be missing"
+  return 1
+}
+
+# helix — there is no Debian package and no Ubuntu package either, only this PPA.
+_apt_repo_helix() {
+  if ! is_ubuntu; then
+    # a skip, not a warning: there is nothing this step could do about it on plain
+    # Debian, and warning here would leave every single run on such a machine with
+    # a warning count it can never clear. `./dot doctor` is where the gap belongs.
+    skip "helix (no Debian apt package — install it from the GitHub releases)"
+    return 0
+  fi
+  if grep -rqs maveonair /etc/apt/sources.list.d/; then
+    skip "helix ppa"
+    return 0
+  fi
+
+  info "Adding the helix PPA..."
+  run sudo add-apt-repository -y ppa:maveonair/helix-editor && return 0
+  err "could not add the helix PPA"
+  return 1
+}
+
+# Node.js current — Debian's `nodejs` is years behind. The guard is the sources
+# file rather than `has node`, so a node that came from nvm or a manual install
+# cannot stop the repo from being added — `nodejs` is in apt.txt either way, and
+# without the repo it would quietly come from the distro instead.
+_apt_repo_node() {
+  if [ -f /etc/apt/sources.list.d/nodesource.list ]; then
+    skip "nodesource repo"
+    return 0
+  fi
+
+  info "Adding the NodeSource repo..."
+  run bash -c 'set -o pipefail; curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -' &&
+    return 0
+  # a warning rather than an error, and a 0 return: apt.txt still installs
+  # `nodejs`, so the run does end with a node — just not the current one
+  warn "could not add the NodeSource repo — nodejs will come from the distro (stale)"
+  return 0
+}
 
 setup_packages_linux() {
   local failed=0
@@ -11,28 +117,53 @@ setup_packages_linux() {
   # but the closing ok must not claim everything is installed either.
   local unavailable=0
 
-  # kubectl comes from a per-minor-version apt repo, so this has to be pinned to
-  # something. Bumping it rewrites the repo on the next `./dot packages`, on
-  # machines that already have kubectl too — apt would otherwise never move past
-  # the pinned minor. Check which minors exist with:
-  #   curl -ILo /dev/null -w '%{http_code}\n' \
-  #     https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release
-  local kubernetes_minor="v1.36"
+  # --- 1. prerequisites -------------------------------------------------------
+  # The sources below need curl, gpg and — on Ubuntu — add-apt-repository before
+  # any third-party repo exists, so these cannot wait for the apt.txt batch that
+  # comes after them. They are listed in apt.txt too: installing them twice costs
+  # nothing, and that list stays the full picture of what a machine gets.
+  local prereqs="curl ca-certificates gnupg"
+  is_ubuntu && prereqs="$prereqs software-properties-common"
 
-  info "apt packages from packages/apt.txt"
+  info "apt prerequisites"
   run sudo apt-get update || warn "apt-get update failed — package versions may be stale"
-  # strip comment lines and trailing inline comments, then hand the rest to apt
-  local pkgs
-  pkgs="$(grep -vE '^\s*#|^\s*$' "$DOTFILES_ROOT/packages/apt.txt" | sed 's/#.*//' | tr '\n' ' ')"
+  # shellcheck disable=SC2086 # deliberate word splitting: one arg per package
+  run sudo apt-get install -y $prereqs ||
+    warn "could not install the prerequisites ($prereqs) — the apt sources below may fail"
+
+  # Everything from here on downloads over the network. Without curl there is no
+  # point in trying, and the errors would be a confusing cascade.
+  if ! has curl && [ -z "$DRY_RUN" ]; then
+    err "curl is missing — skipping the apt sources and the upstream installers"
+    return 1
+  fi
+  # Every `curl … | interpreter` below starts with `set -o pipefail`, and it is
+  # what makes the surrounding `if` mean anything: a pipeline reports the status
+  # of its *last* command, so a failed download hands an empty script to sh/bash,
+  # which exits 0 — the guard would call that a success and the step would be
+  # silently skipped. Same reason every curl carries -f: without it an HTTP error
+  # page is a 200-ish body that gets executed.
+
+  # --- 2. apt sources ---------------------------------------------------------
+  _apt_repo_wakemeops || failed=$((failed + 1))
+  _apt_repo_helix     || failed=$((failed + 1))
+  _apt_repo_node      # reports itself; nodejs installs either way
+
+  run sudo apt-get update || warn "apt-get update failed after adding the apt sources"
+
+  # --- 3. the packages --------------------------------------------------------
+  info "apt packages from packages/apt.txt"
+  _apt_read_list
   # apt is all-or-nothing: one name it cannot resolve (wrk, for instance, is not
   # packaged on Debian) aborts the whole batch and installs nothing. So fall back
   # to one call per package, which costs a few seconds but only loses the
   # packages that really are unavailable.
-  # shellcheck disable=SC2086 # deliberate word splitting: one arg per package
-  if ! run sudo apt-get install -y $pkgs; then
+  if [ "${#APT_PACKAGES[@]}" -eq 0 ]; then
+    warn "packages/apt.txt lists nothing for this machine"
+  elif ! run sudo apt-get install -y "${APT_PACKAGES[@]}"; then
     warn "apt-get install failed for the batch — retrying package by package"
     local pkg total=0
-    for pkg in $pkgs; do
+    for pkg in "${APT_PACKAGES[@]}"; do
       total=$((total + 1))
       # a warning, not an error: apt.txt deliberately lists names that do not
       # exist everywhere, so an error here would make every single run on such a
@@ -51,52 +182,7 @@ setup_packages_linux() {
     fi
   fi
 
-  # WSL only: wslu provides wslview (used by the `open` shim), wslpath, etc.
-  if is_wsl && ! has wslview; then
-    info "Installing wslu (WSL detected)..."
-    run sudo apt-get install -y wslu || warn "wslu install failed — the \`open\` shim will not work"
-  fi
-
-  # The mirror image of wslu: outside WSL the pbcopy/pbpaste shims in
-  # home/.functions need wl-copy or xclip. Under WSL they go through
-  # win32yank.exe/clip.exe instead, so installing the X11/Wayland tooling there
-  # would only drag in dependencies nothing ever calls. A warning, not an error:
-  # headless images do not always carry them.
-  if ! is_wsl; then
-    if has xclip && has wl-copy; then
-      skip "clipboard tools (xclip, wl-clipboard)"
-    else
-      info "Installing clipboard tools (xclip, wl-clipboard)..."
-      run sudo apt-get install -y xclip wl-clipboard ||
-        warn "clipboard tools unavailable — pbcopy/pbpaste will not work"
-    fi
-  fi
-
-  # Everything below downloads its own installer. Without curl there is no point
-  # in trying, and the errors would be a confusing cascade.
-  if ! has curl && [ -z "$DRY_RUN" ]; then
-    err "curl is missing — skipping the upstream installers (node, starship, kubectl, helm, yq)"
-    return 1
-  fi
-  # Every `curl … | interpreter` below starts with `set -o pipefail`, and it is
-  # what makes the surrounding `if` mean anything: a pipeline reports the status
-  # of its *last* command, so a failed download hands an empty script to sh/bash,
-  # which exits 0 — the guard would call that a success and the step would be
-  # silently skipped. Same reason every curl carries -f: without it an HTTP error
-  # page is a 200-ish body that gets executed.
-
-  # Node.js current — Debian's `nodejs` is stale
-  if has node; then
-    skip "node $(node --version)"
-  else
-    info "Installing Node.js (current)..."
-    if run bash -c 'set -o pipefail; curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -'; then
-      run sudo apt-get install -y nodejs || { err "nodejs install failed"; failed=$((failed + 1)); }
-    else
-      err "could not add the NodeSource repo"
-      failed=$((failed + 1))
-    fi
-  fi
+  # --- 4. what apt cannot provide ---------------------------------------------
 
   # antidote — zsh plugin manager, not in apt
   if [ -d "$HOME/.antidote" ]; then
@@ -120,95 +206,10 @@ setup_packages_linux() {
     fi
   fi
 
-  # helix editor
-  if has hx; then
-    skip "helix"
-  elif is_ubuntu; then
-    info "Installing helix (PPA)..."
-    if run sudo add-apt-repository -y ppa:maveonair/helix-editor; then
-      run sudo apt-get update || warn "apt-get update failed after adding the helix PPA"
-      run sudo apt-get install -y helix || { err "helix install failed"; failed=$((failed + 1)); }
-    else
-      err "could not add the helix PPA"
-      failed=$((failed + 1))
-    fi
-  else
-    # a skip, not a warning: there is nothing this step could do about it on plain
-    # Debian, and warning here would leave every single run on such a machine with
-    # a warning count it can never clear. `./dot doctor` is where the gap belongs.
-    skip "helix (no Debian apt package — install it from the GitHub releases)"
-  fi
-
-  # kubectl (pkgs.k8s.io apt repo). The guard is the repo pin, not `has kubectl`:
-  # the repo only ever carries one minor, so on a machine that already installed
-  # kubectl from an older pin apt would sit on that minor forever and a bump of
-  # $kubernetes_minor above would silently do nothing.
-  local k8s_list="/etc/apt/sources.list.d/kubernetes.list"
-  if has kubectl && grep -qF "/stable:/$kubernetes_minor/" "$k8s_list" 2>/dev/null; then
-    skip "kubectl ($kubernetes_minor)"
-  else
-    if has kubectl; then
-      info "Repinning the kubernetes repo to $kubernetes_minor..."
-    else
-      info "Installing kubectl ($kubernetes_minor)..."
-    fi
-    # The sources.list must not be written unless the keyring really holds a key:
-    # a signed-by repo whose key signs nothing makes every apt-get update on the
-    # machine fail with NO_PUBKEY, not just this script, until someone deletes
-    # the file by hand. Temp file plus an explicit -s check, so nothing lands in
-    # /etc until it is known good — same shape as the yq block below.
-    if run sudo mkdir -p /etc/apt/keyrings &&
-       run bash -c "set -o pipefail
-         tmp=\$(mktemp) &&
-         curl -fsSL 'https://pkgs.k8s.io/core:/stable:/$kubernetes_minor/deb/Release.key' \
-           | gpg --dearmor > \"\$tmp\" &&
-         [ -s \"\$tmp\" ] &&
-         sudo install -m 644 \"\$tmp\" /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-         rc=\$?; rm -f \"\$tmp\"; exit \$rc" &&
-       run bash -c "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$kubernetes_minor/deb/ /' \
-         | sudo tee $k8s_list >/dev/null"; then
-      run sudo apt-get update || warn "apt-get update failed after adding the kubernetes repo"
-      run sudo apt-get install -y kubectl || { err "kubectl install failed"; failed=$((failed + 1)); }
-    else
-      err "could not add the kubernetes apt repo"
-      failed=$((failed + 1))
-    fi
-  fi
-
-  # helm (official installer script)
-  if has helm; then
-    skip "helm"
-  else
-    info "Installing helm..."
-    if ! run bash -c 'set -o pipefail; curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash'; then
-      err "helm install failed"
-      failed=$((failed + 1))
-    fi
-  fi
-
-  # yq (mikefarah) — apt's `yq` is a different tool entirely
-  if has yq; then
-    skip "yq"
-  else
-    info "Installing yq ($(arch_name))..."
-    # via a temp file, not straight to the target: `curl -o` truncates the
-    # destination before it knows the request failed and leaves the 0-byte file
-    # behind (--remove-on-error only exists from curl 7.83, Ubuntu 22.04 has
-    # 7.81). `install` also folds in the chmod.
-    local yq_url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_$(arch_name)"
-    if run bash -c "tmp=\$(mktemp) &&
-        curl -fsSL -o \"\$tmp\" '$yq_url' &&
-        sudo install -m 755 \"\$tmp\" /usr/local/bin/yq
-      rc=\$?; rm -f \"\$tmp\"; exit \$rc"; then
-      ok_run "yq installed" "would install yq"
-    else
-      err "yq install failed"
-      failed=$((failed + 1))
-    fi
-  fi
-
-  # bat ships as `batcat` on Debian/Ubuntu (name clash with bacula's `bat`);
-  # expose it under its real name via ~/.local/bin, which is already on PATH
+  # `bat` normally comes from WakeMeOps and is called `bat`. When that repo is not
+  # available the name resolves to Debian's own package instead, whose binary is
+  # `batcat` (a name clash with bacula's `bat`) — expose it under its real name
+  # via ~/.local/bin, which is already on PATH.
   if has batcat && ! has bat; then
     if run mkdir -p "$HOME/.local/bin" && run ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"; then
       ok_run "linked batcat -> ~/.local/bin/bat" "would link batcat -> ~/.local/bin/bat"
