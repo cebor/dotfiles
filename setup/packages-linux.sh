@@ -95,8 +95,13 @@ _apt_repo_helix() {
 # file rather than `has node`, so a node that came from nvm or a manual install
 # cannot stop the repo from being added — `nodejs` is in apt.txt either way, and
 # without the repo it would quietly come from the distro instead.
+#
+# It greps the directory for the repo host rather than naming a file: the
+# installer used to write `nodesource.list` and now writes `nodesource.sources`
+# (deb822), so a filename guard silently stops matching the day upstream
+# switches format — and then re-runs the whole installer on every ./dot packages.
 _apt_repo_node() {
-  if [ -f /etc/apt/sources.list.d/nodesource.list ]; then
+  if grep -rqs deb.nodesource.com /etc/apt/sources.list.d/; then
     skip "nodesource repo"
     return 0
   fi
