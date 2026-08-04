@@ -71,6 +71,35 @@ _apt_repo_wakemeops() {
   return 1
 }
 
+# git — Debian and Ubuntu both ship a git that is a year or more behind. This PPA
+# is upstream's own stable build for Ubuntu; there is no Debian equivalent, so
+# plain Debian keeps the distro git.
+#
+# The guard greps the directory rather than naming a file, for the same reason as
+# the NodeSource one: add-apt-repository writes `.list` on older Ubuntu and
+# deb822 `.sources` from 24.04 on, and a filename guard would silently stop
+# matching — re-running add-apt-repository on every ./dot packages.
+_apt_repo_git() {
+  if ! is_ubuntu; then
+    # a skip, not a warning, for the same reason as helix below: nothing this step
+    # could do about it on Debian, and its git works — it is only older
+    skip "git ppa (Ubuntu only — Debian keeps the distro git)"
+    return 0
+  fi
+  if grep -rqs git-core /etc/apt/sources.list.d/; then
+    skip "git ppa"
+    return 0
+  fi
+
+  info "Adding the git PPA..."
+  run sudo add-apt-repository -y ppa:git-core/ppa && return 0
+  # a warning rather than an error, and a 0 return: `git` is in apt.txt, so the run
+  # does end with a git — just the distro's older one. helix errs instead because
+  # there it is the PPA or nothing.
+  warn "could not add the git PPA — git will come from the distro (older)"
+  return 0
+}
+
 # helix — there is no Debian package and no Ubuntu package either, only this PPA.
 _apt_repo_helix() {
   if ! is_ubuntu; then
@@ -125,9 +154,12 @@ setup_packages_linux() {
   # --- 1. prerequisites -------------------------------------------------------
   # The sources below need curl, gpg and — on Ubuntu — add-apt-repository before
   # any third-party repo exists, so these cannot wait for the apt.txt batch that
-  # comes after them. They are listed in apt.txt too: installing them twice costs
-  # nothing, and that list stays the full picture of what a machine gets.
-  local prereqs="curl ca-certificates gnupg"
+  # comes after them. git is here for a different reason: step 4 clones antidote
+  # with it, and that must not depend on the apt.txt batch having gone through —
+  # the same guarantee the curl gate below gives. They are listed in apt.txt too:
+  # installing them twice costs nothing, and that list stays the full picture of
+  # what a machine gets. On Ubuntu the batch then upgrades git to the PPA version.
+  local prereqs="git curl ca-certificates gnupg"
   is_ubuntu && prereqs="$prereqs software-properties-common"
 
   info "apt prerequisites"
@@ -151,6 +183,7 @@ setup_packages_linux() {
 
   # --- 2. apt sources ---------------------------------------------------------
   _apt_repo_wakemeops || failed=$((failed + 1))
+  _apt_repo_git       # reports itself; git installs either way
   _apt_repo_helix     || failed=$((failed + 1))
   _apt_repo_node      # reports itself; nodejs installs either way
 

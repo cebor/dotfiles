@@ -21,16 +21,17 @@ coreutils
 findutils
 wget
 rsync
-git
 tree
 procps            # provides `watch`
 
-# Repo prerequisites. Also installed before the sources are added (the repo setup
-# itself needs them), but listed here so the list stays the full picture.
+# Prerequisites. Also installed before the apt sources are added — the source
+# setup needs curl/gpg, and the antidote clone needs git — but listed here so the
+# list stays the full picture.
+git               # from the git-core PPA on Ubuntu (see setup/packages-linux.sh)
 curl
 ca-certificates
 gnupg             # gpg
-software-properties-common  # add-apt-repository, for the helix PPA
+software-properties-common  # add-apt-repository, for the git and helix PPAs
 
 # Editors
 vim

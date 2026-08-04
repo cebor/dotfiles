@@ -49,7 +49,7 @@ Three phases, each runnable on its own:
    Files are linked, directories are mirrored as real directories, so `~/.config` and `~/.ssh`
    stay yours and other tools can keep writing into them.
 2. **packages** — `brew bundle` against `packages/Brewfile` on macOS; on Linux the apt sources
-   ([WakeMeOps](https://docs.wakemeops.com/), the helix PPA, NodeSource) first, then everything in
+   ([WakeMeOps](https://docs.wakemeops.com/), the git and helix PPAs, NodeSource) first, then everything in
    `packages/apt.txt` in one go, then antidote and starship, which apt cannot provide.
 3. **configure** — imperative settings that are not files: `git config --global`, the login shell,
    vim-plug, and `defaults write` on macOS.
@@ -123,7 +123,7 @@ xclip, and wslview / xdg-open) so the same functions work in WSL.
 
 | | macOS | Linux / WSL2 |
 | --- | --- | --- |
-| Packages | `packages/Brewfile` (brew, cask, mas) | `packages/apt.txt` (+ WakeMeOps, helix PPA, NodeSource) |
+| Packages | `packages/Brewfile` (brew, cask, mas) | `packages/apt.txt` (+ WakeMeOps, git PPA, helix PPA, NodeSource) |
 | Bootstrap | Xcode CLI tools + Homebrew | none needed |
 | Git credentials | `osxkeychain` | libsecret, else 1 h cache |
 | Clipboard | native `pbcopy`/`pbpaste` | shims in `home/.functions` |
@@ -167,8 +167,9 @@ matching `core.attributesfile` setting, but the empty file in `$HOME` is yours t
 
 ## Requirements
 
-macOS or Debian/Ubuntu (incl. WSL2), `git`, `curl`, and `sudo` rights for package installation.
-Everything else is installed by `./dot install`.
+macOS or Debian/Ubuntu (incl. WSL2), `git` to clone this repo, and `sudo` rights for package
+installation. Nothing else has to be installed by hand — `curl`, `gnupg` and the rest are
+prerequisites `./dot install` installs for itself, before it adds the apt sources that need them.
 
 ## License
 
