@@ -25,6 +25,9 @@ setup_git() {
   # closing ok only fires when none of them warned.
   local warnings_before="$LOG_WARNINGS"
 
+  # the literal ~ is the point: git expands it itself, and writing $HOME out in
+  # full would bake this machine's home directory into ~/.gitconfig
+  # shellcheck disable=SC2088
   try git config --global core.excludesfile "~/.gitignore_global"
 
   # helix is the preferred editor, but `./dot packages` cannot install it on
@@ -42,6 +45,9 @@ setup_git() {
   # The old layout pointed this at ~/.gitattributes_global, which no longer
   # exists — drop the dangling setting on machines that ran the previous script,
   # but only when it still holds that old value.
+  # compared against the unexpanded string, because that is what the old script
+  # stored in ~/.gitconfig — expanding it here would never match
+  # shellcheck disable=SC2088
   if [ "$(git config --global --get core.attributesfile)" = "~/.gitattributes_global" ]; then
     try git config --global --unset core.attributesfile
   fi

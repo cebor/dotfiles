@@ -46,6 +46,7 @@ setup_vim() {
   # below has nothing to read. Under --dry-run sync has not run either, so its
   # absence there is a forecast artefact.
   if [ ! -f "$HOME/.vimrc" ] && [ -z "$DRY_RUN" ]; then
+    # shellcheck disable=SC2088  # message text: ~ is how the user writes the path
     warn "~/.vimrc is not linked — run ./dot sync first; skipping the plugin install"
     return 0
   fi
