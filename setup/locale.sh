@@ -63,8 +63,13 @@ setup_locale() {
     return 1
   fi
 
+  # `has locale-gen` alone is not the right question: the binary lives in
+  # /usr/sbin, which Ubuntu puts on a normal user's PATH and Debian does not — and
+  # it is invoked through `sudo` below, whose secure_path carries /usr/sbin on
+  # both. So on Debian `has` would call it missing and fail a step that would have
+  # worked, which is exactly what `./dot install` did there.
   local gen="/etc/locale.gen"
-  if [ ! -f "$gen" ] || ! has locale-gen; then
+  if [ ! -f "$gen" ] || { ! has locale-gen && [ ! -x /usr/sbin/locale-gen ]; }; then
     # Under --dry-run the packages phase would have installed `locales` before this
     # step ever ran, so its absence here is an artefact of the forecast, not a
     # finding. Same guard as in setup/shell.sh and setup/vim.sh.
