@@ -6,6 +6,21 @@
 setup_git() {
   section "Configuring git"
 
+  # Without git there is nothing to configure — and the read-only `git config
+  # --get` queries below are not wrapped in `run`, so they would really execute
+  # and spray "command not found" across the run, dry or not. Under --dry-run
+  # the prereqs phase only said it *would* install git, so its absence there is
+  # an artefact of the forecast. Same guard as in setup/shell.sh and setup/vim.sh.
+  if ! has git; then
+    if [ -n "$DRY_RUN" ]; then
+      info "git not installed yet — ./dot install installs it before this step"
+      ok "would configure git once it is there"
+      return 0
+    fi
+    warn "git not installed — skipping the git configuration"
+    return 0
+  fi
+
   # every `git config` below is a mutation, so failures have to surface; the
   # closing ok only fires when none of them warned.
   local warnings_before="$LOG_WARNINGS"
