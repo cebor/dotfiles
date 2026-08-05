@@ -44,6 +44,8 @@ exported `$DOTFILES_OS`.
   for prompts. Counts warnings/errors for the run summary.
 - `lib/link.sh` — the symlink engine, plus the two read-only manifest queries `link_stale` and
   `link_orphans`.
+- `test/` — the bats suite behind `./dot test`, plus `ci-deps.sh` and a `Dockerfile` shared with
+  `.gitlab-ci.yml`. See the Tests section under Project Conventions.
 
 ### Symlink model
 
@@ -180,6 +182,37 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
 **not** source `lib/*.sh` or spawn heavy subshells. Use `[[ "$OSTYPE" == ... ]]` globs and
 `command -v`.
 
+### Tests
+
+`./dot test` runs `bash -n`, then `shellcheck -x`, then bats over `test/*.bats`, stopping at the
+first stage that fails. `cmd_test` owns its exit code the way `cmd_doctor` does — a failing test is
+not a failed configuration step, and bats output is not the run report.
+
+The suite exists for the rules in this file that nothing else enforces: the branch order in
+`_link_state`, "a dry run writes nothing at all", the re-quoting in `run`, `_apt_read_list` filling
+a global rather than echoing, the manifest carrying forward a link it failed to remove, the
+stdout/stderr split. **A change to one of those is a change to its test** — if a documented
+invariant is not asserted anywhere, it is prose, which is the state this suite was written to end.
+New invariants come with a test.
+
+- `test/helper.bash` points `$HOME`, `$XDG_STATE_HOME` and `$TMPDIR` at a temp sandbox **before**
+  sourcing anything: `lib/link.sh` binds `LINK_SRC`/`LINK_MANIFEST`/`LINK_BACKUP_ROOT` at source
+  time. Nothing in the suite needs root or the network, and nothing writes outside the sandbox.
+- `lib/log.sh` defines `run` and `skip`, which shadow the bats builtins of the same name. Any file
+  that calls `load_dotfiles` must use **`bats_run`** and `bats_skip`; `test/cli.bats` sources
+  nothing and so uses plain `run`.
+- bats runs test bodies under `set -e`, so a deliberately failing call needs `|| true` — otherwise
+  the test aborts instead of reaching its assertion.
+- `test/cli.bats` drives `./dot` as a subprocess. `dot` calls `main "$@"` at file scope and cannot
+  be sourced; running the real entrypoint is the better coverage anyway, so it stays that way.
+- CI and `test/Dockerfile` both provision through `test/ci-deps.sh`, so the package list has one
+  home. They run the suite as an **unprivileged user** deliberately: the backup-failed and
+  rm-failed paths are forced by making a directory unwritable, root ignores that, and as root those
+  tests would skip and the run would go green for the wrong reason. `skip_if_root` marks them.
+- `$LANG`/`$LC_ALL` are set to `C.UTF-8` in CI: shellcheck echoes the offending source line back,
+  and in the images' default `C` locale the em-dashes in these comments are a hard error
+  (`commitBuffer: invalid argument`), not a garbled character.
+
 ### Dotfile organization
 
 - `home/` — everything that maps into `$HOME`, at its real relative path.
@@ -226,6 +259,9 @@ EditorConfig: 2-space indent, LF.
 - **Modify a macOS setting**: edit `setup/macos-defaults.sh` → `./dot configure macos`.
 - **Change the locale**: edit `LANG` in `home/.exports` → `./dot configure locale`.
 - **Check the setup**: `./dot doctor`, or `./dot sync --status` for links only.
+- **Run the tests**: `./dot test` (syntax → shellcheck → bats, stopping at the first failure), or
+  `docker build -f test/Dockerfile -t dot-test . && docker run --rm dot-test` for a CI-shaped run.
+  A single file: `bats test/link.bats`.
 
 ## Platform Gotchas
 

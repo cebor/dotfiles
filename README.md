@@ -43,6 +43,7 @@ git clone git@github.com:cebor/dotfiles.git ~/code/dotfiles
 | `./dot packages` | Install packages: `Brewfile` on macOS, apt sources + `apt.txt` on Linux |
 | `./dot configure` | Apply configuration: locale, git, login shell, vim, macOS defaults |
 | `./dot doctor` | Health check: links, tools, login shell, locale, git identity |
+| `./dot test` | Syntax check, shellcheck and the bats suite under `test/` |
 | `./dot help` | Usage summary |
 
 | Option | Effect |
@@ -107,9 +108,14 @@ manifest at `~/.local/state/dotfiles/manifest`.
 │   ├── locale.sh          #   generate the LANG from home/.exports (Linux)
 │   ├── git.sh shell.sh vim.sh
 │   └── macos-defaults.sh  #   defaults write / scutil
-└── packages/
-    ├── Brewfile           #   brew, cask, mas
-    └── apt.txt            #   apt list: name [@tag] [# comment]
+├── packages/
+│   ├── Brewfile           #   brew, cask, mas
+│   └── apt.txt            #   apt list: name [@tag] [# comment]
+└── test/                  # bats suite, run by ./dot test
+    ├── helper.bash        #   sandbox $HOME, command stubs, filesystem snapshots
+    ├── *.bats             #   one file per unit under test, plus cli.bats end to end
+    ├── ci-deps.sh         #   what a bare image needs; used by CI and the Dockerfile
+    └── Dockerfile         #   reproduce a CI job locally
 ```
 
 ## What's included
@@ -195,6 +201,44 @@ checks for what it needs and points at `./dot install` rather than installing it
 
 On a Mac without the Xcode CLI tools the bootstrap starts their installer and stops — finish it,
 then run the same command again.
+
+## Development
+
+```sh
+./dot test
+```
+
+runs three stages and stops at the first that fails: `bash -n` over every script, `shellcheck -x`,
+then the [bats](https://github.com/bats-core/bats-core) suite in `test/`. Neither shellcheck nor
+bats is needed to *use* these dotfiles — install them with `brew install shellcheck bats-core` or
+`apt-get install shellcheck bats`. A missing shellcheck is reported and skipped; a missing bats
+fails, because then nothing was tested.
+
+The suite never touches your real home directory: `test/helper.bash` points `$HOME`,
+`$XDG_STATE_HOME` and `$TMPDIR` at a temp sandbox before anything is sourced, and stubs any command
+that would reach the system. It needs no root and no network.
+
+To run it the way CI does, on either target distribution:
+
+```sh
+docker build -f test/Dockerfile -t dot-test .                              # debian:trixie
+docker build --build-arg BASE=ubuntu:24.04 -f test/Dockerfile -t dot-test .
+docker run --rm dot-test
+```
+
+Both distributions are worth running — `is_ubuntu` switches real branches in `packages/apt.txt` and
+`setup/packages-linux.sh`. The container runs the suite as an unprivileged user on purpose: several
+failure paths in `lib/link.sh` are forced by making a directory unwritable, and root ignores that,
+so as root they would skip and the run would go green for the wrong reason.
+
+`.gitlab-ci.yml` runs the same `./dot test` across both images and expects a runner with the docker
+executor.
+
+What the tests are for is less "does bash work" than pinning the decisions this repo documents but
+cannot otherwise enforce: the branch order in `_link_state`, that a dry run writes nothing at all,
+the argument re-quoting in `run`, the manifest carrying forward a link it failed to remove, and the
+two literal carriage returns in `home/.gitignore_global`. Changing one of those on purpose means
+changing its test; having one break by accident is the point.
 
 ## License
 
