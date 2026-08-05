@@ -1,20 +1,33 @@
-# apt package list for Linux (Debian/Ubuntu) - parallels the brew lines in Brewfile.
+# apt package list for Linux (Debian/Ubuntu) — the counterpart to the brew lines
+# in packages/Brewfile.
 #
-# Line format:  name [@tag] [# comment]
+# Line format:
 #
-# Blank lines and '#' comments are ignored. An optional tag restricts the line to
+#   name [@tag] [# comment]
+#
+# Blank lines and '#' comments are ignored. The columns below are cosmetic: the
+# parser collapses the padding. An optional tag restricts the line to the
 # machines it applies to; untagged lines apply everywhere:
 #
 #   @wsl      only under WSL
 #   @!wsl     only outside WSL
-#   @ubuntu   only on Ubuntu (not on plain Debian)
+#   @ubuntu   only on Ubuntu, not on plain Debian
 #
-# This list is the only place package names live. setup/packages-linux.sh sets up
-# the apt sources first (WakeMeOps, the helix PPA, NodeSource) and then installs
-# everything here in one go. Only what apt cannot provide at all is installed
-# separately there: antidote (git clone) and starship (upstream installer).
+# This list is the only place package names live. setup/packages-linux.sh adds
+# the apt sources first (WakeMeOps, the git and helix PPAs, NodeSource) and then
+# installs everything here in one go. Only what apt cannot provide at all is
+# installed separately there: antidote (git clone) and starship (upstream
+# installer).
+#
+# Not listed on purpose:
+#
+#   git-credential-libsecret   not an apt package on Debian/Ubuntu. setup/git.sh
+#                              probes for it and falls back to the 1 h
+#                              credential cache, so git works either way.
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Core / shell
+# ─────────────────────────────────────────────────────────────────────────────
 zsh
 tmux
 coreutils
@@ -22,54 +35,73 @@ findutils
 wget
 rsync
 tree
-procps            # provides `watch`
-locales           # locale-gen, for the LANG in home/.exports (see setup/locale.sh)
+procps                      # provides `watch`
+locales                     # locale-gen, for the LANG in home/.exports (setup/locale.sh)
 
-# Prerequisites. Also installed before the apt sources are added — the source
-# setup needs curl/gpg, and the antidote clone needs git — but listed here so the
-# list stays the full picture.
-git               # from the git-core PPA on Ubuntu (see setup/packages-linux.sh)
+# ─────────────────────────────────────────────────────────────────────────────
+# Prerequisites
+#
+# Also installed before the apt sources are added — the source setup needs
+# curl/gpg and add-apt-repository, the antidote clone needs git — but listed
+# here so this list stays the full picture. Installing them twice costs nothing.
+# ─────────────────────────────────────────────────────────────────────────────
+git                         # upgraded to the git-core PPA build on Ubuntu
 curl
 ca-certificates
-gnupg             # gpg
+gnupg                       # gpg
 software-properties-common  # add-apt-repository, for the git and helix PPAs
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Editors
+# ─────────────────────────────────────────────────────────────────────────────
 vim
-helix @ubuntu     # PPA (see setup/packages-linux.sh); no Debian package exists
+helix             @ubuntu   # from the helix PPA; no Debian package exists
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Python
+# ─────────────────────────────────────────────────────────────────────────────
 python3
 python3-venv
 python3-pip
 ipython3
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Dev tooling
-universal-ctags   # ctags
+# ─────────────────────────────────────────────────────────────────────────────
+universal-ctags             # ctags
 httpie
-nodejs            # NodeSource repo, added by setup/packages-linux.sh
+nodejs                      # from the NodeSource repo
 
-# Kubernetes / ops (WakeMeOps repo — none of these are packaged by Debian)
+# ─────────────────────────────────────────────────────────────────────────────
+# Kubernetes / ops
+#
+# All from the WakeMeOps repo — none of these are packaged by Debian. That repo
+# sits at apt's default priority, so for yq only the version comparison keeps
+# mikefarah's 4.x in front of Debian's; ./dot doctor checks which one landed.
+# ─────────────────────────────────────────────────────────────────────────────
 kubectl
 helm
-yq                # mikefarah's Go yq; Debian's `yq` is the unrelated python jq wrapper
+yq                          # mikefarah's Go yq, not Debian's python jq wrapper
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Networking
+# ─────────────────────────────────────────────────────────────────────────────
 nmap
-mtr-tiny          # mtr (the `mtr` metapackage pulls in GTK)
-wrk               # in universe on Ubuntu (not packaged on Debian)
+mtr-tiny                    # mtr (the `mtr` metapackage pulls in GTK)
+wrk                         # in universe on Ubuntu, not packaged on Debian
 
-# Clipboard, for the pbcopy/pbpaste shims in home/.functions. Under WSL the shims
-# go through win32yank.exe/clip.exe instead, so the X11/Wayland tooling there would
+# ─────────────────────────────────────────────────────────────────────────────
+# Clipboard
+#
+# For the pbcopy/pbpaste shims in home/.functions. Under WSL the shims go
+# through win32yank.exe/clip.exe instead, so the X11/Wayland tooling there would
 # only drag in dependencies nothing ever calls.
-xclip        @!wsl
-wl-clipboard @!wsl
+# ─────────────────────────────────────────────────────────────────────────────
+xclip             @!wsl
+wl-clipboard      @!wsl
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Misc
-bat               # from WakeMeOps as `bat`; Debian's own package installs `batcat`
-wslu @wsl         # wslview, used by the `open` shim in home/.functions
-
-# Not listed on purpose:
-# - git-credential-libsecret is not an apt package on Debian/Ubuntu. setup/git.sh
-#   probes for it and falls back to the 1 h credential cache, so git works
-#   either way.
+# ─────────────────────────────────────────────────────────────────────────────
+bat                         # from WakeMeOps as `bat`; Debian's own installs `batcat`
+wslu              @wsl      # wslview, used by the `open` shim in home/.functions
