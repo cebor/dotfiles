@@ -9,11 +9,25 @@ repo — no copy step to forget, and `git status` shows exactly what drifted.
 
 ## Quick start
 
+On a fresh machine, where not even `git` is installed:
+
 ```sh
-git clone git@github.com:cebor/dotfiles.git ~/code/dotfiles
+curl -fsSL https://gitlab.stkn.org/felix/dotfiles/-/raw/main/bootstrap.sh | bash
+```
+
+That installs `git` (apt on Linux, Xcode CLI tools on macOS), clones the repo to `~/code/dotfiles`
+and stops — nothing else is touched. Then:
+
+```sh
 cd ~/code/dotfiles
 ./dot install
 exec zsh
+```
+
+With `git` and an SSH key already in place, clone it yourself instead and skip the bootstrap:
+
+```sh
+git clone git@github.com:cebor/dotfiles.git ~/code/dotfiles
 ```
 
 `./dot install` is idempotent — it is also the regular update command.
@@ -71,6 +85,7 @@ manifest at `~/.local/state/dotfiles/manifest`.
 
 ```
 .
+├── bootstrap.sh           # curl-able: installs git and clones this repo, nothing more
 ├── dot                    # the only entrypoint
 ├── home/                  # mirrored 1:1 into $HOME
 │   ├── .zshrc             #   sources .exports/.aliases/.functions, then antidote + starship
@@ -170,9 +185,13 @@ matching `core.attributesfile` setting, but the empty file in `$HOME` is yours t
 
 ## Requirements
 
-macOS or Debian/Ubuntu (incl. WSL2), `git` to clone this repo, and `sudo` rights for package
-installation. Nothing else has to be installed by hand — `curl`, `gnupg` and the rest are
-prerequisites `./dot install` installs for itself, before it adds the apt sources that need them.
+macOS or Debian/Ubuntu (incl. WSL2), `curl` to fetch the bootstrap, and `sudo` rights for package
+installation. Nothing else has to be installed by hand: `bootstrap.sh` brings the `git` that clones
+the repo, and `curl`, `gnupg` and the rest are prerequisites `./dot install` installs for itself,
+before it adds the apt sources that need them.
+
+On a Mac without the Xcode CLI tools the bootstrap starts their installer and stops — finish it,
+then run the same command again.
 
 ## License
 

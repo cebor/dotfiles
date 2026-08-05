@@ -13,8 +13,16 @@ exported `$DOTFILES_OS`.
 
 ### Key components
 
-- `dot` — the only executable. Parses global flags, sources `lib/*.sh` once, then sources the
-  needed `setup/*.sh` and calls its function. Everything else is sourced, never executed.
+- `bootstrap.sh` — the one executable besides `dot`, and the only file that runs before the repo
+  exists: fetched by `curl` on a bare machine, it installs `git` (apt, or the Xcode CLI tools on
+  macOS), clones the repo over HTTPS and stops, pointing at `./dot install`. It therefore **cannot
+  source `lib/*.sh`** — none of it is on the machine yet — so its output helpers are deliberate
+  duplicates of `lib/log.sh` and must stay self-contained. Piped into bash it has the script on
+  stdin, so nothing in it may prompt. Not to be confused with `setup/bootstrap.sh`, which is the
+  macOS system phase *of* `install`.
+- `dot` — the only entrypoint. Parses global flags, sources `lib/*.sh` once, then sources the
+  needed `setup/*.sh` and calls its function. Everything under `lib/` and `setup/` is sourced,
+  never executed.
   `main` owns the run summary and the exit code for every mutating command: non-zero when
   `$LOG_ERRORS > 0` or the command itself returned non-zero, warnings reported but not fatal.
   `doctor` and `help` report themselves and return early.
@@ -89,8 +97,9 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
     `apt.txt` batch having gone through, the same guarantee the `has curl` gate gives curl. On
     Ubuntu the batch then upgrades it to the PPA version. They all stay listed in `apt.txt` as
     well — installing them twice costs nothing, and that list has to remain the full picture.
-    Between the two, the only thing a bare machine needs by hand is the `git` that cloned the
-    repo; `README.md`'s Requirements section says exactly that and should keep saying it.
+    Between those and `bootstrap.sh`, which brings the `git` that clones the repo, the only thing
+    a bare machine needs by hand is the `curl` that fetches the bootstrap; `README.md`'s
+    Requirements section says exactly that and should keep saying it.
 - `packages/apt.txt` is the only place Linux package names live. Line format:
   `name [@tag] [# comment]`, with the optional tag one of `@wsl`, `@!wsl` or `@ubuntu` — that is
   how `wslu` stays WSL-only, `xclip`/`wl-clipboard` non-WSL-only (the shims use
