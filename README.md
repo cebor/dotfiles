@@ -38,7 +38,7 @@ git clone git@github.com:cebor/dotfiles.git ~/code/dotfiles
 
 | Command | What it does |
 | --- | --- |
-| `./dot install` | Everything: bootstrap → sync → packages → configure |
+| `./dot install` | Everything: prerequisites → sync → packages → configure |
 | `./dot sync` | Symlink `home/` into `$HOME` — dotfiles and configs only |
 | `./dot packages` | Install packages: `Brewfile` on macOS, apt sources + `apt.txt` on Linux |
 | `./dot configure` | Apply configuration: locale, git, login shell, vim, macOS defaults |
@@ -101,7 +101,7 @@ manifest at `~/.local/state/dotfiles/manifest`.
 │   ├── log.sh             #   section/info/ok/warn/err, prompts, dry-run `run`
 │   └── link.sh            #   symlink engine: link, backup, prune, status
 ├── setup/                 # one file per step, one function each
-│   ├── bootstrap.sh       #   macOS: Xcode CLI tools + Homebrew
+│   ├── prereqs.sh         #   Xcode CLI tools + Homebrew / the apt prerequisites
 │   ├── packages.sh        #   dispatches to brew bundle or packages-linux.sh
 │   ├── packages-linux.sh  #   apt sources, then the apt list, then the rest
 │   ├── locale.sh          #   generate the LANG from home/.exports (Linux)
@@ -140,7 +140,7 @@ xclip, and wslview / xdg-open) so the same functions work in WSL.
 | | macOS | Linux / WSL2 |
 | --- | --- | --- |
 | Packages | `packages/Brewfile` (brew, cask, mas) | `packages/apt.txt` (+ WakeMeOps, git PPA, helix PPA, NodeSource) |
-| Bootstrap | Xcode CLI tools + Homebrew | none needed |
+| Prerequisites | Xcode CLI tools + Homebrew | apt: `git`, `curl`, `ca-certificates`, `gnupg` (+ `software-properties-common` on Ubuntu) |
 | Git credentials | `osxkeychain` | libsecret, else 1 h cache |
 | Clipboard | native `pbcopy`/`pbpaste` | shims in `home/.functions` |
 | Browser | native `open` | `wslview` (WSL) / `xdg-open` |
@@ -187,8 +187,11 @@ matching `core.attributesfile` setting, but the empty file in `$HOME` is yours t
 
 macOS or Debian/Ubuntu (incl. WSL2), `curl` to fetch the bootstrap, and `sudo` rights for package
 installation. Nothing else has to be installed by hand: `bootstrap.sh` brings the `git` that clones
-the repo, and `curl`, `gnupg` and the rest are prerequisites `./dot install` installs for itself,
-before it adds the apt sources that need them.
+the repo, and `curl`, `gnupg` and the rest are prerequisites `./dot install` installs for itself, in
+its own first phase, before it adds the apt sources that need them.
+
+That first phase is why `./dot packages` on its own expects an already-provisioned machine: it
+checks for what it needs and points at `./dot install` rather than installing it.
 
 On a Mac without the Xcode CLI tools the bootstrap starts their installer and stops — finish it,
 then run the same command again.

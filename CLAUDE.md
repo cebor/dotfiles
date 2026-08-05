@@ -6,7 +6,8 @@ Guidance for working in this repository.
 
 Cross-platform (macOS + WSL2/Debian) dotfiles with a **single entrypoint**: three phases
 (`sync`, `packages`, `configure`), each runnable on its own, wrapped by `install` (all three, with
-the macOS bootstrap first when needed) and the read-only `doctor`. `./dot help` has the full usage.
+the system prerequisites first, on both platforms) and the read-only `doctor`. `./dot help` has the
+full usage.
 
 The platform is auto-detected (`uname` via `lib/os.sh`); `--linux` forces the Linux path via the
 exported `$DOTFILES_OS`.
@@ -18,8 +19,18 @@ exported `$DOTFILES_OS`.
   macOS), clones the repo over HTTPS and stops, pointing at `./dot install`. It therefore **cannot
   source `lib/*.sh`** — none of it is on the machine yet — so its output helpers are deliberate
   duplicates of `lib/log.sh` and must stay self-contained. Piped into bash it has the script on
-  stdin, so nothing in it may prompt. Not to be confused with `setup/bootstrap.sh`, which is the
-  macOS system phase *of* `install`.
+  stdin, so nothing in it may prompt. Not to be confused with `setup/prereqs.sh`, which is the
+  system-prerequisites phase *of* `install`.
+- `setup/prereqs.sh` — what has to be in place before `packages` can run: the Xcode CLI tools and
+  Homebrew on macOS, the apt packages the third-party sources need on Linux (`git curl
+  ca-certificates gnupg`, plus `software-properties-common` on Ubuntu). It is the **only** step
+  `install` runs before `sync`, and the only one whose failure can be fatal: on macOS `cmd_install`
+  turns it into `die`, because without the CLI tools or brew every phase below is the same failure
+  over again; on Linux it only sets `rc=1`, because `sync` and `configure` still have work to do.
+  Deliberately no apt sources here — this step installs the tools the source step *needs*
+  (`curl`, `gnupg`, `add-apt-repository`), the source step uses them, and a repo added without the
+  `apt.txt` batch behind it would leave a machine with a source and none of its packages. `git` and
+  `curl` come from the distro repo; on Ubuntu the later batch upgrades git to the PPA version.
 - `dot` — the only entrypoint. Parses global flags, sources `lib/*.sh` once, then sources the
   needed `setup/*.sh` and calls its function. Everything under `lib/` and `setup/` is sourced,
   never executed.
@@ -91,12 +102,13 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
     `yq` is where it bites: Debian ships a *different* tool under that name (a python wrapper
     around jq, 3.x). Only the version comparison keeps mikefarah's 4.x in front, so `./dot doctor`
     checks which `yq` actually landed rather than assume.
-  - Prerequisites (`curl`, `ca-certificates`, `gnupg`, plus `software-properties-common` on
-    Ubuntu) are installed *before* the sources, because the source setup itself needs them. `git`
-    is in that list for a different reason — the antidote clone in step 4 must not depend on the
-    `apt.txt` batch having gone through, the same guarantee the `has curl` gate gives curl. On
-    Ubuntu the batch then upgrades it to the PPA version. They all stay listed in `apt.txt` as
-    well — installing them twice costs nothing, and that list has to remain the full picture.
+  - The prerequisites the sources need are installed by `setup/prereqs.sh`, one phase earlier;
+    step 1 here only *checks* for them (`curl`, `gpg`, and `add-apt-repository` on Ubuntu) and
+    `err`s pointing at `./dot install` — the same shape as the `has brew` check in
+    `setup/packages.sh`, and the reason `./dot packages` is no longer self-sufficient on a bare
+    machine. `git` is in that prereq list for a reason of its own: the antidote clone in step 4
+    must not depend on the `apt.txt` batch having gone through. They all stay listed in `apt.txt`
+    as well — installing them twice costs nothing, and that list has to remain the full picture.
     Between those and `bootstrap.sh`, which brings the `git` that clones the repo, the only thing
     a bare machine needs by hand is the `curl` that fetches the bootstrap; `README.md`'s
     Requirements section says exactly that and should keep saying it.

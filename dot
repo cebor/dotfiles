@@ -2,7 +2,7 @@
 #
 # dot — single entrypoint for these dotfiles.
 #
-#   ./dot install     everything: bootstrap, sync, packages, configure
+#   ./dot install     everything: prereqs, sync, packages, configure
 #   ./dot sync        symlink home/ into $HOME
 #   ./dot packages    install packages for this platform
 #   ./dot configure   apply configuration (locale, git, shell, vim, macOS defaults)
@@ -31,7 +31,7 @@ usage() {
 Usage: ./dot <command> [options]
 
 Commands:
-  install            Full setup: bootstrap → sync → packages → configure
+  install            Full setup: prereqs → sync → packages → configure
   sync               Symlink home/ into $HOME (dotfiles and configs only)
   packages           Install packages: Brewfile on macOS, apt sources + apt.txt on Linux
   configure [step]   Apply configuration; step = locale | git | shell | vim | macos
@@ -132,15 +132,19 @@ cmd_install() {
   printf '%s%sdotfiles — %s%s\n' "$C_BOLD" "$C_BLUE" "$OS" "$C_RESET"
   [ -n "$DRY_RUN" ] && info "dry run: nothing will be modified"
 
-  # before the gate below, not after: an existing Homebrew that is merely not on
-  # this process's PATH would otherwise look uninstalled and send bootstrap off
+  # before the prereqs step, not after: an existing Homebrew that is merely not
+  # on this process's PATH would otherwise look uninstalled and send the step off
   # to run the Homebrew installer over it
   is_macos && brew_shellenv
 
-  if is_macos && { ! has brew || ! xcode-select -p &>/dev/null; }; then
-    # shellcheck source=setup/bootstrap.sh
-    source "$DOTFILES_ROOT/setup/bootstrap.sh"
-    setup_bootstrap || die "bootstrap incomplete"
+  # shellcheck source=setup/prereqs.sh
+  source "$DOTFILES_ROOT/setup/prereqs.sh"
+  # On macOS a failed prereqs step is fatal: without the CLI tools or Homebrew
+  # every phase below is the same failure over again. On Linux it only gates
+  # `packages` — sync and configure still have work to do, so it just counts.
+  if ! setup_prereqs; then
+    is_macos && die "prerequisites incomplete"
+    rc=1
   fi
 
   # every phase runs even when an earlier one failed — that is the whole point of

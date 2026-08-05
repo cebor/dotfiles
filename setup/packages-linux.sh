@@ -7,6 +7,10 @@
 # whole of packages/apt.txt. Only what apt cannot carry at all is installed after
 # that — antidote (git clone) and starship (upstream installer).
 #
+# The tools all of that needs (curl, gnupg, git, add-apt-repository) come from
+# setup/prereqs.sh, which `./dot install` runs first; this step only checks that
+# they are there.
+#
 # Every step is guarded, so re-running is cheap.
 
 # The apt names that apply to this machine, filled by _apt_read_list.
@@ -152,28 +156,25 @@ setup_packages_linux() {
   local unavailable=0
 
   # --- 1. prerequisites -------------------------------------------------------
-  # The sources below need curl, gpg and — on Ubuntu — add-apt-repository before
-  # any third-party repo exists, so these cannot wait for the apt.txt batch that
-  # comes after them. git is here for a different reason: step 4 clones antidote
-  # with it, and that must not depend on the apt.txt batch having gone through —
-  # the same guarantee the curl gate below gives. They are listed in apt.txt too:
-  # installing them twice costs nothing, and that list stays the full picture of
-  # what a machine gets. On Ubuntu the batch then upgrades git to the PPA version.
-  local prereqs="git curl ca-certificates gnupg"
-  is_ubuntu && prereqs="$prereqs software-properties-common"
-
-  info "apt prerequisites"
-  run sudo apt-get update || warn "apt-get update failed — package versions may be stale"
-  # shellcheck disable=SC2086 # deliberate word splitting: one arg per package
-  run sudo apt-get install -y $prereqs ||
-    warn "could not install the prerequisites ($prereqs) — the apt sources below may fail"
-
-  # Everything from here on downloads over the network. Without curl there is no
-  # point in trying, and the errors would be a confusing cascade.
-  if ! has curl && [ -z "$DRY_RUN" ]; then
-    err "curl is missing — skipping the apt sources and the upstream installers"
-    return 1
+  # setup/prereqs.sh installs these; `./dot packages` on its own never ran it, so
+  # the tools the sources below need may simply not be there. The same situation
+  # as a macOS run without Homebrew, and reported the same way (see
+  # setup/packages.sh) — everything from here on downloads over the network, and
+  # without those the errors would be a confusing cascade.
+  local missing=""
+  has curl || missing="$missing curl"
+  has gpg  || missing="$missing gpg"
+  is_ubuntu && { has add-apt-repository || missing="$missing software-properties-common"; }
+  if [ -n "$missing" ]; then
+    # Under --dry-run their absence is an artefact of the forecast: setup_prereqs
+    # only said it *would* install them. Same guard as in setup/packages.sh.
+    if [ -z "$DRY_RUN" ]; then
+      err "prerequisites missing:$missing — run ./dot install"
+      return 1
+    fi
+    info "prerequisites not installed yet — ./dot install installs them before this step"
   fi
+
   # Every `curl … | interpreter` below starts with `set -o pipefail`, and it is
   # what makes the surrounding `if` mean anything: a pipeline reports the status
   # of its *last* command, so a failed download hands an empty script to sh/bash,

@@ -12,18 +12,18 @@ setup_packages() {
   local rc=0
 
   if is_macos; then
-    # `./dot packages` on its own never ran bootstrap, so brew may be installed
-    # without being on this process's PATH — same reason as in cmd_install
+    # `./dot packages` on its own never ran setup/prereqs.sh, so brew may be
+    # installed without being on this process's PATH — same as in cmd_install
     brew_shellenv
-    # On a fresh Mac under --dry-run, bootstrap only said it *would* install
-    # Homebrew, so its absence here is an artefact of the forecast. Same guard as
-    # in setup/vim.sh and setup/shell.sh.
+    # On a fresh Mac under --dry-run, the prereqs step only said it *would*
+    # install Homebrew, so its absence here is an artefact of the forecast. Same
+    # guard as in setup/vim.sh and setup/shell.sh.
     if ! has brew; then
       if [ -z "$DRY_RUN" ]; then
-        err "Homebrew missing — run ./dot install to bootstrap first"
+        err "Homebrew missing — run ./dot install"
         return 1
       fi
-      info "Homebrew not installed yet — ./dot install bootstraps it before this step"
+      info "Homebrew not installed yet — ./dot install installs it before this step"
       ok "would install the Brewfile packages once Homebrew is there"
       return 0
     fi

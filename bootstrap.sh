@@ -4,8 +4,8 @@
 # this repo over HTTPS, and stops there. `./dot install` stays a second, separate
 # decision.
 #
-# Not to be confused with setup/bootstrap.sh, which is the macOS system phase
-# *of* `./dot install`. This one runs before the repo exists, which is also why
+# Not to be confused with setup/prereqs.sh, which is the system-prerequisites
+# phase *of* `./dot install`. This one runs before the repo exists, which is why
 # it may not source lib/*.sh: none of it is on the machine yet, so the output
 # helpers below are deliberate duplicates.
 #
