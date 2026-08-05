@@ -81,39 +81,8 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
 - **Linux**: sources first, packages second. `setup/packages-linux.sh` adds every third-party apt
   source up front, then **one** `apt-get install` pulls the whole of `packages/apt.txt`. Only what
   apt cannot carry at all comes after: antidote (git clone `~/.antidote`) and starship (upstream
-  installer).
-  - Sources: **WakeMeOps** (`deb.wakemeops.com`, components `devops terminal`) for `kubectl`,
-    `helm`, `yq` and `bat`; the **git PPA** (`ppa:git-core/ppa`, Ubuntu only — upstream's own
-    stable build, and there is no Debian equivalent); the **helix PPA** (Ubuntu only — no Debian
-    *and* no Ubuntu package named `helix` exists); **NodeSource** for `nodejs`.
-  - A source whose package exists anyway only **warns** on failure and returns 0 — git and
-    NodeSource, where the run still ends with a git/node, just the distro's older one. helix
-    `err`s and counts as a failed step, because there the PPA is the only source there is. Both
-    Ubuntu-only sources `skip` on Debian rather than warn: nothing the step could do about it,
-    and warning would leave every run on such a machine with a count it can never clear.
-  - Each `_apt_repo_*` is guarded by its sources file, never by `has <tool>`: WakeMeOps on the
-    exact `Components:` line (so changing the component list reaches machines that already have
-    the repo), NodeSource, git and helix by grepping `sources.list.d/` for the repo host (so a
-    node from nvm cannot stop the repo from being added). A `has` guard would freeze them on
-    whatever the machine got first. Only WakeMeOps names a file, because the line it needs is *in*
-    that file; the others grep the directory, because apt takes both the old `.list` and the
-    deb822 `.sources` format and upstream installers switch between them without notice — a
-    filename guard stops matching the day that happens, silently re-running the installer on
-    every `./dot packages`.
-  - WakeMeOps sits at apt's default priority 500, unpinned. That is a deliberate choice, and
-    `yq` is where it bites: Debian ships a *different* tool under that name (a python wrapper
-    around jq, 3.x). Only the version comparison keeps mikefarah's 4.x in front, so `./dot doctor`
-    checks which `yq` actually landed rather than assume.
-  - The prerequisites the sources need are installed by `setup/prereqs.sh`, one phase earlier;
-    step 1 here only *checks* for them (`curl`, `gpg`, and `add-apt-repository` on Ubuntu) and
-    `err`s pointing at `./dot install` — the same shape as the `has brew` check in
-    `setup/packages.sh`, and the reason `./dot packages` is no longer self-sufficient on a bare
-    machine. `git` is in that prereq list for a reason of its own: the antidote clone in step 4
-    must not depend on the `apt.txt` batch having gone through. They all stay listed in `apt.txt`
-    as well — installing them twice costs nothing, and that list has to remain the full picture.
-    Between those and `bootstrap.sh`, which brings the `git` that clones the repo, the only thing
-    a bare machine needs by hand is the `curl` that fetches the bootstrap; `README.md`'s
-    Requirements section says exactly that and should keep saying it.
+  installer). The sources themselves — which repo, which guard, which failure policy — are
+  documented in `setup/CLAUDE.md`, next to the code that adds them.
 - `packages/apt.txt` is the only place Linux package names live. Line format:
   `name [@tag] [# comment]`, with the optional tag one of `@wsl`, `@!wsl` or `@ubuntu` — that is
   how `wslu` stays WSL-only, `xclip`/`wl-clipboard` non-WSL-only (the shims use
@@ -195,23 +164,8 @@ stdout/stderr split. **A change to one of those is a change to its test** — if
 invariant is not asserted anywhere, it is prose, which is the state this suite was written to end.
 New invariants come with a test.
 
-- `test/helper.bash` points `$HOME`, `$XDG_STATE_HOME` and `$TMPDIR` at a temp sandbox **before**
-  sourcing anything: `lib/link.sh` binds `LINK_SRC`/`LINK_MANIFEST`/`LINK_BACKUP_ROOT` at source
-  time. Nothing in the suite needs root or the network, and nothing writes outside the sandbox.
-- `lib/log.sh` defines `run` and `skip`, which shadow the bats builtins of the same name. Any file
-  that calls `load_dotfiles` must use **`bats_run`** and `bats_skip`; `test/cli.bats` sources
-  nothing and so uses plain `run`.
-- bats runs test bodies under `set -e`, so a deliberately failing call needs `|| true` — otherwise
-  the test aborts instead of reaching its assertion.
-- `test/cli.bats` drives `./dot` as a subprocess. `dot` calls `main "$@"` at file scope and cannot
-  be sourced; running the real entrypoint is the better coverage anyway, so it stays that way.
-- CI and `test/Dockerfile` both provision through `test/ci-deps.sh`, so the package list has one
-  home. They run the suite as an **unprivileged user** deliberately: the backup-failed and
-  rm-failed paths are forced by making a directory unwritable, root ignores that, and as root those
-  tests would skip and the run would go green for the wrong reason. `skip_if_root` marks them.
-- `$LANG`/`$LC_ALL` are set to `C.UTF-8` in CI: shellcheck echoes the offending source line back,
-  and in the images' default `C` locale the em-dashes in these comments are a hard error
-  (`commitBuffer: invalid argument`), not a garbled character.
+The harness mechanics — sandbox setup, the `run`/`skip` name clash with bats, the CI image — are
+documented in `test/CLAUDE.md`, next to the suite.
 
 ### Dotfile organization
 
@@ -241,12 +195,8 @@ EditorConfig: 2-space indent, LF.
 
 ## Custom Functions to Preserve
 
-- `svenv()` — walks upward to find and activate `venv`/`.venv`, with `✓/✗` feedback.
-- `scpp()` — `scp` to stkn.org, sets perms, copies URL to clipboard via `pbcopy` (shim on Linux).
-- `tunnel()` — SSH port forwarding.
-- `pwgen()` — `openssl rand -base64` with configurable length.
-- `server()` — `python3 -m http.server` with auto-open browser via `open` (shim on Linux).
-- `f()` — `find . -name "$1"`.
+The functions in `home/.functions` (`svenv`, `scpp`, `tunnel`, `pwgen`, `server`, `f`) are
+load-bearing — do not remove them or rewrite their behavior.
 
 ## Common Tasks
 
