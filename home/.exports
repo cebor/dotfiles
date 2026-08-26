@@ -15,3 +15,10 @@ export DISABLE_AUTO_UPDATE=true
 
 # WSL: default browser (used by the `open` shim / xdg)
 grep -qi microsoft /proc/version 2>/dev/null && export BROWSER=wslview
+
+# default editor - guarded, so machines without helix fall back to the system default
+if command -v hx &>/dev/null; then
+  export EDITOR=hx
+  export VISUAL=hx
+  export SYSTEMD_EDITOR=hx
+fi
