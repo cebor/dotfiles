@@ -89,3 +89,21 @@ dot" ]
   run find "$REPO/home" -type l
   [ -z "$output" ]
 }
+
+@test "home/.zshrc sets up Homebrew's PATH before it sources anything" {
+  local zshrc brew exports antidote
+  zshrc="$REPO/home/.zshrc"
+  brew="$(grep -n 'brew shellenv' "$zshrc" | head -n 1 | cut -d: -f1)"
+  exports="$(grep -n 'exports,aliases,functions' "$zshrc" | head -n 1 | cut -d: -f1)"
+  antidote="$(grep -n 'HOMEBREW_PREFIX' "$zshrc" | head -n 1 | cut -d: -f1)"
+
+  [ -n "$brew" ] && [ -n "$exports" ] && [ -n "$antidote" ]
+  [ "$brew" -lt "$exports" ] || {
+    echo "brew shellenv (line $brew) must come before the sourcing loop (line $exports)"
+    return 1
+  }
+  [ "$brew" -lt "$antidote" ] || {
+    echo "brew shellenv (line $brew) must come before the antidote block (line $antidote)"
+    return 1
+  }
+}

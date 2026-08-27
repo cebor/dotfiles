@@ -1,14 +1,14 @@
-for file in ~/.{exports,aliases,functions}; do
-    [ -e "$file" ] && source "$file"
-done
-unset file
-
 # Homebrew (macOS): sets up PATH and provides `brew --prefix`
 if [ -x /opt/homebrew/bin/brew ]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 elif [ -x /usr/local/bin/brew ]; then
   eval "$(/usr/local/bin/brew shellenv)"
 fi
+
+for file in ~/.{exports,aliases,functions}; do
+    [ -e "$file" ] && source "$file"
+done
+unset file
 
 # antidote: brew keg on macOS, ~/.antidote clone on Linux.
 # $HOMEBREW_PREFIX comes from the shellenv above — `brew --prefix` would fork a
