@@ -3,9 +3,9 @@
 # Linux package installation (Debian/Ubuntu) — the counterpart to `brew bundle`.
 #
 # Sources first, packages second: every third-party apt source is added up front
-# (WakeMeOps, the helix PPA, NodeSource), then a single apt-get install pulls the
-# whole of packages/apt.txt. Only what apt cannot carry at all is installed after
-# that — antidote (git clone) and starship (upstream installer).
+# (WakeMeOps, the git and helix PPAs, NodeSource), then a single apt-get install
+# pulls the whole of packages/apt.txt. Only what apt cannot carry at all is
+# installed after that — antidote (git clone) and starship (upstream installer).
 #
 # The tools all of that needs (curl, gnupg, git, add-apt-repository) come from
 # setup/prereqs.sh, which `./dot install` runs first; this step only checks that

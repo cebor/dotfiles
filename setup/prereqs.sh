@@ -58,8 +58,8 @@ _prereqs_macos() {
     # Via a temp file, not `/bin/bash -c "$(curl …)"`: a failed fetch makes the
     # command substitution empty and `bash -c ""` exits 0. pipefail cannot catch
     # that — this is a substitution, not a pipeline — so fetch and run are
-    # separated and an empty body is caught by -s. Same shape as the yq/kubectl
-    # installs in packages-linux.sh. The download stays inside `run bash -c '…'`:
+    # separated and an empty body is caught by -s. Same shape as the vim-plug
+    # download in setup/vim.sh. The download stays inside `run bash -c '…'`:
     # as an argument it would be fetched even under --dry-run.
     if run bash -c "tmp=\$(mktemp) &&
         curl -fsSL -o \"\$tmp\" https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh &&

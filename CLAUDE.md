@@ -163,10 +163,12 @@ not a failed configuration step, and bats output is not the run report.
 
 The suite exists for the rules in this file that nothing else enforces: the branch order in
 `_link_state`, "a dry run writes nothing at all", the re-quoting in `run`, `_apt_read_list` filling
-a global rather than echoing, the manifest carrying forward a link it failed to remove, the
-stdout/stderr split. **A change to one of those is a change to its test** — if a documented
-invariant is not asserted anywhere, it is prose, which is the state this suite was written to end.
-New invariants come with a test.
+a global rather than echoing, the manifest carrying forward a link it failed to remove — in
+`link_tree` *and* in `link_unlink` — the stdout/stderr split, and that `home/.zshrc` defines
+`has_brew` before `antidote load`. `README.md` repeats the list; keep the two in step.
+**A change to one of those is a change to its test** — if a documented invariant is not asserted
+anywhere, it is prose, which is the state this suite was written to end. New invariants come with
+a test.
 
 The harness mechanics — sandbox setup, the `run`/`skip` name clash with bats, the CI image — are
 documented in `test/CLAUDE.md`, next to the suite.
@@ -208,8 +210,8 @@ EditorConfig: 2-space indent, LF.
 
 ## Custom Functions to Preserve
 
-The functions in `home/.functions` (`svenv`, `scpp`, `tunnel`, `pwgen`, `server`, `f`) are
-load-bearing — do not remove them or rewrite their behavior.
+The functions in `home/.functions` (`svenv`, `scpp`, `tunnel`, `pwgen`, `server`, `f`, `bump`,
+`dcl`) are load-bearing — do not remove them or rewrite their behavior.
 
 ## Common Tasks
 

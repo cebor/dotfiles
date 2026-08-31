@@ -251,8 +251,10 @@ executor.
 
 What the tests are for is less "does bash work" than pinning the decisions this repo documents but
 cannot otherwise enforce: the branch order in `_link_state`, that a dry run writes nothing at all,
-the argument re-quoting in `run`, the manifest carrying forward a link it failed to remove, and the
-two literal carriage returns in `home/.config/git/ignore`. Changing one of those on purpose means
+the argument re-quoting in `run`, `_apt_read_list` filling a global rather than echoing, the
+manifest carrying forward a link it failed to remove — in `link_tree` *and* in `link_unlink` — the
+stdout/stderr split, and the two literal carriage returns in `home/.config/git/ignore`. `CLAUDE.md`
+keeps the authoritative list; this one has to match it. Changing one of those on purpose means
 changing its test; having one break by accident is the point.
 
 ## License

@@ -128,7 +128,10 @@ skip_if_root() {
 # Run a bash snippet with a real pty on stdin, fed with $1. Without this the
 # `[ -t 0 ]` guards in confirm/ask short-circuit and the interactive branches —
 # where the stdout/stderr split actually matters — are unreachable.
-# The snippet's stdout and stderr land in $SANDBOX/out and $SANDBOX/err.
+# with_tty itself discards both channels; the snippet is expected to redirect
+# them where the test wants them (the callers in log.bats use $SANDBOX/out and
+# $SANDBOX/err).
+
 #
 # util-linux script(1) only; BSD script takes its command differently. The
 # snippet must contain no single quotes: it is passed through `bash -c '…'`.
