@@ -191,9 +191,18 @@ Backups of replaced files live in `~/.dotfiles-backup/<timestamp>/` and are neve
 automatically.
 
 Coming from the older rsync-based layout, `$HOME` still holds real copies rather than links — the
-first `./dot sync` backs each one up before linking. One leftover it cannot clean up is
-`~/.gitattributes_global`: the file is gone from the repo and `./dot configure git` drops the
-matching `core.attributesfile` setting, but the empty file in `$HOME` is yours to delete.
+first `./dot sync` backs each one up before linking. What it cannot clean up is what the old
+layout wrote into `~/.gitconfig`: `3a01b9b` dropped the migration guards along with
+`core.excludesfile` itself, both machines being past that point. On one that is not, clear the two
+settings by hand — a `core.excludesfile` still naming `~/.gitignore_global` hides
+`~/.config/git/ignore` entirely, because git reads the file that setting names rather than both:
+
+```sh
+git config --global --unset core.excludesfile
+git config --global --unset core.attributesfile
+```
+
+The files themselves, `~/.gitignore_global` and `~/.gitattributes_global`, are yours to delete.
 
 ## Requirements
 

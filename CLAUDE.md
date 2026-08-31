@@ -176,7 +176,11 @@ documented in `test/CLAUDE.md`, next to the suite.
 - `home/` — everything that maps into `$HOME`, at its real relative path.
 - OS differences stay **inline** in the config files, not in per-OS overlay directories.
 - Git config is applied imperatively by `setup/git.sh`; there is no static `.gitconfig`.
-  `user.name`/`user.email` are prompted only when unset.
+  `user.name`/`user.email` are prompted only when unset. It sets no `core.excludesfile` and no
+  migration guards for the pre-XDG layout — `3a01b9b` dropped those on purpose, both machines
+  being past that point. On a machine that is not, a leftover `core.excludesfile` hides
+  `~/.config/git/ignore` entirely (git reads the file the setting names, not both), so it has to
+  be cleared by hand.
 - The global ignore file lives at `home/.config/git/ignore`, which is git's own default
   (`$XDG_CONFIG_HOME/git/ignore`) — so `core.excludesfile` is deliberately **not** set: leaving it
   unset is what makes the file take effect. The one thing this trades away is a custom
