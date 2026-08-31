@@ -22,8 +22,9 @@ is_linux() { [ "$OS" = "linux" ]; }
 # WSL exposes "microsoft" in the kernel version string
 is_wsl() { grep -qi microsoft /proc/version 2>/dev/null; }
 
-# Ubuntu (or a derivative — ID_LIKE also matches) as opposed to plain Debian.
-# Some upstreams only ship a PPA, which apt can only add on the Ubuntu side.
+# Ubuntu, or a derivative — the match is over the whole of /etc/os-release, so
+# ID_LIKE counts too. Backs the @ubuntu tag in packages/apt.txt, for a package
+# that a derivative might not carry.
 is_ubuntu() { grep -qi ubuntu /etc/os-release 2>/dev/null; }
 
 # single idiom for "is this command available?"

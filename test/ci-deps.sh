@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# What the test suite needs on a bare Debian/Ubuntu image, and the unprivileged
+# What the test suite needs on a bare Ubuntu image, and the unprivileged
 # user it runs as. Deliberately not executable and never sourced: both
 # test/Dockerfile and .gitlab-ci.yml call it as `bash test/ci-deps.sh`, so the
 # package list has exactly one home.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Linux package installation (Debian/Ubuntu) — the counterpart to `brew bundle`.
+# Linux package installation (Ubuntu) — the counterpart to `brew bundle`.
 #
 # Sources first, packages second: every third-party apt source is added up front
 # (WakeMeOps, the git and helix PPAs, NodeSource), then a single apt-get install
@@ -43,7 +43,7 @@ _apt_read_list() {
   done < "$DOTFILES_ROOT/packages/apt.txt"
 }
 
-# WakeMeOps — a signed Debian repo (https://docs.wakemeops.com) carrying kubectl,
+# WakeMeOps — a signed apt repo (https://docs.wakemeops.com) carrying kubectl,
 # helm, yq and bat, which apt would otherwise not provide in a usable version.
 # Only the two components we want; the installer's default is all five
 # (dev devops secops terminal desktop).
@@ -62,8 +62,8 @@ _apt_repo_wakemeops() {
 
   info "Adding the WakeMeOps repo ($components)..."
   # the installer writes its keyring straight into /etc/apt/keyrings without
-  # creating the directory — it ships with Debian 12 / Ubuntu 22.04 and later,
-  # but not with anything older
+  # creating the directory — it ships with Ubuntu 22.04 and later, but not with
+  # anything older
   if run sudo mkdir -p /etc/apt/keyrings &&
      run bash -c "set -o pipefail
        curl -fsSL https://raw.githubusercontent.com/upciti/wakemeops/main/assets/install_repository \
@@ -74,21 +74,14 @@ _apt_repo_wakemeops() {
   return 1
 }
 
-# git — Debian and Ubuntu both ship a git that is a year or more behind. This PPA
-# is upstream's own stable build for Ubuntu; there is no Debian equivalent, so
-# plain Debian keeps the distro git.
+# git — the distro ships a git that is a year or more behind. This PPA is
+# upstream's own stable build.
 #
 # The guard greps the directory rather than naming a file, for the same reason as
 # the NodeSource one: add-apt-repository writes `.list` on older Ubuntu and
 # deb822 `.sources` from 24.04 on, and a filename guard would silently stop
 # matching — re-running add-apt-repository on every ./dot packages.
 _apt_repo_git() {
-  if ! is_ubuntu; then
-    # a skip, not a warning, for the same reason as helix below: nothing this step
-    # could do about it on Debian, and its git works — it is only older
-    skip "git ppa (Ubuntu only — Debian keeps the distro git)"
-    return 0
-  fi
   if grep -rqs git-core /etc/apt/sources.list.d/; then
     skip "git ppa"
     return 0
@@ -103,15 +96,8 @@ _apt_repo_git() {
   return 0
 }
 
-# helix — there is no Debian package and no Ubuntu package either, only this PPA.
+# helix — there is no apt package under that name, only this PPA.
 _apt_repo_helix() {
-  if ! is_ubuntu; then
-    # a skip, not a warning: there is nothing this step could do about it on plain
-    # Debian, and warning here would leave every single run on such a machine with
-    # a warning count it can never clear. `./dot doctor` is where the gap belongs.
-    skip "helix (no Debian apt package — install it from the GitHub releases)"
-    return 0
-  fi
   if grep -rqs maveonair /etc/apt/sources.list.d/; then
     skip "helix ppa"
     return 0
@@ -123,7 +109,7 @@ _apt_repo_helix() {
   return 1
 }
 
-# Node.js current — Debian's `nodejs` is years behind. The guard is the sources
+# Node.js current — the distro's `nodejs` is years behind. The guard is the sources
 # file rather than `has node`, so a node that came from nvm or a manual install
 # cannot stop the repo from being added — `nodejs` is in apt.txt either way, and
 # without the repo it would quietly come from the distro instead.
@@ -163,7 +149,7 @@ setup_packages_linux() {
   local missing=""
   has curl || missing="$missing curl"
   has gpg  || missing="$missing gpg"
-  is_ubuntu && { has add-apt-repository || missing="$missing software-properties-common"; }
+  has add-apt-repository || missing="$missing software-properties-common"
   if [ -n "$missing" ]; then
     # Under --dry-run their absence is an artefact of the forecast: setup_prereqs
     # only said it *would* install them. Same guard as in setup/packages.sh.
@@ -192,10 +178,9 @@ setup_packages_linux() {
   # --- 3. the packages --------------------------------------------------------
   info "apt packages from packages/apt.txt"
   _apt_read_list
-  # apt is all-or-nothing: one name it cannot resolve (wrk, for instance, is not
-  # packaged on Debian) aborts the whole batch and installs nothing. So fall back
-  # to one call per package, which costs a few seconds but only loses the
-  # packages that really are unavailable.
+  # apt is all-or-nothing: one name it cannot resolve aborts the whole batch and
+  # installs nothing. So fall back to one call per package, which costs a few
+  # seconds but only loses the packages that really are unavailable.
   if [ "${#APT_PACKAGES[@]}" -eq 0 ]; then
     warn "packages/apt.txt lists nothing for this machine"
   elif ! run sudo apt-get install -y "${APT_PACKAGES[@]}"; then
@@ -209,8 +194,8 @@ setup_packages_linux() {
       run sudo apt-get install -y "$pkg" ||
         { warn "apt: $pkg unavailable"; unavailable=$((unavailable + 1)); }
     done
-    # A name this machine does not carry (wrk on Debian) is expected; *none* of
-    # them getting through is not — that is apt or sudo being unreachable, and
+    # A name this machine does not carry is expected; *none* of them getting
+    # through is not — that is apt or sudo being unreachable, and
     # the closing ok would otherwise put a ✓ on a run that installed nothing.
     # Guarded on > 0 so an empty apt.txt cannot trigger it, and `run` returns 0
     # under --dry-run, so a forecast never lands here either.
@@ -245,8 +230,8 @@ setup_packages_linux() {
   fi
 
   # `bat` normally comes from WakeMeOps and is called `bat`. When that repo is not
-  # available the name resolves to Debian's own package instead, whose binary is
-  # `batcat` (a name clash with bacula's `bat`) — expose it under its real name
+  # available the name resolves to the distro's own package instead, whose binary
+  # is `batcat` (a name clash with bacula's `bat`) — expose it under its real name
   # via ~/.local/bin, which is already on PATH.
   if has batcat && ! has bat; then
     if run mkdir -p "$HOME/.local/bin" && run ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"; then

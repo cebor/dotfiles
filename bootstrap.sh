@@ -65,7 +65,7 @@ install_git() {
         skip "git already installed"
         return 0
       fi
-      has apt-get || die "no apt-get — this bootstrap only covers Debian/Ubuntu (incl. WSL2)"
+      has apt-get || die "no apt-get — this bootstrap only covers Ubuntu (incl. WSL2)"
       # empty on root, where sudo need not even exist — the expansion below is
       # unquoted for exactly that: it has to disappear, not become an empty arg
       local as_root=""
@@ -82,7 +82,7 @@ install_git() {
       ok "git installed"
       ;;
     *)
-      die "unsupported platform: $(uname -s) — macOS and Debian/Ubuntu only"
+      die "unsupported platform: $(uname -s) — macOS and Ubuntu only"
       ;;
   esac
 }

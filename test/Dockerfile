@@ -2,16 +2,8 @@
 #
 #   docker build -f test/Dockerfile -t dot-test .
 #   docker run --rm dot-test
-#
-# and the other half of the matrix:
-#
-#   docker build --build-arg BASE=ubuntu:24.04 -f test/Dockerfile -t dot-test-ubuntu .
-#
-# Both distributions are worth running: is_ubuntu switches real branches in
-# packages/apt.txt and setup/packages-linux.sh.
 
-ARG BASE=debian:trixie
-FROM ${BASE}
+FROM ubuntu:24.04
 
 # shellcheck writes the offending source line back out, and this repo's comments
 # are full of em-dashes. In the images' default C locale that is a hard error

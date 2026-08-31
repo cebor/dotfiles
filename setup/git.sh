@@ -29,10 +29,10 @@ setup_git() {
   # default, $XDG_CONFIG_HOME/git/ignore (~/.config/git/ignore), so leaving the
   # setting unset is what makes it take effect.
 
-  # helix is the preferred editor, but `./dot packages` cannot install it on
-  # plain Debian (no apt package, see setup/packages-linux.sh) — pointing
-  # core.editor at a binary that is not there breaks every `git commit`. Re-run
-  # this step once helix is in place and it switches over.
+  # helix is the preferred editor, but this step can run before `./dot packages`
+  # has installed it — pointing core.editor at a binary that is not there breaks
+  # every `git commit`. Re-run this step once helix is in place and it switches
+  # over.
   local editor="vim"
   has hx && editor="hx"
   try git config --global core.editor "$editor"
@@ -41,8 +41,8 @@ setup_git() {
   try git config --global push.followTags "true"
   try git config --global init.defaultBranch "main"
 
-  # credential storage differs per platform. libsecret is not an apt package on
-  # Debian/Ubuntu, so Linux normally lands on the cache helper — see packages/apt.txt.
+  # credential storage differs per platform. libsecret is not an apt package, so
+  # Linux normally lands on the cache helper — see packages/apt.txt.
   if is_macos; then
     try git config --global credential.helper "osxkeychain"
   elif has git-credential-libsecret; then

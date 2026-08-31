@@ -2,8 +2,8 @@
 
 # Generate the locale home/.exports asks for. Linux only.
 #
-# macOS ships every locale precompiled; glibc does not. A fresh Debian/Ubuntu —
-# and every WSL image — carries only C, C.UTF-8 and POSIX, so the LANG in
+# macOS ships every locale precompiled; glibc does not. A fresh Ubuntu — and
+# every WSL image — carries only C, C.UTF-8 and POSIX, so the LANG in
 # home/.exports names a locale that does not exist. setlocale() then falls back
 # to C, which is how you get `perl: warning: Setting locale failed` on every apt
 # run that touches a Perl maintainer script, and, quietly, no UTF-8 ctype:
@@ -63,13 +63,8 @@ setup_locale() {
     return 1
   fi
 
-  # `has locale-gen` alone is not the right question: the binary lives in
-  # /usr/sbin, which Ubuntu puts on a normal user's PATH and Debian does not — and
-  # it is invoked through `sudo` below, whose secure_path carries /usr/sbin on
-  # both. So on Debian `has` would call it missing and fail a step that would have
-  # worked, which is exactly what `./dot install` did there.
   local gen="/etc/locale.gen"
-  if [ ! -f "$gen" ] || { ! has locale-gen && [ ! -x /usr/sbin/locale-gen ]; }; then
+  if [ ! -f "$gen" ] || ! has locale-gen; then
     # Under --dry-run the packages phase would have installed `locales` before this
     # step ever ran, so its absence here is an artefact of the forecast, not a
     # finding. Same guard as in setup/shell.sh and setup/vim.sh.

@@ -18,7 +18,7 @@ fi
 # cross-platform `open` shim.
 #
 # Under WSL this deliberately overrides an `open` that already exists: xdg-utils
-# ships /usr/bin/open on Debian/Ubuntu, and xdg-open looks for a *Linux*
+# ships /usr/bin/open on Ubuntu, and xdg-open looks for a *Linux*
 # application, while wslview hands the file to Windows. A `! command -v open`
 # guard would find that /usr/bin/open and leave the wslview branch dead.
 # Everywhere else the shim only steps in when there is no `open` at all.
@@ -80,9 +80,9 @@ tunnel () {
 }
 
 # generate password.
-# `cut` rather than `colrm`: colrm lives in bsdextrautils, which is only
-# Priority: standard on Debian and is not in packages/apt.txt — cut comes from
-# coreutils, which is. It also keeps the trailing newline colrm dropped.
+# `cut` rather than `colrm`: colrm lives in bsdextrautils, which is not in
+# packages/apt.txt — cut comes from coreutils, which is. It also keeps the
+# trailing newline colrm dropped.
 pwgen () {
   local length="${1:-16}"
   openssl rand -base64 "$length" | tr -d '\n' | cut -c1-"$length"

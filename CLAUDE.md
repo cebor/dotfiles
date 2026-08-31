@@ -4,7 +4,7 @@ Guidance for working in this repository.
 
 ## Architecture Overview
 
-Cross-platform (macOS + WSL2/Debian) dotfiles with a **single entrypoint**: three phases
+Cross-platform (macOS + WSL2/Ubuntu) dotfiles with a **single entrypoint**: three phases
 (`sync`, `packages`, `configure`), each runnable on its own, wrapped by `install` (all three, with
 the system prerequisites first, on both platforms) and the read-only `doctor`. `./dot help` has the
 full usage.
@@ -23,14 +23,14 @@ exported `$DOTFILES_OS`.
   system-prerequisites phase *of* `install`.
 - `setup/prereqs.sh` — what has to be in place before `packages` can run: the Xcode CLI tools and
   Homebrew on macOS, the apt packages the third-party sources need on Linux (`git curl
-  ca-certificates gnupg`, plus `software-properties-common` on Ubuntu). It is the **only** step
+  ca-certificates gnupg software-properties-common`). It is the **only** step
   `install` runs before `sync`, and the only one whose failure can be fatal: on macOS `cmd_install`
   turns it into `die`, because without the CLI tools or brew every phase below is the same failure
   over again; on Linux it only sets `rc=1`, because `sync` and `configure` still have work to do.
   Deliberately no apt sources here — this step installs the tools the source step *needs*
   (`curl`, `gnupg`, `add-apt-repository`), the source step uses them, and a repo added without the
   `apt.txt` batch behind it would leave a machine with a source and none of its packages. `git` and
-  `curl` come from the distro repo; on Ubuntu the later batch upgrades git to the PPA version.
+  `curl` come from the distro repo; the later batch upgrades git to the PPA version.
 - `dot` — the only entrypoint. Parses global flags, sources `lib/*.sh` once, then sources the
   needed `setup/*.sh` and calls its function. Everything under `lib/` and `setup/` is sourced,
   never executed.
@@ -85,8 +85,9 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
   documented in `setup/CLAUDE.md`, next to the code that adds them.
 - `packages/apt.txt` is the only place Linux package names live. Line format:
   `name [@tag] [# comment]`, with the optional tag one of `@wsl`, `@!wsl` or `@ubuntu` — that is
-  how `wslu` stays WSL-only, `xclip`/`wl-clipboard` non-WSL-only (the shims use
-  `win32yank.exe`/`clip.exe` under WSL) and `helix` Ubuntu-only. `_apt_read_list` parses it into
+  how `wslu` stays WSL-only and `xclip`/`wl-clipboard` non-WSL-only (the shims use
+  `win32yank.exe`/`clip.exe` under WSL). `@ubuntu` is supported but currently carried by no line,
+  and it is there for a package a derivative might not have. `_apt_read_list` parses it into
   the global `$APT_PACKAGES` rather than echoing its result: in a `pkgs="$(_apt_read_list)"` the
   `warn` for an unknown tag would land in `$pkgs` as if it were a package name, and its
   `$LOG_WARNINGS` increment would die with the subshell. An unknown tag warns and drops the line —
@@ -203,9 +204,9 @@ documented in `test/CLAUDE.md`, next to the suite.
 ### Editor / style
 
 Primary editor **helix** (`hx`); vim uses vim-plug, Solarized, persistent undo. `setup/git.sh`
-points `core.editor` at `hx` only when it is actually installed and falls back to vim — on plain
-Debian `./dot packages` cannot install helix, and a `core.editor` that does not exist breaks every
-`git commit`.
+points `core.editor` at `hx` only when it is actually installed and falls back to vim — the step
+can run before `./dot packages` has installed helix, and a `core.editor` that does not exist breaks
+every `git commit`.
 EditorConfig: 2-space indent, LF.
 
 ## Custom Functions to Preserve
@@ -231,13 +232,13 @@ The functions in `home/.functions` (`svenv`, `scpp`, `tunnel`, `pwgen`, `server`
 ## Platform Gotchas
 
 - `bat` comes from WakeMeOps under its real name. Only when that repo is unreachable does the name
-  resolve to Debian's own package, whose binary is `batcat` (a clash with bacula's `bat`) —
+  resolve to the distro's own package, whose binary is `batcat` (a clash with bacula's `bat`) —
   `setup/packages-linux.sh` keeps the `~/.local/bin/bat` symlink as the fallback for exactly that.
 - `home/.ssh/config` uses `IgnoreUnknown UseKeychain` so the macOS-only option does not break Linux
   OpenSSH. `link_tree` chmods `~/.ssh` to 700 after linking.
 - Git credentials: keychain on macOS; libsecret or a 1 h cache on Linux.
 - glibc ships only `C`, `C.UTF-8` and `POSIX` precompiled, so the `LANG=en_US.UTF-8` from
-  `home/.exports` names a locale that does not exist on a fresh Debian/Ubuntu — and on every WSL
+  `home/.exports` names a locale that does not exist on a fresh Ubuntu — and on every WSL
   image, whose `/etc/default/locale` says `C.UTF-8`. `setlocale()` then falls back to `C`: perl
   warns on every apt run with a maintainer script, and UTF-8 ctype is silently gone. `setup/locale.sh`
   enables the line in `/etc/locale.gen` and runs `locale-gen "$lang"`; `doctor` reports the gap.
@@ -256,8 +257,5 @@ The functions in `home/.functions` (`svenv`, `scpp`, `tunnel`, `pwgen`, `server`
 - The two `locale -a` spellings differ from `LANG`'s: glibc normalizes the charset (`en_US.utf8`),
   the canonical name does not (`en_US.UTF-8`). `_locale_normalize` lowercases and drops dashes so
   the comparison works on both platforms; never compare the two strings directly.
-- helix has no Debian apt package, only an Ubuntu PPA, so `./dot packages` cannot install it on
-  plain Debian. `doctor` therefore reports it separately — pointing at `./dot packages` there
-  would send you at something that will never fix it.
 - The repo must not be moved after `sync` — links point at it by absolute path. If it moves, re-run
   `./dot sync` (stale links are detected and replaced).

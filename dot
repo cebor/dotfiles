@@ -269,26 +269,12 @@ cmd_doctor() {
   # a spot check of the things other parts of this repo assume exist, not a
   # mirror of Brewfile/apt.txt — `./dot packages` is the authority on those
   local tool missing="" tools_ok=1
-  for tool in zsh git vim tmux curl starship node kubectl helm yq bat; do
+  for tool in zsh git vim tmux curl starship node kubectl helm yq bat hx; do
     has "$tool" || missing="$missing $tool"
   done
   is_macos && { has brew || missing="$missing brew"; }
   # home/.exports sets BROWSER=wslview, and the `open` shim relies on it
   is_wsl && { has wslview || missing="$missing wslview"; }
-
-  # helix is the one tool `./dot packages` cannot install everywhere: outside
-  # Ubuntu there is no apt package, so it deliberately skips it (see
-  # setup/packages-linux.sh). Sending the user to `./dot packages` there would
-  # point at something that will never fix it.
-  if has hx; then
-    :
-  elif is_linux && ! is_ubuntu; then
-    warn "helix not installed — no Debian apt package, install it from the GitHub releases"
-    issues=1
-    tools_ok=""
-  else
-    missing="$missing hx"
-  fi
 
   if [ -n "$missing" ]; then
     warn "not installed:$missing — run ./dot packages"
@@ -297,12 +283,12 @@ cmd_doctor() {
   fi
   [ -n "$tools_ok" ] && ok "all expected tools present"
 
-  # `yq` is the one name where the WakeMeOps repo competes with a Debian package
-  # that carries a different tool: Debian's `yq` is a python wrapper around jq.
-  # Nothing pins the two apart — apt just prefers the higher version — so check
-  # which one actually landed rather than assume.
+  # `yq` is the one name where the WakeMeOps repo competes with a distro package
+  # that carries a different tool: the distro's `yq` is a python wrapper around
+  # jq. Nothing pins the two apart — apt just prefers the higher version — so
+  # check which one actually landed rather than assume.
   if is_linux && has yq && ! yq --version 2>/dev/null | grep -qE 'mikefarah|version v?4'; then
-    warn "yq is not mikefarah's v4 — Debian's python yq shadowed it, check the WakeMeOps repo"
+    warn "yq is not mikefarah's v4 — the distro's python yq shadowed it, check the WakeMeOps repo"
     issues=1
   fi
 

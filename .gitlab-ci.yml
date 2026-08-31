@@ -1,26 +1,17 @@
 # Runs `./dot test` — syntax check, shellcheck, then the bats suite under test/ —
-# on both distributions these dotfiles target. Needs a runner with the docker
+# on the distribution these dotfiles target. Needs a runner with the docker
 # executor.
 #
 # There is no separate lint stage: cmd_test already runs bash -n and shellcheck
 # before the tests and stops at the first stage that fails, so a lint job would
 # only duplicate the file list it works from.
-#
-# Both images are worth the run. is_ubuntu switches real branches — the @ubuntu
-# tags in packages/apt.txt, and the git and helix PPAs in
-# setup/packages-linux.sh — so a green Debian job says nothing about Ubuntu.
 
 stages:
   - test
 
 test:
   stage: test
-  image: $BASE
-  parallel:
-    matrix:
-      - BASE:
-          - debian:trixie
-          - ubuntu:24.04
+  image: ubuntu:24.04
   variables:
     # shellcheck echoes the offending source line back, and the comments in this
     # repo are full of em-dashes. In the images' default C locale that is a hard

@@ -1,4 +1,4 @@
-# apt package list for Linux (Debian/Ubuntu) — the counterpart to the brew lines
+# apt package list for Linux (Ubuntu) — the counterpart to the brew lines
 # in packages/Brewfile.
 #
 # Line format:
@@ -11,7 +11,10 @@
 #
 #   @wsl      only under WSL
 #   @!wsl     only outside WSL
-#   @ubuntu   only on Ubuntu, not on plain Debian
+#   @ubuntu   only on Ubuntu itself, not on a derivative
+#
+# @ubuntu is supported but currently unused — every line below is either untagged
+# or WSL-tagged.
 #
 # This list is the only place package names live. setup/packages-linux.sh adds
 # the apt sources first (WakeMeOps, the git and helix PPAs, NodeSource) and then
@@ -21,9 +24,9 @@
 #
 # Not listed on purpose:
 #
-#   git-credential-libsecret   not an apt package on Debian/Ubuntu. setup/git.sh
-#                              probes for it and falls back to the 1 h
-#                              credential cache, so git works either way.
+#   git-credential-libsecret   not an apt package. setup/git.sh probes for it and
+#                              falls back to the 1 h credential cache, so git
+#                              works either way.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Core / shell
@@ -45,18 +48,17 @@ locales                     # locale-gen, for the LANG in home/.exports (setup/l
 # curl/gpg and add-apt-repository, the antidote clone needs git — but listed
 # here so this list stays the full picture. Installing them twice costs nothing.
 # ─────────────────────────────────────────────────────────────────────────────
-git                         # upgraded to the git-core PPA build on Ubuntu
+git                         # upgraded to the git-core PPA build
 curl
 ca-certificates
 gnupg                       # gpg
-software-properties-common @ubuntu  # add-apt-repository; both PPAs are Ubuntu-only,
-                                    # and so is setup/prereqs.sh's install of it
+software-properties-common  # add-apt-repository, for the git and helix PPAs
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Editors
 # ─────────────────────────────────────────────────────────────────────────────
 vim
-helix             @ubuntu   # from the helix PPA; no Debian package exists
+helix                       # from the helix PPA; no package of that name exists
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Python
@@ -76,20 +78,20 @@ nodejs                      # from the NodeSource repo
 # ─────────────────────────────────────────────────────────────────────────────
 # Kubernetes / ops
 #
-# All from the WakeMeOps repo — none of these are packaged by Debian. That repo
-# sits at apt's default priority, so for yq only the version comparison keeps
-# mikefarah's 4.x in front of Debian's; ./dot doctor checks which one landed.
+# All from the WakeMeOps repo — none of these are packaged usably by the distro.
+# That repo sits at apt's default priority, so for yq only the version comparison
+# keeps mikefarah's 4.x in front; ./dot doctor checks which one landed.
 # ─────────────────────────────────────────────────────────────────────────────
 kubectl
 helm
-yq                          # mikefarah's Go yq, not Debian's python jq wrapper
+yq                          # mikefarah's Go yq, not the python jq wrapper
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Networking
 # ─────────────────────────────────────────────────────────────────────────────
 nmap
 mtr-tiny                    # mtr (the `mtr` metapackage pulls in GTK)
-wrk                         # in universe on Ubuntu, not packaged on Debian
+wrk                         # from universe
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Clipboard
@@ -104,5 +106,5 @@ wl-clipboard      @!wsl
 # ─────────────────────────────────────────────────────────────────────────────
 # Misc
 # ─────────────────────────────────────────────────────────────────────────────
-bat                         # from WakeMeOps as `bat`; Debian's own installs `batcat`
+bat                         # from WakeMeOps as `bat`; the distro's installs `batcat`
 wslu              @wsl      # wslview, used by the `open` shim in home/.functions

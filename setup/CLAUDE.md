@@ -10,14 +10,11 @@ pulls the whole of `packages/apt.txt`. Only what apt cannot carry at all comes a
 clone `~/.antidote`) and starship (upstream installer).
 
 - Sources: **WakeMeOps** (`deb.wakemeops.com`, components `devops terminal`) for `kubectl`,
-  `helm`, `yq` and `bat`; the **git PPA** (`ppa:git-core/ppa`, Ubuntu only — upstream's own
-  stable build, and there is no Debian equivalent); the **helix PPA** (Ubuntu only — no Debian
-  *and* no Ubuntu package named `helix` exists); **NodeSource** for `nodejs`.
+  `helm`, `yq` and `bat`; the **git PPA** (`ppa:git-core/ppa` — upstream's own stable build);
+  the **helix PPA** (no apt package named `helix` exists); **NodeSource** for `nodejs`.
 - A source whose package exists anyway only **warns** on failure and returns 0 — git and
   NodeSource, where the run still ends with a git/node, just the distro's older one. helix
-  `err`s and counts as a failed step, because there the PPA is the only source there is. Both
-  Ubuntu-only sources `skip` on Debian rather than warn: nothing the step could do about it,
-  and warning would leave every run on such a machine with a count it can never clear.
+  `err`s and counts as a failed step, because there the PPA is the only source there is.
 - Each `_apt_repo_*` is guarded by its sources file, never by `has <tool>`: WakeMeOps on the
   exact `Components:` line (so changing the component list reaches machines that already have
   the repo), NodeSource, git and helix by grepping `sources.list.d/` for the repo host (so a
@@ -28,11 +25,11 @@ clone `~/.antidote`) and starship (upstream installer).
   filename guard stops matching the day that happens, silently re-running the installer on
   every `./dot packages`.
 - WakeMeOps sits at apt's default priority 500, unpinned. That is a deliberate choice, and
-  `yq` is where it bites: Debian ships a *different* tool under that name (a python wrapper
+  `yq` is where it bites: the distro ships a *different* tool under that name (a python wrapper
   around jq, 3.x). Only the version comparison keeps mikefarah's 4.x in front, so `./dot doctor`
   checks which `yq` actually landed rather than assume.
 - The prerequisites the sources need are installed by `setup/prereqs.sh`, one phase earlier;
-  step 1 here only *checks* for them (`curl`, `gpg`, and `add-apt-repository` on Ubuntu) and
+  step 1 here only *checks* for them (`curl`, `gpg` and `add-apt-repository`) and
   `err`s pointing at `./dot install` — the same shape as the `has brew` check in
   `setup/packages.sh`, and the reason `./dot packages` is no longer self-sufficient on a bare
   machine. `git` is in that prereq list for a reason of its own: the antidote clone in step 4

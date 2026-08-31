@@ -85,16 +85,15 @@ _prereqs_macos() {
   return 0
 }
 
-# The apt sources in setup/packages-linux.sh need curl, gpg and — on Ubuntu —
-# add-apt-repository before any third-party repo exists, so these cannot come out
-# of the apt.txt batch that runs after them. git is here for a different reason:
-# packages-linux.sh clones antidote with it, and that must not depend on the
-# apt.txt batch having gone through either. They are all listed in apt.txt too:
-# installing them twice costs nothing, and that list stays the full picture of
-# what a machine gets. On Ubuntu the batch then upgrades git to the PPA version.
+# The apt sources in setup/packages-linux.sh need curl, gpg and add-apt-repository
+# before any third-party repo exists, so these cannot come out of the apt.txt
+# batch that runs after them. git is here for a different reason: packages-linux.sh
+# clones antidote with it, and that must not depend on the apt.txt batch having
+# gone through either. They are all listed in apt.txt too: installing them twice
+# costs nothing, and that list stays the full picture of what a machine gets. The
+# batch then upgrades git to the PPA version.
 _prereqs_linux() {
-  local prereqs="git curl ca-certificates gnupg"
-  is_ubuntu && prereqs="$prereqs software-properties-common"
+  local prereqs="git curl ca-certificates gnupg software-properties-common"
 
   info "apt prerequisites"
   run sudo apt-get update || warn "apt-get update failed — package versions may be stale"

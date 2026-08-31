@@ -59,11 +59,11 @@ git   # trailing comment
 @test "@wsl and @!wsl select on the machine" {
   apt_fixture "$FIXTURE"
 
-  platform 0 1          # WSL, not Ubuntu
+  platform 0 1          # WSL, not plain Ubuntu
   _apt_read_list
   [ "${APT_PACKAGES[*]}" = "zsh git wslu tmux" ]
 
-  platform 1 1          # not WSL, not Ubuntu
+  platform 1 1          # neither
   _apt_read_list
   [ "${APT_PACKAGES[*]}" = "zsh git xclip tmux" ]
 }
@@ -71,7 +71,7 @@ git   # trailing comment
 @test "@ubuntu selects on the distribution" {
   apt_fixture "$FIXTURE"
 
-  platform 1 0          # not WSL, Ubuntu
+  platform 1 0          # Ubuntu, not WSL
   _apt_read_list
   [ "${APT_PACKAGES[*]}" = "zsh git xclip helix tmux" ]
 
@@ -142,18 +142,19 @@ git'
   [[ " ${APT_PACKAGES[*]} " == *" wslu "* ]]
   [[ " ${APT_PACKAGES[*]} " != *" xclip "* ]]
 
-  platform 1 0          # bare Ubuntu
+  platform 1 0          # not WSL
   _apt_read_list
   [[ " ${APT_PACKAGES[*]} " == *" xclip "* ]]
-  [[ " ${APT_PACKAGES[*]} " == *" helix "* ]]
   [[ " ${APT_PACKAGES[*]} " != *" wslu "* ]]
-  # add-apt-repository, which only the two Ubuntu-only PPAs need — the same
-  # condition setup/prereqs.sh installs it under
-  [[ " ${APT_PACKAGES[*]} " == *" software-properties-common "* ]]
 
-  platform 1 1          # bare Debian — no helix package exists there
-  _apt_read_list
-  [[ " ${APT_PACKAGES[*]} " != *" helix "* ]]
-  [[ " ${APT_PACKAGES[*]} " != *" software-properties-common "* ]]
-
+  # untagged, so they land everywhere: helix and the add-apt-repository package
+  # both PPAs need, the same set setup/prereqs.sh installs
+  local machine
+  for machine in "0 1" "1 0"; do
+    # shellcheck disable=SC2086 # two arguments, deliberately split
+    platform $machine
+    _apt_read_list
+    [[ " ${APT_PACKAGES[*]} " == *" helix "* ]]
+    [[ " ${APT_PACKAGES[*]} " == *" software-properties-common "* ]]
+  done
 }

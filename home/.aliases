@@ -1,5 +1,5 @@
 # Aliases
-# python3/ipython3 by name: Debian and Ubuntu ship no bare `python` (apt.txt has
+# python3/ipython3 by name: Ubuntu ships no bare `python` (apt.txt has
 # python3/ipython3), and Homebrew's python formula does not create one either.
 alias py="python3"
 alias py3="python3"
