@@ -36,7 +36,7 @@ link_files() {
 # correctly linked file is `-ef` its source too, and before -e, which would
 # otherwise claim it.
 _link_state() {
-  local rel="$1" src="$LINK_SRC/$1" dest="$HOME/$1"
+  local src="$LINK_SRC/$1" dest="$HOME/$1"
   if [ -L "$dest" ]; then
     if [ "$(readlink "$dest")" = "$src" ]; then echo "linked"; else echo "stale-link"; fi
   elif [ -e "$dest" ] && [ "$dest" -ef "$src" ]; then
