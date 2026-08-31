@@ -73,10 +73,13 @@ tunnel () {
   ssh -nNT -L "$3":localhost:"$2" "$1"
 }
 
-# generate password
+# generate password.
+# `cut` rather than `colrm`: colrm lives in bsdextrautils, which is only
+# Priority: standard on Debian and is not in packages/apt.txt — cut comes from
+# coreutils, which is. It also keeps the trailing newline colrm dropped.
 pwgen () {
-  length=${1:-16}
-  openssl rand -base64 $length | tr -d '\n' | colrm $((++length))
+  local length="${1:-16}"
+  openssl rand -base64 "$length" | tr -d '\n' | cut -c1-"$length"
 }
 
 # source python venv - walks up tree to find and activate virtual environment
