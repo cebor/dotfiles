@@ -312,25 +312,34 @@ cmd_doctor() {
   fi
 
   section "Git"
-  # both halves, the same condition setup_git ends on — testing only the mail
-  # would put a ✓ on `  <you@example.com>` with an empty name, for exactly the
-  # state `./dot configure git` calls incomplete
-  local git_name git_email
-  git_name="$(git config --global user.name)"
-  git_email="$(git config --global user.email)"
-  if [ -n "$git_name" ] && [ -n "$git_email" ]; then
-    ok "$git_name <$git_email>"
-  else
-    warn "git identity incomplete — run ./dot configure git"
+  # The `git config --get` queries below are read-only, but they are not wrapped
+  # in `run` and would really execute: without git they spray "command not
+  # found" onto stderr — outside the report — and every finding under them would
+  # describe a configuration that cannot exist yet. Same guard as setup/git.sh.
+  if ! has git; then
+    warn "git not installed — run ./dot packages"
     issues=1
-  fi
-  local helper
-  helper="$(git config --global credential.helper)"
-  if [ -n "$helper" ]; then
-    info "credential.helper: $helper"
   else
-    warn "credential.helper not set — run ./dot configure git"
-    issues=1
+    # both halves, the same condition setup_git ends on — testing only the mail
+    # would put a ✓ on `  <you@example.com>` with an empty name, for exactly the
+    # state `./dot configure git` calls incomplete
+    local git_name git_email
+    git_name="$(git config --global user.name)"
+    git_email="$(git config --global user.email)"
+    if [ -n "$git_name" ] && [ -n "$git_email" ]; then
+      ok "$git_name <$git_email>"
+    else
+      warn "git identity incomplete — run ./dot configure git"
+      issues=1
+    fi
+    local helper
+    helper="$(git config --global credential.helper)"
+    if [ -n "$helper" ]; then
+      info "credential.helper: $helper"
+    else
+      warn "credential.helper not set — run ./dot configure git"
+      issues=1
+    fi
   fi
 
   section "Result"
