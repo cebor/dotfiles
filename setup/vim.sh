@@ -19,14 +19,19 @@ setup_vim() {
     return 0
   fi
 
+  # every mutation below is checked, and the closing ok may only speak for all of
+  # them — same snapshot as setup/git.sh and setup/macos-defaults.sh. Taken after
+  # the guard above, whose warning is a skip, not a failed mutation.
+  local warnings_before="$LOG_WARNINGS"
+
   run mkdir -p "$HOME/.vim/backups" "$HOME/.vim/swaps" "$HOME/.vim/undo" ||
     warn "could not create the vim working directories"
 
   # -s, not -f: `curl -o` truncates its destination before it knows the request
   # failed (--remove-on-error is curl 7.83, Ubuntu 22.04 ships 7.81), so a 0-byte
-  # plug.vim has to count as missing. Same shape as the yq install in
-  # setup/packages-linux.sh; the download stays inside `run bash -c '…'` so
-  # --dry-run does not hit the network.
+  # plug.vim has to count as missing. Same shape as the Homebrew install in
+  # setup/prereqs.sh; the download stays inside `run bash -c '…'` so --dry-run
+  # does not hit the network.
   if [ -s "$HOME/.vim/autoload/plug.vim" ]; then
     skip "vim-plug already installed"
   else
@@ -60,9 +65,15 @@ setup_vim() {
   #             out from under it.
   # </dev/null: ex mode reads commands from stdin — a prompt outliving +qall
   #             would eat the rest of the run's input.
-  if run vim -es -u "$HOME/.vimrc" +'PlugUpdate --sync' +qall </dev/null; then
-    ok_run "vim plugins up to date" "would install and update the vim plugins"
-  else
+  if ! run vim -es -u "$HOME/.vimrc" +'PlugUpdate --sync' +qall </dev/null; then
     warn "vim exited with an error — plugins may be incomplete"
   fi
+
+  # not a blanket ok: it would otherwise also speak for the working directories
+  # above, and a failed PlugUpdate would never reach `setup_vim || rc=1` in `dot`
+  if [ "$LOG_WARNINGS" -ne "$warnings_before" ]; then
+    warn "vim setup incomplete — see the warnings above"
+    return 1
+  fi
+  ok_run "vim plugins up to date" "would install and update the vim plugins"
 }
