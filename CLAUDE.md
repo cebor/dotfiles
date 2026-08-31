@@ -147,9 +147,13 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
 
 ### Keep sourced shell files fast
 
-`home/.aliases` and `home/.functions` are sourced on every interactive shell start — they must
-**not** source `lib/*.sh` or spawn heavy subshells. Use `[[ "$OSTYPE" == ... ]]` globs and
-`command -v`.
+`home/.exports`, `home/.aliases` and `home/.functions` are sourced on every interactive shell start
+— all three, by the one loop in `home/.zshrc` — so they must **not** source `lib/*.sh` or spawn
+subshells. Use `[[ "$OSTYPE" == ... ]]` globs and `command -v`; for the two probes that used to fork,
+zsh answers without one: `$TTY` instead of `$(tty)`, and `"$(</proc/version)"` instead of a `grep`
+pipeline (same test as `is_wsl`, which these files may not source). `test/repo.bats` asserts the
+no-sourcing half, anchored at column 0 — `svenv` sourcing a venv's `activate` from inside a function
+body costs a shell start nothing.
 
 ### Tests
 

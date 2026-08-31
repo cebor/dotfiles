@@ -1,5 +1,7 @@
-# GPG - use gpg without suite
-export GPG_TTY=$(tty)
+# GPG - use gpg without suite. $TTY is zsh's own, so this costs no fork — and it
+# stays empty without a terminal, where `tty` prints "not a tty" onto stdout and
+# GPG_TTY would end up holding that string.
+export GPG_TTY=$TTY
 
 # locales
 export LANG=en_US.UTF-8
@@ -13,8 +15,10 @@ export DISABLE_AUTO_UPDATE=true
 # snap binaries on PATH (Linux)
 [ -d /snap/bin ] && export PATH="$PATH:/snap/bin"
 
-# WSL: default browser (used by the `open` shim / xdg)
-grep -qi microsoft /proc/version 2>/dev/null && export BROWSER=wslview
+# WSL: default browser (used by the `open` shim / xdg). $(<file) rather than a
+# grep pipeline: zsh reads the file without forking, and this runs on every
+# shell start. Same test as `is_wsl` in lib/os.sh, which we must not source here.
+[[ -r /proc/version && "$(</proc/version)" == *[Mm]icrosoft* ]] && export BROWSER=wslview
 
 # default editor - guarded, so machines without helix fall back to the system default
 if command -v hx &>/dev/null; then
