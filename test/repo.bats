@@ -23,13 +23,46 @@ teardown() { teardown_sandbox; }
 }
 
 @test "the shell files sourced on every prompt stay self-contained" {
-  # home/.aliases and home/.functions run on every interactive shell start, so
-  # they must not source lib/*.sh or otherwise pull the repo into the startup path
+  # home/.exports, home/.aliases and home/.functions all run on every interactive
+  # shell start — one loop in .zshrc sources all three — so none of them may
+  # source lib/*.sh or otherwise pull the repo into the startup path.
+  #
+  # Anchored at column 0, because the rule is about sourcing at *file* scope:
+  # svenv sources a venv's activate script from inside a function body, which
+  # costs a shell start nothing.
+  #
+  # Asserted with `if grep`, not `! grep`: set -e is documented not to fire on a
+  # command whose status is inverted, so `! grep -q …` can only ever fail the
+  # test when it happens to be its last statement — everywhere else it is a
+  # no-op that reads like an assertion.
   local f
-  for f in "$REPO"/home/.aliases "$REPO"/home/.functions; do
-    ! grep -qE '^[[:space:]]*(source|\.)[[:space:]]+' "$f"
-    ! grep -q 'DOTFILES_ROOT' "$f"
+  for f in "$REPO"/home/.exports "$REPO"/home/.aliases "$REPO"/home/.functions; do
+    if grep -nE '^(source|\.)[[:space:]]' "$f"; then
+      echo "$f sources something at file scope"
+      return 1
+    fi
+    if grep -n 'DOTFILES_ROOT' "$f"; then
+      echo "$f reaches into the repo"
+      return 1
+    fi
   done
+}
+
+@test "home/.zshrc defines has_brew before antidote loads the plugins" {
+  # .zsh_plugins.txt gates the omz brew bundle on `conditional:has_brew`, and
+  # antidote resolves that when it loads — a definition after `antidote load`
+  # would never be seen, and the bundle would silently not load anywhere.
+  local zshrc def load
+  zshrc="$REPO/home/.zshrc"
+  grep -q 'conditional:has_brew' "$REPO/home/.zsh_plugins.txt"
+  def="$(grep -n '^has_brew()' "$zshrc" | head -n 1 | cut -d: -f1)"
+  load="$(grep -n 'antidote load' "$zshrc" | head -n 1 | cut -d: -f1)"
+
+  [ -n "$def" ] && [ -n "$load" ]
+  [ "$def" -lt "$load" ] || {
+    echo "has_brew (line $def) must be defined before antidote load (line $load)"
+    return 1
+  }
 }
 
 @test "each setup file defines exactly one public function" {
