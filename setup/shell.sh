@@ -33,7 +33,10 @@ setup_shell() {
     return 0
   fi
 
-  if ! grep -qxF "$target" /etc/shells; then
+  # 2>/dev/null: on a minimal image /etc/shells may not exist at all, and grep's
+  # complaint would land on stderr, outside the run report. The branch is right
+  # either way — the tee below creates the file.
+  if ! grep -qxF "$target" /etc/shells 2>/dev/null; then
     info "Registering $target in /etc/shells..."
     if ! run bash -c "printf '%s\n' '$target' | sudo tee -a /etc/shells >/dev/null"; then
       err "could not add $target to /etc/shells — chsh would refuse it"
