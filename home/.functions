@@ -41,14 +41,19 @@ server () {
   python3 -m http.server "${port}"
 }
 
-# Upload file to server and copy link to clipboard
+# Upload file to server and copy link to clipboard.
+# The remote name is the *basename*: `scp out/report.pdf host:dir` lands at
+# dir/report.pdf, so passing $1 on to chmod and the URL would name a path that
+# is not there — silently, with a 404 in the clipboard.
 scpp () {
-  local HOST="stkn.org"
-  local DIR="htdocs/static.stkn.org"
-  scp "$1" "$HOST:$DIR";
-  ssh "$HOST" chmod a+r "$DIR/$1"
-  echo "https://static.stkn.org/$1" | pbcopy;
-  echo "Copied to clipboard: https://static.stkn.org/$1"
+  local host="stkn.org"
+  local dir="htdocs/static.stkn.org"
+  local name="${1##*/}"
+
+  scp "$1" "$host:$dir" || return 1
+  ssh "$host" chmod a+r "$dir/$name" || return 1
+  echo "https://static.stkn.org/$name" | pbcopy
+  echo "Copied to clipboard: https://static.stkn.org/$name"
 }
 
 # npm bump
