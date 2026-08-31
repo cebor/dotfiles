@@ -322,6 +322,10 @@ link_status() {
 link_unlink() {
   local rel dest removed=0 newest
   local did="unlinked" summary="removed"
+  # Nothing here aborts on its own, so the status is collected the way link_tree
+  # collects its $failed — via the error count, because the failures are spread
+  # over three branches plus _prune, which reports its own.
+  local errors_before="$LOG_ERRORS"
   if [ -n "$DRY_RUN" ]; then did="would unlink"; summary="would be removed"; fi
 
   # Links we could not remove have to survive in the manifest — it is the only
@@ -403,4 +407,8 @@ link_unlink() {
 
   blank
   info "$removed link(s) $summary"
+  if [ "$LOG_ERRORS" -ne "$errors_before" ]; then
+    return 1
+  fi
+  return 0
 }

@@ -339,3 +339,45 @@ teardown() { teardown_sandbox; }
   [[ "$output" == *"points at another checkout"* ]]
   [ -L "$HOME/.zshrc" ]
 }
+
+@test "link_unlink keeps a link it could not remove in the manifest" {
+  # CLAUDE.md: *both* link_tree and link_unlink carry entries they failed to
+  # remove into the new manifest. link_tree's half is covered above; this is the
+  # other one, and it matters more here — link_unlink drops the manifest
+  # otherwise, and the record is the only thing that will ever find the link again.
+  skip_if_root
+  link_tree >/dev/null
+  # rm fails when the parent directory is not writable
+  chmod 500 "$HOME/.config/helix"
+  ASSUME_YES=1
+
+  bats_run link_unlink
+  [[ "$output" == *"could not remove the link"* ]]
+  # the error has to reach the exit code, not only $LOG_ERRORS
+  [ "$status" -ne 0 ]
+
+  chmod 700 "$HOME/.config/helix"
+  grep -qx ".config/helix/config.toml" "$LINK_MANIFEST"
+}
+
+@test "a dry run of link_unlink writes nothing and speaks in the conditional" {
+  link_tree >/dev/null
+  local home_before state_before tmp_before
+  home_before="$(snapshot_fs "$HOME")"
+  state_before="$(snapshot_fs "$XDG_STATE_HOME")"
+  tmp_before="$(snapshot_fs "$TMPDIR")"
+  DRY_RUN=1
+
+  bats_run link_unlink
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"would unlink"* ]]
+  [[ "$output" == *"would be removed"* ]]
+  # nothing may read as if it had already happened
+  [[ "$output" != *"unlinked ."* ]]
+
+  [ "$home_before" = "$(snapshot_fs "$HOME")" ]
+  # the manifest survives a forecast untouched
+  [ "$state_before" = "$(snapshot_fs "$XDG_STATE_HOME")" ]
+  # not even under $TMPDIR — the kept-entries file goes to /dev/null on a dry run
+  [ "$tmp_before" = "$(snapshot_fs "$TMPDIR")" ]
+}
