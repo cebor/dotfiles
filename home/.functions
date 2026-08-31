@@ -95,6 +95,7 @@ svenv () {
     deactivate 2>/dev/null
   fi
 
+  local CURRENT_DIR FOUND
   CURRENT_DIR="$(pwd)"
   FOUND=0
 
