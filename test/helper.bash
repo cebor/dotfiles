@@ -131,7 +131,6 @@ skip_if_root() {
 # with_tty itself discards both channels; the snippet is expected to redirect
 # them where the test wants them (the callers in log.bats use $SANDBOX/out and
 # $SANDBOX/err).
-
 #
 # util-linux script(1) only; BSD script takes its command differently. The
 # snippet must contain no single quotes: it is passed through `bash -c '…'`.

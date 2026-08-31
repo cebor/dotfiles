@@ -11,7 +11,7 @@
 #
 #   @wsl      only under WSL
 #   @!wsl     only outside WSL
-#   @ubuntu   only on Ubuntu itself, not on a derivative
+#   @ubuntu   only on Ubuntu or a derivative — is_ubuntu greps all of /etc/os-release
 #
 # @ubuntu is supported but currently unused — every line below is either untagged
 # or WSL-tagged.
@@ -58,7 +58,7 @@ software-properties-common  # add-apt-repository, for the git and helix PPAs
 # Editors
 # ─────────────────────────────────────────────────────────────────────────────
 vim
-helix                       # from the helix PPA; no package of that name exists
+helix                       # from the helix PPA; the distro has no package of that name
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Python

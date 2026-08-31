@@ -104,7 +104,6 @@ teardown() { teardown_sandbox; }
   # The file list is deliberately *not* the one cmd_test lints: test/ci-deps.sh
   # is linted but sets `set -e` on purpose — it provisions a CI runner and is no
   # part of ./dot.
-
   ! grep -rnE '^[[:space:]]*set -[eu]' \
     "$REPO/dot" "$REPO/bootstrap.sh" "$REPO/lib" "$REPO/setup"
 }

@@ -55,9 +55,10 @@ _link_state() {
 _backup() {
   local rel="$1" dest="$HOME/$1"
   if [ -z "$DRY_RUN" ]; then
-    # stderr, because the caller reads this in a command substitution: a message
-    # from here would bypass the run report entirely. The caller reports the
-    # failure itself ("could not back up … left untouched").
+    # stderr silenced: the caller reads this in a command substitution, so a
+    # message from here would land outside the run report, which is reserved for
+    # the interactive prompts. The caller reports the failure itself ("could not
+    # back up … left untouched").
     mkdir -p "$_link_backup_dir/$(dirname "$rel")" 2>/dev/null || return 1
     mv "$dest" "$_link_backup_dir/$rel" 2>/dev/null || return 1
   fi

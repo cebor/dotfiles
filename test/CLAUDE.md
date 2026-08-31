@@ -10,7 +10,6 @@ mechanics.
 - `lib/log.sh` defines `run` and `skip`, which shadow the bats builtins of the same name. Any file
   that calls `load_dotfiles` must use **`bats_run`** and `bats_skip`; `test/cli.bats` and
   `test/repo.bats` source nothing and so use plain `run`.
-
 - bats runs test bodies under `set -e`, so a deliberately failing call needs `|| true` — otherwise
   the test aborts instead of reaching its assertion.
 - `test/cli.bats` drives `./dot` as a subprocess. `dot` calls `main "$@"` at file scope and cannot
@@ -19,9 +18,10 @@ mechanics.
   home. `cmd_test` lints it along with `dot`, `bootstrap.sh`, `lib/` and `setup/` — CI runs it on
   every job. `test/helper.bash` is left out on purpose: every variable it sets is consumed by the
   `.bats` files, which shellcheck cannot see, so it yields nothing but SC2034 noise.
- They run the suite as an **unprivileged user** deliberately: the backup-failed and
-  rm-failed paths are forced by making a directory unwritable, root ignores that, and as root those
-  tests would skip and the run would go green for the wrong reason. `skip_if_root` marks them.
+- CI and `test/Dockerfile` run the suite as an **unprivileged user** deliberately: the
+  backup-failed and rm-failed paths are forced by making a directory unwritable, root ignores that,
+  and as root those tests would skip and the run would go green for the wrong reason.
+  `skip_if_root` marks them.
 - `$LANG`/`$LC_ALL` are set to `C.UTF-8` in CI: shellcheck echoes the offending source line back,
   and in the images' default `C` locale the em-dashes in these comments are a hard error
   (`commitBuffer: invalid argument`), not a garbled character.
