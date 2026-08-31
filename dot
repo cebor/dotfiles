@@ -361,7 +361,17 @@ main() {
     # doctor, test and help report themselves and own their exit code
     doctor)          cmd_doctor "${args[@]}"; return $? ;;
     test)            cmd_test "${args[@]}"; return $? ;;
-    help|"")         usage; return 0 ;;
+    # `usage` is the whole job here, but an argument nobody understood must not
+    # vanish into it: `./dot --bogus` would otherwise print the help and exit 0,
+    # which is exactly what every other command refuses to do.
+    help|"")         if [ "${#args[@]}" -gt 0 ]; then
+                       err "unknown option: ${args[*]}"
+                       usage
+                       return 1
+                     fi
+                     usage
+                     return 0
+                     ;;
     install)         cmd_install "${args[@]}" ;;
     sync)            cmd_sync "${args[@]}" ;;
     packages)        cmd_packages "${args[@]}" ;;

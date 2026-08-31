@@ -46,7 +46,23 @@ teardown() { teardown_sandbox; }
   [ "$status" -ne 0 ]
 }
 
+@test "an option nobody understood is not swallowed by the usage" {
+  # `./dot --bogus` used to print the help and exit 0 — the global parser dropped
+  # unknown options into $args, and the no-command branch never looked at them
+  run "$DOT" --bogus
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"unknown option: --bogus"* ]]
+
+  run "$DOT" help extra-arg
+  [ "$status" -ne 0 ]
+
+  # a plain help still succeeds
+  run "$DOT" -h
+  [ "$status" -eq 0 ]
+}
+
 @test "sync rejects --status and --unlink together" {
+
   run "$DOT" sync --status --unlink
   [ "$status" -ne 0 ]
   [[ "$output" == *"cannot be combined"* ]]
