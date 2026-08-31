@@ -61,10 +61,16 @@ bump () {
   npm version "$1" -m "bump version to %s"
 }
 
-# docker clean
+# docker clean — kill everything running, then remove every container.
+# Both lists are checked first: with nothing to do, `docker kill`/`docker rm`
+# would be called without arguments and answer with a usage error.
 dcl () {
-  docker kill $(docker ps -q)
-  docker rm $(docker ps -a -q)
+  local running stopped
+  running="$(docker ps -q)"
+  [ -n "$running" ] && docker kill ${=running}
+  stopped="$(docker ps -a -q)"
+  [ -n "$stopped" ] && docker rm ${=stopped}
+  return 0
 }
 
 # ssh tunnel: tunnel <host> <destination port> <local port>
