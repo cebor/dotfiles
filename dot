@@ -364,7 +364,7 @@ main() {
     # vanish into it: `./dot --bogus` would otherwise print the help and exit 0,
     # which is exactly what every other command refuses to do.
     help|"")         if [ "${#args[@]}" -gt 0 ]; then
-                       err "unknown option: ${args[*]}"
+                       err "unrecognised argument(s): ${args[*]}"
                        usage
                        return 1
                      fi
