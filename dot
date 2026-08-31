@@ -174,7 +174,11 @@ cmd_install() {
 cmd_test() {
   [ $# -eq 0 ] || die "test takes no options (got: $*)"
 
-  local scripts=("$DOTFILES_ROOT/dot" "$DOTFILES_ROOT/bootstrap.sh")
+  # test/ci-deps.sh is in here because CI executes it on every job; test/helper.bash
+  # deliberately is not — every variable it sets is consumed by the .bats files,
+  # which shellcheck cannot see, so it produces nothing but SC2034 noise.
+  local scripts=("$DOTFILES_ROOT/dot" "$DOTFILES_ROOT/bootstrap.sh"
+                 "$DOTFILES_ROOT/test/ci-deps.sh")
   local f
   for f in "$DOTFILES_ROOT"/lib/*.sh "$DOTFILES_ROOT"/setup/*.sh; do
     scripts+=("$f")

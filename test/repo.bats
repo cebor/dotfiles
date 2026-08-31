@@ -100,6 +100,11 @@ teardown() { teardown_sandbox; }
   # deliberate: a step may soft-fail with a warning and let the run continue,
   # which is why every mutating command is checked by hand instead. Anchored, so
   # the comments explaining the choice do not count as violations of it.
+  #
+  # The file list is deliberately *not* the one cmd_test lints: test/ci-deps.sh
+  # is linted but sets `set -e` on purpose — it provisions a CI runner and is no
+  # part of ./dot.
+
   ! grep -rnE '^[[:space:]]*set -[eu]' \
     "$REPO/dot" "$REPO/bootstrap.sh" "$REPO/lib" "$REPO/setup"
 }
