@@ -13,11 +13,10 @@
 #
 # Every step is guarded, so re-running is cheap.
 
-# The apt names that apply to this machine, filled by _apt_read_list.
-APT_PACKAGES=()
-
-# Read packages/apt.txt into $APT_PACKAGES, dropping the lines whose tag does not
-# match this machine. Line format: `name [@tag] [# comment]`.
+# Read packages/apt.txt into the global $APT_PACKAGES — the apt names that apply
+# to this machine — dropping the lines whose tag does not match it. Line format:
+# `name [@tag] [# comment]`. The array is declared inside the function, not at
+# file scope: like every setup/*.sh this one must do nothing at source time.
 #
 # Fills a global instead of echoing its result, on purpose: with
 # `pkgs="$(_apt_read_list)"` the warn below would land in $pkgs as if it were a
