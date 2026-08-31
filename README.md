@@ -94,9 +94,9 @@ manifest at `~/.local/state/dotfiles/manifest`.
 │   ├── .aliases           #   command shortcuts
 │   ├── .functions         #   shell functions + cross-platform pbcopy/pbpaste/open shims
 │   ├── .zsh_plugins.txt   #   antidote plugin list
-│   ├── .vimrc .tmux.conf .latexmkrc .gitignore_global
+│   ├── .vimrc .tmux.conf .latexmkrc
 │   ├── .ssh/config
-│   └── .config/           #   helix, pycodestyle
+│   └── .config/           #   git/ignore (the global gitignore), helix, pycodestyle
 ├── lib/                   # sourced helpers, never executed
 │   ├── os.sh              #   platform detection, `has`, brew shellenv, arch mapping
 │   ├── log.sh             #   section/info/ok/warn/err, prompts, dry-run `run`
@@ -237,7 +237,7 @@ executor.
 What the tests are for is less "does bash work" than pinning the decisions this repo documents but
 cannot otherwise enforce: the branch order in `_link_state`, that a dry run writes nothing at all,
 the argument re-quoting in `run`, the manifest carrying forward a link it failed to remove, and the
-two literal carriage returns in `home/.gitignore_global`. Changing one of those on purpose means
+two literal carriage returns in `home/.config/git/ignore`. Changing one of those on purpose means
 changing its test; having one break by accident is the point.
 
 ## License

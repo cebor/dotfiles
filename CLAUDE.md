@@ -173,11 +173,16 @@ documented in `test/CLAUDE.md`, next to the suite.
 - OS differences stay **inline** in the config files, not in per-OS overlay directories.
 - Git config is applied imperatively by `setup/git.sh`; there is no static `.gitconfig`.
   `user.name`/`user.email` are prompted only when unset.
+- The global ignore file lives at `home/.config/git/ignore`, which is git's own default
+  (`$XDG_CONFIG_HOME/git/ignore`) — so `core.excludesfile` is deliberately **not** set: leaving it
+  unset is what makes the file take effect. The one thing this trades away is a custom
+  `$XDG_CONFIG_HOME` — git would then look elsewhere while `sync` still links into `~/.config`.
+  Nothing here sets that variable, and `home/.config/` already assumes the default.
 - `home/.exports` is the single source of truth for `LANG`. `setup/locale.sh` parses the value back
   out of that file rather than reading `$LANG` from the environment — the process running `./dot`
   need never have sourced it. Anything else that needs the locale should go through
   `_locale_wanted`, not hardcode a name.
-- `home/.gitignore_global` contains two **literal carriage returns** after `Icon` (macOS names
+- `home/.config/git/ignore` contains two **literal carriage returns** after `Icon` (macOS names
   folder-icon files `Icon\r`). `.editorconfig` and `.gitattributes` both carve out an exception for
   it — do not "clean up" that line, and check with `od -c` after editing.
 - Zsh plugins that only apply to one OS go in `home/.zsh_plugins.txt` with antidote's

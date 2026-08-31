@@ -13,12 +13,12 @@ setup() {
 
 teardown() { teardown_sandbox; }
 
-@test "home/.gitignore_global keeps its two literal carriage returns" {
+@test "home/.config/git/ignore keeps its two literal carriage returns" {
   # macOS names folder-icon files Icon\r, and .editorconfig and .gitattributes
   # both carve out an exception for this line. Stripping the CRs makes the
   # pattern silently stop matching.
   local content
-  content="$(cat "$REPO/home/.gitignore_global")"
+  content="$(cat "$REPO/home/.config/git/ignore")"
   [[ "$content" == *$'Icon\r\r'* ]]
 }
 

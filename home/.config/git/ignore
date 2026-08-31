@@ -44,4 +44,6 @@ npm-debug.log
 *.pyc
 
 # Claude Code
-.claude/settings.local.json
+# `**/` because a pattern with a slash in the global ignore file is otherwise
+# anchored to the top level of the work tree — see gitignore(5).
+**/.claude/settings.local.json

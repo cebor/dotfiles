@@ -25,10 +25,9 @@ setup_git() {
   # closing ok only fires when none of them warned.
   local warnings_before="$LOG_WARNINGS"
 
-  # the literal ~ is the point: git expands it itself, and writing $HOME out in
-  # full would bake this machine's home directory into ~/.gitconfig
-  # shellcheck disable=SC2088
-  try git config --global core.excludesfile "~/.gitignore_global"
+  # No core.excludesfile here on purpose: the ignore file lives at git's own
+  # default, $XDG_CONFIG_HOME/git/ignore (~/.config/git/ignore), so leaving the
+  # setting unset is what makes it take effect.
 
   # helix is the preferred editor, but `./dot packages` cannot install it on
   # plain Debian (no apt package, see setup/packages-linux.sh) — pointing
@@ -41,16 +40,6 @@ setup_git() {
   try git config --global push.default "simple"
   try git config --global push.followTags "true"
   try git config --global init.defaultBranch "main"
-
-  # The old layout pointed this at ~/.gitattributes_global, which no longer
-  # exists — drop the dangling setting on machines that ran the previous script,
-  # but only when it still holds that old value.
-  # compared against the unexpanded string, because that is what the old script
-  # stored in ~/.gitconfig — expanding it here would never match
-  # shellcheck disable=SC2088
-  if [ "$(git config --global --get core.attributesfile)" = "~/.gitattributes_global" ]; then
-    try git config --global --unset core.attributesfile
-  fi
 
   # credential storage differs per platform. libsecret is not an apt package on
   # Debian/Ubuntu, so Linux normally lands on the cache helper — see packages/apt.txt.
