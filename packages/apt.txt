@@ -49,7 +49,8 @@ git                         # upgraded to the git-core PPA build on Ubuntu
 curl
 ca-certificates
 gnupg                       # gpg
-software-properties-common  # add-apt-repository, for the git and helix PPAs
+software-properties-common @ubuntu  # add-apt-repository; both PPAs are Ubuntu-only,
+                                    # and so is setup/prereqs.sh's install of it
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Editors

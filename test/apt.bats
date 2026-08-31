@@ -147,8 +147,13 @@ git'
   [[ " ${APT_PACKAGES[*]} " == *" xclip "* ]]
   [[ " ${APT_PACKAGES[*]} " == *" helix "* ]]
   [[ " ${APT_PACKAGES[*]} " != *" wslu "* ]]
+  # add-apt-repository, which only the two Ubuntu-only PPAs need — the same
+  # condition setup/prereqs.sh installs it under
+  [[ " ${APT_PACKAGES[*]} " == *" software-properties-common "* ]]
 
   platform 1 1          # bare Debian — no helix package exists there
   _apt_read_list
   [[ " ${APT_PACKAGES[*]} " != *" helix "* ]]
+  [[ " ${APT_PACKAGES[*]} " != *" software-properties-common "* ]]
+
 }
