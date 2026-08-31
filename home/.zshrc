@@ -1,3 +1,8 @@
+# Keep $PATH free of duplicates. .exports prepends ~/.local/bin and appends
+# /snap/bin unconditionally, and `exec zsh` — which this repo tells you to run
+# after every change — re-sources them into an environment that already has both.
+typeset -U path PATH
+
 # Homebrew (macOS): sets up PATH and provides `brew --prefix`
 if [ -x /opt/homebrew/bin/brew ]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
