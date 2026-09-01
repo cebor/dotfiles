@@ -122,6 +122,28 @@ teardown() { teardown_sandbox; }
   [ ! -e "$HOME/.local/bin/dot" ]
 }
 
+@test "dot works when run through the ~/.local/bin link" {
+  # Through that link $BASH_SOURCE is ~/.local/bin/dot, whose directory is a
+  # real one — `pwd -P` canonicalises it without complaint and every `source`
+  # then looks for lib/ inside ~/.local/bin. Nothing uses set -e, so the failure
+  # is silent apart from every helper becoming an unknown command.
+  "$DOT" sync -y >/dev/null
+  run "$HOME/.local/bin/dot" sync --status
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"command not found"* ]]
+}
+
+@test "dot follows a chain of links and a relative target" {
+  mkdir -p "$SANDBOX/bin2"
+  ln -s "$DOT" "$SANDBOX/bin2/dot-abs"
+  # relative, so it only resolves against the directory holding the link
+  ( cd "$SANDBOX/bin2" && ln -s dot-abs dot-rel )
+
+  run "$SANDBOX/bin2/dot-rel" help
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Usage: ./dot <command>"* ]]
+}
+
 # --- the dry-run invariant, end to end -------------------------------------
 
 @test "a dry run of sync writes nothing" {

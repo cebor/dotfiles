@@ -257,8 +257,9 @@ What the tests are for is less "does bash work" than pinning the decisions this 
 cannot otherwise enforce: the branch order in `_link_state`, that a dry run writes nothing at all,
 the argument re-quoting in `run`, `_apt_read_list` filling a global rather than echoing, the
 manifest carrying forward a link it failed to remove — in `link_tree` *and* in `link_unlink` — the
-stdout/stderr split, that `~/.local/bin/dot` never enters the manifest, that the last line of `dot`
-is a group ending in `exit`, the two literal carriage returns in `home/.config/git/ignore`, and that
+stdout/stderr split, that `~/.local/bin/dot` never enters the manifest, that `dot` still works when
+invoked through that link, that the last line of `dot` is a group ending in `exit`, the two literal
+carriage returns in `home/.config/git/ignore`, and that
 `home/.zshrc` defines `has_brew` before `antidote load`. `CLAUDE.md`
 keeps the authoritative list; this one has to match it. Changing one of those on purpose means
 changing its test; having one break by accident is the point.

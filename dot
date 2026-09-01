@@ -13,10 +13,35 @@
 # No `set -euo pipefail` on purpose: a step that fails should warn and let the
 # rest of the run continue. Failures are counted and reported at the end.
 
+# The script's own path has to be resolved before its directory is the repo:
+# `sync` links ~/.local/bin/dot at this file, and through that link
+# $BASH_SOURCE is ~/.local/bin/dot — a real directory, so `pwd -P` canonicalises
+# it happily and every `source` below then looks for lib/ inside ~/.local/bin.
+# Nothing here uses `set -e`, so that failure is silent and shows up as every
+# helper being an unknown command. Hand-rolled rather than `readlink -f`, which
+# BSD readlink did not have for most of this repo's life.
+#
+# The loop is bounded because a link that points at itself would otherwise spin
+# here forever; 40 is what the kernel allows before ELOOP anyway.
+_dot_self="${BASH_SOURCE[0]}"
+_dot_hops=0
+while [ -L "$_dot_self" ] && [ "$_dot_hops" -lt 40 ]; do
+  _dot_dir="$(cd "$(dirname "$_dot_self")" && pwd -P)"
+  _dot_self="$(readlink "$_dot_self")"
+  # a relative target is relative to the directory that holds the link
+  case "$_dot_self" in
+    /*) ;;
+    *)  _dot_self="$_dot_dir/$_dot_self" ;;
+  esac
+  _dot_hops=$((_dot_hops + 1))
+done
+
 # -P, so the root is the canonical path even when the repo is reached through a
-# symlink. Without it `~/dotfiles/dot` and `~/code/dotfiles/dot` produce two
-# different link targets for the same file, and each run undoes the other's links.
-DOTFILES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+# symlinked *directory*. Without it `~/dotfiles/dot` and `~/code/dotfiles/dot`
+# produce two different link targets for the same file, and each run undoes the
+# other's links.
+DOTFILES_ROOT="$(cd "$(dirname "$_dot_self")" && pwd -P)"
+unset _dot_self _dot_dir _dot_hops
 
 # shellcheck source=lib/os.sh
 source "$DOTFILES_ROOT/lib/os.sh"

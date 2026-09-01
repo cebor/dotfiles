@@ -34,6 +34,12 @@ exported `$DOTFILES_OS`.
 - `dot` — the only entrypoint. Parses global flags, sources `lib/*.sh` once, then sources the
   needed `setup/*.sh` and calls its function. Everything under `lib/` and `setup/` is sourced,
   never executed.
+  `$DOTFILES_ROOT` resolves `$BASH_SOURCE` through **its own symlink** before taking the dirname:
+  `sync` links `~/.local/bin/dot` at this file, and reached that way `$BASH_SOURCE` is
+  `~/.local/bin/dot` — a real directory, which `pwd -P` canonicalises happily, leaving every
+  `source` looking for `lib/` inside `~/.local/bin`. With no `set -e` that failure is silent and
+  surfaces as every helper being an unknown command. The loop is hand-rolled (BSD `readlink` had
+  no `-f` for most of this repo's life) and bounded, so a link pointing at itself cannot spin.
   `main` owns the run summary and the exit code for every mutating command: non-zero when
   `$LOG_ERRORS > 0` or the command itself returned non-zero, warnings reported but not fatal.
   `doctor` and `help` report themselves and return early.
@@ -191,7 +197,8 @@ The suite exists for the rules in this file that nothing else enforces: the bran
 `_link_state`, "a dry run writes nothing at all", the re-quoting in `run`, `_apt_read_list` filling
 a global rather than echoing, the manifest carrying forward a link it failed to remove — in
 `link_tree` *and* in `link_unlink` — the stdout/stderr split, that `~/.local/bin/dot` never enters
-the manifest, that the last line of `dot` is a group ending in `exit`, the two literal carriage
+the manifest, that `dot` still works when invoked through that link, that the last line of `dot`
+is a group ending in `exit`, the two literal carriage
 returns in `home/.config/git/ignore`, and that `home/.zshrc` defines `has_brew` before
 `antidote load`. `README.md` repeats the list; keep the two in step.
 **A change to one of those is a change to its test** — if a documented invariant is not asserted
