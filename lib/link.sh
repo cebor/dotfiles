@@ -13,6 +13,19 @@ LINK_SRC="$DOTFILES_ROOT/home"
 LINK_MANIFEST="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/manifest"
 LINK_BACKUP_ROOT="$HOME/.dotfiles-backup"
 
+# `dot` itself, onto $PATH. home/.exports already prepends ~/.local/bin, so a
+# link there is the whole of it.
+#
+# Deliberately outside the manifest, unlike everything else this file links: its
+# source is $DOTFILES_ROOT/dot, not a file under home/, so a manifest entry for
+# it is exactly what link_orphans calls somebody else's link — source missing
+# from $LINK_SRC, target pointing outside it — and every sync from then on would
+# warn about it. The manifest is there for renames of arbitrary files; this one
+# path is known and never moves, so it is handled by name.
+LINK_BIN_DIR="$HOME/.local/bin"
+LINK_BIN_SRC="$DOTFILES_ROOT/dot"
+LINK_BIN_DEST="$LINK_BIN_DIR/dot"
+
 # One directory per run, stamped up front so every conflict in this run lands
 # together. Created lazily by _backup, so a clean run leaves nothing behind.
 _link_backup_dir=""
@@ -132,6 +145,78 @@ _prune() {
       if [ -n "$keep" ]; then printf '%s\n' "$rel" >> "$keep"; fi
     fi
   done < <(link_stale)
+}
+
+# --- `dot` on $PATH --------------------------------------------------------
+#
+# One known path rather than a manifest entry (see LINK_BIN_DEST above), so it
+# gets its own three functions: a classifier, the mutating half link_tree calls
+# and the read-only half link_status calls.
+#
+# The messages name it `.local/bin/dot`, relative to $HOME like every other line
+# of the link report — and a leading literal `~/` in a quoted string is an
+# SC2088 waiting to happen.
+
+# linked | stale-link | conflict | missing — _link_state's vocabulary minus
+# `self`: that state needs a directory above $dest to be a link into home/, and
+# nothing in this repo ever links ~/.local or ~/.local/bin.
+_link_bin_state() {
+  if [ -L "$LINK_BIN_DEST" ]; then
+    if [ "$(readlink "$LINK_BIN_DEST")" = "$LINK_BIN_SRC" ]; then echo "linked"; else echo "stale-link"; fi
+  elif [ -e "$LINK_BIN_DEST" ]; then
+    echo "conflict"
+  else
+    echo "missing"
+  fi
+}
+
+# Create the link. Called by link_tree.
+link_bin() {
+  local state note=""
+  state="$(_link_bin_state)"
+  case "$state" in
+    linked)
+      skip ".local/bin/dot"
+      return 0
+      ;;
+    conflict)
+      # The one place this file does not back the conflict up and link over it:
+      # what sits there is somebody's own binary, not a dotfile the repo owns,
+      # and moving a program out of $PATH is not ours to do. An err rather than
+      # a warn because `dot` will not be on $PATH until a human sorts it out.
+      err ".local/bin/dot is a real file, not our link — move it aside and re-run"
+      return 1
+      ;;
+    stale-link)
+      note=" (was pointing at $(readlink "$LINK_BIN_DEST"))"
+      ;;
+  esac
+
+  if run mkdir -p "$LINK_BIN_DIR" && run ln -sfn "$LINK_BIN_SRC" "$LINK_BIN_DEST"; then
+    ok_run ".local/bin/dot -> $LINK_BIN_SRC$note" \
+           "would link .local/bin/dot -> $LINK_BIN_SRC$note"
+    # home/.exports guards the $PATH entry on the directory existing, so on the
+    # run that creates it the shell we were started from does not have it yet.
+    # Only on a real run — after a dry run there is nothing to pick up.
+    if [ -z "$DRY_RUN" ] && ! has dot; then
+      info "run \`exec zsh\` to pick \`dot\` up"
+    fi
+    return 0
+  fi
+  err "could not link .local/bin/dot"
+  return 1
+}
+
+# Read-only report, folded into link_status so `./dot sync --status` and
+# `./dot doctor` both get it from one place.
+link_bin_status() {
+  case "$(_link_bin_state)" in
+    linked)     skip ".local/bin/dot" ; return 0 ;;
+    missing)    warn ".local/bin/dot — not linked, \`dot\` is not on \$PATH — run ./dot sync" ;;
+    conflict)   warn ".local/bin/dot — a real file is in the way" ;;
+    stale-link) warn ".local/bin/dot — link points elsewhere: $(readlink "$LINK_BIN_DEST")" ;;
+  esac
+  return 1
 }
 
 # Link every file in home/ into $HOME. Idempotent.
@@ -268,6 +353,11 @@ link_tree() {
     run chmod 700 "$HOME/.ssh" || warn "could not chmod 700 $HOME/.ssh"
   fi
 
+  # `dot` itself onto $PATH. Counted into $failed like any other file, which is
+  # why link_bin reports its refusals with err — the closing line below sends
+  # the reader to "the errors above".
+  link_bin || failed=$((failed + 1))
+
   # nothing to install or clean up under --dry-run: manifest_tmp is /dev/null
   if [ -z "$DRY_RUN" ]; then
     if mkdir -p "$(dirname "$LINK_MANIFEST")" && mv "$manifest_tmp" "$LINK_MANIFEST"; then
@@ -318,6 +408,9 @@ link_status() {
     warn "$rel — no longer in home/, points at another checkout: $(readlink "$HOME/$rel")"
     bad=1
   done < <(link_orphans)
+
+  # the one link outside the manifest, so outside both loops above
+  link_bin_status || bad=1
 
   return $bad
 }
@@ -374,6 +467,21 @@ link_unlink() {
     removed=$((removed + 1))
     ok "$did $rel"
   done < <(link_files)
+
+  # `dot` on $PATH — never in the manifest, so it has to be named here too
+  case "$(_link_bin_state)" in
+    linked)
+      if run rm -f "$LINK_BIN_DEST"; then
+        removed=$((removed + 1))
+        ok "$did .local/bin/dot"
+      else
+        err "could not remove .local/bin/dot"
+      fi
+      ;;
+    stale-link)
+      warn ".local/bin/dot — points at another checkout ($(readlink "$LINK_BIN_DEST")), left untouched"
+      ;;
+  esac
 
   # nothing survived -> the manifest has no purpose left; otherwise it keeps the
   # leftovers so the next ./dot sync can try again

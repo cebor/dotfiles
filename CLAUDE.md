@@ -6,8 +6,8 @@ Guidance for working in this repository.
 
 Cross-platform (macOS + WSL2/Ubuntu) dotfiles with a **single entrypoint**: three phases
 (`sync`, `packages`, `configure`), each runnable on its own, wrapped by `install` (all three, with
-the system prerequisites first, on both platforms) and the read-only `doctor`. `./dot help` has the
-full usage.
+the system prerequisites first, on both platforms), plus `update` (fast-forward the checkout, then
+`sync`) and the read-only `doctor`. `./dot help` has the full usage.
 
 The platform is auto-detected (`uname` via `lib/os.sh`); `--linux` forces the Linux path via the
 exported `$DOTFILES_OS`.
@@ -37,6 +37,21 @@ exported `$DOTFILES_OS`.
   `main` owns the run summary and the exit code for every mutating command: non-zero when
   `$LOG_ERRORS > 0` or the command itself returned non-zero, warnings reported but not fatal.
   `doctor` and `help` report themselves and return early.
+  Its last line is `{ main "$@"; exit $?; }`, not a bare `main "$@"`: `./dot update` replaces this
+  very file mid-run, and bash reads a script one command at a time from a file offset it would
+  otherwise return to afterwards. git's rename-into-place is what keeps a bare call harmless today
+  — the descriptor still points at the old inode — which is exactly why the guard is easy to drop
+  by accident. The group is parsed in full before it runs and the `exit` ends the read.
+  `cmd_update` is `git fetch` + `merge --ff-only` against the branch's upstream, then `cmd_sync` —
+  `sync` and nothing else: it is the one phase a new commit can invalidate on its own, while
+  `packages` and `configure` want sudo and the network, which is more than "update the repo" should
+  imply. Uncommitted changes only **warn** — `merge --ff-only` refuses on its own if the update
+  would overwrite one, so nothing can be lost, and refusing up front would block the common case of
+  an edit under `home/` while the incoming commits touch `setup/`. Only `fetch` and `merge` go
+  through `run`; the queries around them are read-only, like the `git config --get` calls in
+  `cmd_doctor`. So a dry run compares against whatever the last real fetch left behind, and says
+  so. The run finishes with the code it started with — everything was sourced before the merge — so
+  a commit that changes `link_tree` takes effect on the *next* invocation.
 - `lib/os.sh` — platform detection and the predicates the rest of the repo is written in. Honors
   `$DOTFILES_OS`. `current_user` is `id -un`, not `$USER` — `su`, `sudo -i`, cron and containers
   leave `$USER` unset, and an empty user name is what turns `chsh` into a failed run.
@@ -73,6 +88,16 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
   from here, so these are only ever reported and carried into the new manifest, never removed.
   Dropping them instead would lose the only record of them, which is the loss the manifest exists
   to prevent.
+- `~/.local/bin/dot` is the one link that is **not** a mirror of `home/`: it points at
+  `$DOTFILES_ROOT/dot` itself, so `dot` is on `$PATH` (`home/.exports` already prepends that
+  directory, guarded on it existing — hence the `exec zsh` hint after the first sync). It is
+  deliberately kept **out of the manifest**: an entry there is exactly what `link_orphans` calls
+  somebody else's link — source missing from `$LINK_SRC`, target pointing outside it — and every
+  sync from then on would warn about it. So it is handled by name instead, by `link_bin` /
+  `link_bin_status` / `_link_bin_state`, called from `link_tree`, `link_status` and `link_unlink`.
+  A real file already at that path is the one conflict this repo does **not** back up and link
+  over: what sits there is somebody's own binary, not a dotfile we own. `doctor` additionally
+  reports when `command -v dot` resolves somewhere else — graphviz ships a `dot` too.
 - Editing an already-linked file needs **no** sync. `./dot sync` is only for new/renamed/deleted files.
 
 ### Package sources
@@ -165,8 +190,10 @@ not a failed configuration step, and bats output is not the run report.
 The suite exists for the rules in this file that nothing else enforces: the branch order in
 `_link_state`, "a dry run writes nothing at all", the re-quoting in `run`, `_apt_read_list` filling
 a global rather than echoing, the manifest carrying forward a link it failed to remove — in
-`link_tree` *and* in `link_unlink` — the stdout/stderr split, and that `home/.zshrc` defines
-`has_brew` before `antidote load`. `README.md` repeats the list; keep the two in step.
+`link_tree` *and* in `link_unlink` — the stdout/stderr split, that `~/.local/bin/dot` never enters
+the manifest, that the last line of `dot` is a group ending in `exit`, the two literal carriage
+returns in `home/.config/git/ignore`, and that `home/.zshrc` defines `has_brew` before
+`antidote load`. `README.md` repeats the list; keep the two in step.
 **A change to one of those is a change to its test** — if a documented invariant is not asserted
 anywhere, it is prose, which is the state this suite was written to end. New invariants come with
 a test.
@@ -224,6 +251,7 @@ The functions in `home/.functions` (`svenv`, `scpp`, `tunnel`, `pwgen`, `server`
 - **Add a zsh plugin**: edit `home/.zsh_plugins.txt` → `exec zsh`.
 - **Modify a macOS setting**: edit `setup/macos-defaults.sh` → `./dot configure macos`.
 - **Change the locale**: edit `LANG` in `home/.exports` → `./dot configure locale`.
+- **Update the repo**: `./dot update` (fetch, fast-forward, re-link). `./dot install` for the rest.
 - **Check the setup**: `./dot doctor`, or `./dot sync --status` for links only.
 - **Run the tests**: `./dot test` (syntax → shellcheck → bats, stopping at the first failure), or
   `docker build -f test/Dockerfile -t dot-test . && docker run --rm dot-test` for a CI-shaped run.

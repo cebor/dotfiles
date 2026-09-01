@@ -6,6 +6,7 @@
 #   ./dot sync        symlink home/ into $HOME
 #   ./dot packages    install packages for this platform
 #   ./dot configure   apply configuration (locale, git, shell, vim, macOS defaults)
+#   ./dot update      fast-forward the repo to its upstream, then sync
 #   ./dot doctor      report what is missing or out of sync
 #   ./dot test        lint and run the test suite
 #
@@ -36,6 +37,7 @@ Commands:
   sync               Symlink home/ into $HOME (dotfiles and configs only)
   packages           Install packages: Brewfile on macOS, apt sources + apt.txt on Linux
   configure [step]   Apply configuration; step = locale | git | shell | vim | macos
+  update             Fast-forward the repo to its upstream, then sync
   doctor             Health check: links, tools, shell, locale, git identity
   test               Syntax check, shellcheck and the bats suite under test/
   help               Show this help
@@ -49,9 +51,10 @@ Options:
       --status       sync only: report link state without writing
 
 Examples:
-  ./dot install              # first run on a new machine, and for updates
+  ./dot install              # first run on a new machine, and after a packages/config change
   ./dot sync                 # after editing anything under home/
   ./dot sync --status        # what drifted?
+  ./dot update               # pull the latest commits and re-link
   ./dot configure git        # just re-apply the git config
 EOF
 }
@@ -165,6 +168,92 @@ cmd_install() {
   return "$rc"
 }
 
+# Fast-forward the checkout to its upstream, then re-link.
+#
+# `sync` afterwards and nothing else: it is the one phase a new commit can
+# invalidate on its own — a file added to or renamed under home/ stays unlinked
+# until sync runs, while editing an already-linked file needs nothing. packages
+# and configure want sudo and the network, which is more than "update the repo"
+# should ever imply; `./dot install` is still there for that.
+#
+# The git queries below are read-only and deliberately not wrapped in `run` —
+# same as the `git config --get` calls in cmd_doctor. Only the two commands that
+# write (fetch, merge) go through it, so --dry-run reports against whatever the
+# last real fetch left behind and says so.
+cmd_update() {
+  [ $# -eq 0 ] || die "update takes no options (got: $*)"
+
+  section "Updating the repo"
+
+  # same guard as setup/git.sh and cmd_doctor: without git every query below
+  # sprays "command not found" onto stderr, outside the run report
+  if ! has git; then
+    err "git not installed — run ./dot packages"
+    return 1
+  fi
+
+  # --show-toplevel, not --git-dir: a checkout dropped inside another repo would
+  # answer yes to "is there a git dir above me?" and we would update that one.
+  # Both sides are canonical — $DOTFILES_ROOT is built with `pwd -P`.
+  local toplevel
+  toplevel="$(git -C "$DOTFILES_ROOT" rev-parse --show-toplevel 2>/dev/null)"
+  if [ "$toplevel" != "$DOTFILES_ROOT" ]; then
+    err "$DOTFILES_ROOT is not the root of a git checkout — nothing to update"
+    return 1
+  fi
+
+  local upstream
+  upstream="$(git -C "$DOTFILES_ROOT" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null)"
+  if [ -z "$upstream" ]; then
+    err "the current branch has no upstream — set one with: git -C $DOTFILES_ROOT branch -u <remote>/<branch>"
+    return 1
+  fi
+
+  # Local changes are not a reason to refuse. The common case is an edit under
+  # home/ while the incoming commits touch setup/, and `merge --ff-only` refuses
+  # on its own when the update would overwrite one of them — nothing can be
+  # lost. The warning still has to be here, or a refusal below would read as if
+  # the remote were at fault.
+  if [ -n "$(git -C "$DOTFILES_ROOT" status --porcelain 2>/dev/null)" ]; then
+    warn "the repo has uncommitted changes — the update is refused if it would overwrite one"
+  fi
+
+  if ! run git -C "$DOTFILES_ROOT" fetch --quiet; then
+    err "git fetch failed — is $upstream reachable from here?"
+    return 1
+  fi
+
+  local behind line
+  behind="$(git -C "$DOTFILES_ROOT" rev-list --count "HEAD..$upstream" 2>/dev/null)"
+  if [ "${behind:-0}" -eq 0 ]; then
+    ok_run "already up to date with $upstream" \
+           "already up to date with $upstream (as of the last fetch)"
+    return 0
+  fi
+
+  info "$behind commit(s) behind $upstream:"
+  # no bare echo: the log lines are part of the run report like everything else
+  while IFS= read -r line; do
+    info "  $line"
+  done < <(git -C "$DOTFILES_ROOT" log --oneline --no-decorate "HEAD..$upstream" 2>/dev/null)
+
+  # --quiet: the commits are already listed above, and merge's own diffstat is
+  # raw output in the middle of the run report
+  if ! run git -C "$DOTFILES_ROOT" merge --quiet --ff-only "$upstream"; then
+    err "fast-forward failed — the branch has diverged or a local change is in the way; sort it out in $DOTFILES_ROOT"
+    return 1
+  fi
+  ok_run "fast-forwarded to $upstream" "would fast-forward to $upstream"
+
+  # This process is still running the code it was started with: `dot` and
+  # everything under lib/ and setup/ were sourced before the merge above
+  # replaced them on disk. That is deliberate and predictable — the new
+  # link_tree takes effect on the next invocation, not in the sync below.
+  local rc=0
+  cmd_sync || rc=1
+  return "$rc"
+}
+
 # Lint and test, in the order that gives the most useful first failure: a syntax
 # error makes every later stage meaningless, and a shellcheck finding is cheaper
 # to read than a bats failure caused by it.
@@ -264,6 +353,22 @@ cmd_doctor() {
 
   section "Links"
   link_status || issues=1
+
+  # link_status covered the link itself; what it cannot see is whether that link
+  # is the `dot` $PATH resolves to. ~/.local/bin is *prepended* by home/.exports,
+  # so ours normally wins — but graphviz ships a `dot` of its own, and the entry
+  # is guarded on the directory existing, so the shell that started this run may
+  # predate it. That last case is an info, not a finding: nothing is wrong yet.
+  if [ "$(_link_bin_state)" = "linked" ]; then
+    local dot_on_path
+    dot_on_path="$(command -v dot)"
+    if [ -z "$dot_on_path" ]; then
+      info "dot is not on this shell's PATH yet — exec zsh"
+    elif [ "$dot_on_path" != "$LINK_BIN_DEST" ]; then
+      warn "\`dot\` resolves to $dot_on_path, not ~/.local/bin/dot"
+      issues=1
+    fi
+  fi
 
   section "Tools"
   # a spot check of the things other parts of this repo assume exist, not a
@@ -375,6 +480,7 @@ main() {
     sync)            cmd_sync "${args[@]}" ;;
     packages)        cmd_packages "${args[@]}" ;;
     configure)       cmd_configure "${args[@]}" ;;
+    update)          cmd_update "${args[@]}" ;;
     *)               err "unknown command: $command"; usage; return 1 ;;
   esac
   status=$?
@@ -389,4 +495,15 @@ main() {
   return "$status"
 }
 
-main "$@"
+# `./dot update` replaces this file while bash is executing it. Bash parses a
+# script one command at a time and keeps a file offset, so a bare `main "$@"` as
+# the last line leaves it reading from the file once more after main returns —
+# and from a *longer* replacement that offset lands mid-line, whose remainder is
+# then run as a command.
+#
+# Today that cannot happen: git writes a new file and renames it over this one,
+# so our descriptor still refers to the old, unchanged inode. But "safe as long
+# as whatever rewrote us did not do it in place" is not a property to depend on.
+# The group is parsed in full before any of it runs and the exit means the file
+# is never read again, either way.
+{ main "$@"; exit $?; }

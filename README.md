@@ -30,7 +30,12 @@ With `git` and an SSH key already in place, clone it yourself instead and skip t
 git clone git@github.com:cebor/dotfiles.git ~/code/dotfiles
 ```
 
-`./dot install` is idempotent — it is also the regular update command.
+`./dot install` is idempotent, so re-running it is always safe. For the regular update there is
+`./dot update`, which fetches, fast-forwards and re-links; `./dot install` is what you want when a
+commit also added a package or changed the configuration.
+
+After the first `exec zsh`, `dot` is on your `$PATH` — `sync` links it into `~/.local/bin`, so
+`dot doctor` and `dot update` work from anywhere and the `./` is only needed before that.
 
 > The repo has to stay where you cloned it: the symlinks point back at it by absolute path.
 
@@ -42,6 +47,7 @@ git clone git@github.com:cebor/dotfiles.git ~/code/dotfiles
 | `./dot sync` | Symlink `home/` into `$HOME` — dotfiles and configs only |
 | `./dot packages` | Install packages: `Brewfile` on macOS, apt sources + `apt.txt` on Linux |
 | `./dot configure` | Apply configuration: locale, git, login shell, vim, macOS defaults |
+| `./dot update` | Fast-forward the checkout to its upstream, then re-link |
 | `./dot doctor` | Health check: links, tools, login shell, locale, git identity |
 | `./dot test` | Syntax check, shellcheck and the bats suite under `test/` |
 | `./dot help` | Usage summary |
@@ -251,7 +257,9 @@ What the tests are for is less "does bash work" than pinning the decisions this 
 cannot otherwise enforce: the branch order in `_link_state`, that a dry run writes nothing at all,
 the argument re-quoting in `run`, `_apt_read_list` filling a global rather than echoing, the
 manifest carrying forward a link it failed to remove — in `link_tree` *and* in `link_unlink` — the
-stdout/stderr split, and the two literal carriage returns in `home/.config/git/ignore`. `CLAUDE.md`
+stdout/stderr split, that `~/.local/bin/dot` never enters the manifest, that the last line of `dot`
+is a group ending in `exit`, the two literal carriage returns in `home/.config/git/ignore`, and that
+`home/.zshrc` defines `has_brew` before `antidote load`. `CLAUDE.md`
 keeps the authoritative list; this one has to match it. Changing one of those on purpose means
 changing its test; having one break by accident is the point.
 

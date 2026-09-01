@@ -12,8 +12,14 @@ mechanics.
   `test/repo.bats` source nothing and so use plain `run`.
 - bats runs test bodies under `set -e`, so a deliberately failing call needs `|| true` — otherwise
   the test aborts instead of reaching its assertion.
-- `test/cli.bats` drives `./dot` as a subprocess. `dot` calls `main "$@"` at file scope and cannot
-  be sourced; running the real entrypoint is the better coverage anyway, so it stays that way.
+- `test/cli.bats` drives `./dot` as a subprocess. `dot` calls `main` at file scope and cannot be
+  sourced; running the real entrypoint is the better coverage anyway, so it stays that way.
+- The `update` tests need a repo of their own: `seed_checkout` copies the **working tree** into the
+  sandbox (not `git archive HEAD` — the point is to run the `./dot` being edited), `git init`s it
+  and gives it a bare upstream to fast-forward from, and `push_upstream_commit` puts one commit
+  there. `dot update` acts on its own `$DOTFILES_ROOT`, so this is the only way to exercise it
+  without touching the real checkout. That commit deliberately also lengthens `./dot`, so the run
+  is one that rewrites the file its own interpreter is reading.
 - CI and `test/Dockerfile` both provision through `test/ci-deps.sh`, so the package list has one
   home. `cmd_test` lints it along with `dot`, `bootstrap.sh`, `lib/` and `setup/` — CI runs it on
   every job. `test/helper.bash` is left out on purpose: every variable it sets is consumed by the

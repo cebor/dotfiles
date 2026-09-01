@@ -114,6 +114,21 @@ teardown() { teardown_sandbox; }
 dot" ]
 }
 
+@test "dot ends in a group that exits" {
+  # `./dot update` replaces this file while bash is executing it. Bash parses one
+  # command at a time and keeps a file offset, so a bare `main "$@"` as the last
+  # line leaves it reading from the file once more after main returns. git's
+  # rename-into-place is what keeps that harmless today — the descriptor still
+  # points at the old inode — which is exactly why the guard is easy to drop by
+  # accident: nothing breaks until something rewrites the file in place.
+  local last
+  last="$(grep -vE '^[[:space:]]*(#|$)' "$REPO/dot" | tail -n 1)"
+  [ "$last" = '{ main "$@"; exit $?; }' ] || {
+    echo "the last line of dot is: $last"
+    return 1
+  }
+}
+
 @test "bootstrap.sh sources nothing from the repo" {
   # it is fetched by curl and runs before the repo exists, so its output helpers
   # are deliberate duplicates of lib/log.sh and must stay self-contained

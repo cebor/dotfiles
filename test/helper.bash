@@ -37,8 +37,9 @@ teardown_sandbox() {
 }
 
 # Source the libraries into the test process and reset the log counters.
-# $LINK_SRC is repointed at the sandbox afterwards, so link tests get a home/
-# tree they own; pass "real" to keep the repo's own home/ instead.
+# $LINK_SRC and $LINK_BIN_SRC are repointed at the sandbox afterwards, so link
+# tests get a home/ tree they own; pass "real" to keep the repo's own home/
+# instead.
 #
 # lib/log.sh defines run() and skip(), which shadow the bats builtins of the same
 # name for the rest of the process. Tests need both meanings — the repo's to
@@ -60,6 +61,10 @@ load_dotfiles() {
   source "$DOTFILES_ROOT/lib/link.sh"
   if [ "$1" != "real" ]; then
     LINK_SRC="$SANDBOX/src"
+    # the same repointing for the one link that is not part of the home/ tree.
+    # $LINK_BIN_DEST already lands in the sandbox, $HOME being one; only the
+    # target would otherwise name the real repo's ./dot.
+    LINK_BIN_SRC="$SANDBOX/dot"
   fi
   reset_counters
 }

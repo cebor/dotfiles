@@ -299,6 +299,87 @@ teardown() { teardown_sandbox; }
   [[ "$output" != *"—"* ]]
 }
 
+# --- `dot` on $PATH --------------------------------------------------------
+
+@test "_link_bin_state classifies missing, linked, stale-link and conflict" {
+  [ "$(_link_bin_state)" = "missing" ]
+
+  mkdir -p "$LINK_BIN_DIR"
+  ln -sfn "$LINK_BIN_SRC" "$LINK_BIN_DEST"
+  [ "$(_link_bin_state)" = "linked" ]
+
+  ln -sfn /somewhere/else "$LINK_BIN_DEST"
+  [ "$(_link_bin_state)" = "stale-link" ]
+
+  rm "$LINK_BIN_DEST"
+  mkfile "$LINK_BIN_DEST" "graphviz, say"
+  [ "$(_link_bin_state)" = "conflict" ]
+}
+
+@test "link_tree puts dot on \$PATH" {
+  link_tree >/dev/null
+  [ -L "$LINK_BIN_DEST" ]
+  [ "$(readlink "$LINK_BIN_DEST")" = "$LINK_BIN_SRC" ]
+}
+
+@test "the dot link stays out of the manifest" {
+  # Its source is $DOTFILES_ROOT/dot, not a file under home/, so a manifest
+  # entry for it is precisely what link_orphans calls somebody else's link —
+  # source gone from $LINK_SRC, target outside it — and every sync from then on
+  # would warn about it. This is the assertion that keeps that from creeping in.
+  link_tree >/dev/null
+  bats_run cat "$LINK_MANIFEST"
+  [[ "$output" != *".local/bin/dot"* ]]
+
+  # and the second run says nothing about another checkout
+  bats_run link_tree
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"another checkout"* ]]
+  [ -L "$LINK_BIN_DEST" ]
+}
+
+@test "link_tree replaces a dot link pointing at another checkout" {
+  mkdir -p "$LINK_BIN_DIR"
+  ln -sfn /old/checkout/dot "$LINK_BIN_DEST"
+
+  bats_run link_tree
+  [ "$status" -eq 0 ]
+  [ "$(readlink "$LINK_BIN_DEST")" = "$LINK_BIN_SRC" ]
+  [[ "$output" == *"was pointing at /old/checkout/dot"* ]]
+}
+
+@test "link_tree refuses to link over a real file at ~/.local/bin/dot" {
+  # not backed up and linked over like a conflict under home/: what sits there
+  # is somebody's own binary, not a dotfile this repo owns
+  mkfile "$LINK_BIN_DEST" "some other dot"
+
+  bats_run link_tree
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"is a real file, not our link"* ]]
+  [ ! -L "$LINK_BIN_DEST" ]
+  [ "$(cat "$LINK_BIN_DEST")" = "some other dot" ]
+}
+
+@test "a dry run does not create the dot link" {
+  DRY_RUN=1
+  bats_run link_tree
+  [ "$status" -eq 0 ]
+  [ ! -e "$LINK_BIN_DEST" ]
+  [ ! -d "$LINK_BIN_DIR" ]
+  [[ "$output" == *"would link .local/bin/dot"* ]]
+}
+
+@test "link_status reports the dot link" {
+  bats_run link_status
+  [ "$status" -ne 0 ]
+  [[ "$output" == *".local/bin/dot — not linked"* ]]
+
+  link_tree >/dev/null
+  reset_counters
+  bats_run link_status
+  [ "$status" -eq 0 ]
+}
+
 # --- link_unlink -----------------------------------------------------------
 
 @test "link_unlink removes our links and leaves real files alone" {
@@ -315,6 +396,19 @@ teardown() { teardown_sandbox; }
   [ -d "$HOME/.config/helix" ]
   # nothing survived, so the manifest has no purpose left
   [ ! -f "$LINK_MANIFEST" ]
+  # the one link that was never in the manifest goes too
+  [ ! -e "$LINK_BIN_DEST" ]
+}
+
+@test "link_unlink leaves a dot link pointing at another checkout" {
+  link_tree >/dev/null
+  ln -sfn /old/checkout/dot "$LINK_BIN_DEST"
+  ASSUME_YES=1
+
+  bats_run link_unlink
+  [ -L "$LINK_BIN_DEST" ]
+  [ "$(readlink "$LINK_BIN_DEST")" = "/old/checkout/dot" ]
+  [[ "$output" == *".local/bin/dot — points at another checkout"* ]]
 }
 
 @test "link_unlink does not restore a backup under --yes" {

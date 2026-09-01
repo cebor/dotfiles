@@ -82,6 +82,8 @@ teardown() { teardown_sandbox; }
   [ -L "$HOME/.zshrc" ]
   [ "$(readlink "$HOME/.zshrc")" = "$DOTFILES_ROOT/home/.zshrc" ]
   [ -d "$HOME/.config" ] && [ ! -L "$HOME/.config" ]
+  # and `dot` itself, onto the ~/.local/bin that home/.exports puts on $PATH
+  [ "$(readlink "$HOME/.local/bin/dot")" = "$DOT" ]
 
   local before
   before="$(snapshot_fs "$HOME")"
@@ -117,6 +119,7 @@ teardown() { teardown_sandbox; }
   [ "$status" -eq 0 ]
   [ ! -L "$HOME/.zshrc" ]
   [ ! -L "$HOME/.config/helix/config.toml" ]
+  [ ! -e "$HOME/.local/bin/dot" ]
 }
 
 # --- the dry-run invariant, end to end -------------------------------------
@@ -167,6 +170,111 @@ teardown() { teardown_sandbox; }
   [[ "$output" == *"would link"* ]]
   # nothing may read as if it had already happened
   [[ "$output" != *"linked: "*" new"* ]] || [[ "$output" == *"would link: "* ]]
+}
+
+# --- update ----------------------------------------------------------------
+
+# A throwaway checkout of this repo in the sandbox, with a bare upstream it can
+# be fast-forwarded from. `dot update` acts on its own $DOTFILES_ROOT, so this is
+# the only way to exercise it without touching the real repo.
+#
+# Sets $CLONE (the work tree, whose ./dot is the one under test) and $UPSTREAM.
+seed_checkout() {
+  command -v git >/dev/null || skip "needs git"
+  CLONE="$SANDBOX/repo"
+  UPSTREAM="$SANDBOX/upstream.git"
+  mkdir -p "$CLONE"
+  # the working tree, not `git archive HEAD` — the point is to run the ./dot
+  # that is being edited, not the one that was last committed
+  cp -a "$DOTFILES_ROOT"/. "$CLONE"/
+  rm -rf "$CLONE/.git"
+  git -C "$CLONE" init -q -b main
+  git -C "$CLONE" add -A
+  git -C "$CLONE" -c user.name=t -c user.email=t@t commit -qm init
+  git clone -q --bare "$CLONE" "$UPSTREAM"
+  git -C "$CLONE" remote add origin "$UPSTREAM"
+  git -C "$CLONE" fetch -q origin
+  git -C "$CLONE" branch -q -u origin/main main
+}
+
+# One commit on the upstream: a new file under home/ (so the sync that follows
+# has something to do) and a line inserted near the top of `dot`, which shifts
+# every byte below it — the running interpreter is parked in that file.
+push_upstream_commit() {
+  local work="$SANDBOX/upstream-work"
+  git clone -q "$UPSTREAM" "$work"
+  printf 'newfile\n' > "$work/home/.a-new-dotfile"
+  # head/tail rather than `sed -i`, whose insert syntax differs between GNU and
+  # BSD; the redirection makes a fresh file, so the exec bit has to be restored
+  { head -n 1 "$work/dot"
+    printf '# an inserted line that shifts every byte below it\n'
+    tail -n +2 "$work/dot"
+  } > "$work/dot.new"
+  mv "$work/dot.new" "$work/dot"
+  chmod +x "$work/dot"
+  git -C "$work" add -A
+  git -C "$work" -c user.name=t -c user.email=t@t commit -qm "add a dotfile"
+  git -C "$work" push -q origin HEAD:main
+}
+
+@test "update rejects options it does not understand" {
+  run "$DOT" update --bogus
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"update takes no options"* ]]
+}
+
+@test "update fast-forwards and then syncs, across a commit that changes ./dot" {
+  seed_checkout
+  push_upstream_commit
+
+  run "$CLONE/dot" update -y
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"fast-forwarded to origin/main"* ]]
+
+  # the follow-on sync ran: the file the new commit added is linked
+  [ -L "$HOME/.a-new-dotfile" ]
+
+  # …and the commit that rewrote ./dot mid-run left no trace in the output. See
+  # the tail-of-dot test in repo.bats for what this is guarding against; the
+  # symptom is a stray fragment of the new file being run as a command.
+  [[ "$output" != *"command not found"* ]]
+  [[ "$output" != *"syntax error"* ]]
+  [[ "$output" != *"unexpected"* ]]
+}
+
+@test "update says so when there is nothing to pull" {
+  seed_checkout
+  run "$CLONE/dot" update -y
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"already up to date with origin/main"* ]]
+}
+
+@test "update fails on a branch with no upstream" {
+  seed_checkout
+  git -C "$CLONE" branch --unset-upstream
+
+  run "$CLONE/dot" update -y
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"no upstream"* ]]
+}
+
+@test "a dry run of update writes nothing and speaks in the conditional" {
+  seed_checkout
+  push_upstream_commit
+  # a real fetch first, so the dry run has an up-to-date origin/main to compare
+  # against — under --dry-run its own fetch is only echoed
+  git -C "$CLONE" fetch -q origin
+
+  local home_before head_before
+  home_before="$(snapshot_fs "$HOME")"
+  head_before="$(git -C "$CLONE" rev-parse HEAD)"
+
+  run "$CLONE/dot" update -n
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"would fast-forward"* ]]
+  [[ "$output" != *"fast-forwarded to"* ]]
+  [ "$home_before" = "$(snapshot_fs "$HOME")" ]
+  [ "$head_before" = "$(git -C "$CLONE" rev-parse HEAD)" ]
 }
 
 # --- doctor ----------------------------------------------------------------
