@@ -70,8 +70,8 @@ Three phases, each runnable on its own:
    Files are linked, directories are mirrored as real directories, so `~/.config` and `~/.ssh`
    stay yours and other tools can keep writing into them.
 2. **packages** — `brew bundle` against `packages/Brewfile` on macOS; on Linux the apt sources
-   ([WakeMeOps](https://docs.wakemeops.com/), the git and helix PPAs, NodeSource) first, then everything in
-   `packages/apt.txt` in one go, then antidote and starship, which apt cannot provide.
+   ([WakeMeOps](https://docs.wakemeops.com/), the git PPA, NodeSource) first, then everything in
+   `packages/apt.txt` in one go, then helix, antidote and starship, which apt cannot provide.
 3. **configure** — imperative settings that are not files: the locale, `git config --global`, the
    login shell, vim-plug, and `defaults write` on macOS.
 
@@ -156,7 +156,7 @@ Linux application, while `wslview` hands the file to Windows.
 
 | | macOS | Linux / WSL2 |
 | --- | --- | --- |
-| Packages | `packages/Brewfile` (brew, cask, mas) | `packages/apt.txt` (+ WakeMeOps, git PPA, helix PPA, NodeSource) |
+| Packages | `packages/Brewfile` (brew, cask, mas) | `packages/apt.txt` (+ WakeMeOps, git PPA, NodeSource), helix as a snap |
 | Prerequisites | Xcode CLI tools + Homebrew | apt: `git`, `curl`, `ca-certificates`, `gnupg`, `software-properties-common` |
 | Git credentials | `osxkeychain` | libsecret, else 1 h cache |
 | Clipboard | native `pbcopy`/`pbpaste` | shims in `home/.functions` |

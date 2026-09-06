@@ -3,9 +3,10 @@
 # Linux package installation (Ubuntu) — the counterpart to `brew bundle`.
 #
 # Sources first, packages second: every third-party apt source is added up front
-# (WakeMeOps, the git and helix PPAs, NodeSource), then a single apt-get install
-# pulls the whole of packages/apt.txt. Only what apt cannot carry at all is
-# installed after that — antidote (git clone) and starship (upstream installer).
+# (WakeMeOps, the git PPA, NodeSource), then a single apt-get install pulls the
+# whole of packages/apt.txt. Only what apt cannot carry at all is installed after
+# that — helix (classic snap), antidote (git clone) and starship (upstream
+# installer).
 #
 # The tools all of that needs (curl, gnupg, git, add-apt-repository) come from
 # setup/prereqs.sh, which `./dot install` runs first; this step only checks that
@@ -90,23 +91,10 @@ _apt_repo_git() {
   info "Adding the git PPA..."
   run sudo add-apt-repository -y ppa:git-core/ppa && return 0
   # a warning rather than an error, and a 0 return: `git` is in apt.txt, so the run
-  # does end with a git — just the distro's older one. helix errs instead because
-  # there it is the PPA or nothing.
+  # does end with a git — just the distro's older one. The helix step in section 4
+  # errs instead, because there it is the snap or nothing.
   warn "could not add the git PPA — git will come from the distro (older)"
   return 0
-}
-
-# helix — there is no apt package under that name, only this PPA.
-_apt_repo_helix() {
-  if grep -rqs maveonair /etc/apt/sources.list.d/; then
-    skip "helix ppa"
-    return 0
-  fi
-
-  info "Adding the helix PPA..."
-  run sudo add-apt-repository -y ppa:maveonair/helix-editor && return 0
-  err "could not add the helix PPA"
-  return 1
 }
 
 # Node.js current — the distro's `nodejs` is years behind. The guard is the sources
@@ -170,7 +158,6 @@ setup_packages_linux() {
   # --- 2. apt sources ---------------------------------------------------------
   _apt_repo_wakemeops || failed=$((failed + 1))
   _apt_repo_git       # reports itself; git installs either way
-  _apt_repo_helix     || failed=$((failed + 1))
   _apt_repo_node      # reports itself; nodejs installs either way
 
   run sudo apt-get update || warn "apt-get update failed after adding the apt sources"
@@ -206,6 +193,37 @@ setup_packages_linux() {
   fi
 
   # --- 4. what apt cannot provide ---------------------------------------------
+
+  # helix — no apt package under that name. The PPA this used to come from
+  # (ppa:maveonair/helix-editor) stopped at oracular (24.10): add-apt-repository
+  # still succeeds on a newer release, apt-get update then warns about a dist that
+  # does not exist, and `helix` falls out of the batch without the run saying so.
+  # The snap is `classic` — helix needs the whole filesystem — and ships the `hx`
+  # alias itself, so nothing here has to link it.
+  #
+  # The guard is `has hx`, not `snap list helix`: a helix from anywhere else should
+  # stop the snap from being installed alongside it, the same way `has starship`
+  # works below.
+  if has hx; then
+    skip "helix"
+  elif ! has snap && [ -z "$DRY_RUN" ]; then
+    # its own message rather than the generic one: without systemd — which under
+    # WSL means `systemd=true` in /etc/wsl.conf — snapd is not there to be reached,
+    # and "snap install failed" would not say what to do about it.
+    #
+    # Not under --dry-run, for the same reason as the prerequisite check in step 1:
+    # `snapd` is in apt.txt, so on a forecast run its absence only means step 3 has
+    # not really run yet — the honest forecast is the "would install" below.
+    err "snapd is not available — helix will be missing"
+    failed=$((failed + 1))
+  elif run sudo snap install helix --classic; then
+    ok_run "helix installed" "would install helix"
+  else
+    # an error, not a warning: unlike git and nodejs there is no second source
+    # helix would still come from
+    err "helix snap install failed"
+    failed=$((failed + 1))
+  fi
 
   # antidote — zsh plugin manager, not in apt
   if [ -d "$HOME/.antidote" ]; then

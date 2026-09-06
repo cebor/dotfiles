@@ -147,14 +147,14 @@ git'
   [[ " ${APT_PACKAGES[*]} " == *" xclip "* ]]
   [[ " ${APT_PACKAGES[*]} " != *" wslu "* ]]
 
-  # untagged, so they land everywhere: helix and the add-apt-repository package
-  # both PPAs need, the same set setup/prereqs.sh installs
+  # untagged, so they land everywhere: vim and the add-apt-repository package the
+  # git PPA needs, which is also in the set setup/prereqs.sh installs
   local machine
   for machine in "0 1" "1 0"; do
     # shellcheck disable=SC2086 # two arguments, deliberately split
     platform $machine
     _apt_read_list
-    [[ " ${APT_PACKAGES[*]} " == *" helix "* ]]
+    [[ " ${APT_PACKAGES[*]} " == *" vim "* ]]
     [[ " ${APT_PACKAGES[*]} " == *" software-properties-common "* ]]
   done
 }

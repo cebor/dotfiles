@@ -17,16 +17,20 @@
 # or WSL-tagged.
 #
 # This list is the only place package names live. setup/packages-linux.sh adds
-# the apt sources first (WakeMeOps, the git and helix PPAs, NodeSource) and then
-# installs everything here in one go. Only what apt cannot provide at all is
-# installed separately there: antidote (git clone) and starship (upstream
-# installer).
+# the apt sources first (WakeMeOps, the git PPA, NodeSource) and then installs
+# everything here in one go. Only what apt cannot provide at all is installed
+# separately there: helix (classic snap), antidote (git clone) and starship
+# (upstream installer).
 #
 # Not listed on purpose:
 #
 #   git-credential-libsecret   not an apt package. setup/git.sh probes for it and
 #                              falls back to the 1 h credential cache, so git
 #                              works either way.
+#   helix                      no apt package under that name, and the PPA it used
+#                              to come from stopped at oracular (24.10). Installed
+#                              as a classic snap by setup/packages-linux.sh, which
+#                              is why `snapd` is listed below.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Core / shell
@@ -40,6 +44,7 @@ rsync
 tree
 procps                      # provides `watch`
 locales                     # locale-gen, for the LANG in home/.exports (setup/locale.sh)
+snapd                       # for the helix snap; not on every WSL image
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Prerequisites
@@ -52,13 +57,12 @@ git                         # upgraded to the git-core PPA build
 curl
 ca-certificates
 gnupg                       # gpg
-software-properties-common  # add-apt-repository, for the git and helix PPAs
+software-properties-common  # add-apt-repository, for the git PPA
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Editors
 # ─────────────────────────────────────────────────────────────────────────────
 vim
-helix                       # from the helix PPA; the distro has no package of that name
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Python

@@ -111,7 +111,8 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
 - **macOS**: `packages/Brewfile` (`brew` CLI, `cask` GUI, `mas` App Store — casks/mas are macOS-only).
 - **Linux**: sources first, packages second. `setup/packages-linux.sh` adds every third-party apt
   source up front, then **one** `apt-get install` pulls the whole of `packages/apt.txt`. Only what
-  apt cannot carry at all comes after: antidote (git clone `~/.antidote`) and starship (upstream
+  apt cannot carry at all comes after: helix (classic snap — the PPA it used to come from stopped
+  at Ubuntu 24.10), antidote (git clone `~/.antidote`) and starship (upstream
   installer). The sources themselves — which repo, which guard, which failure policy — are
   documented in `setup/CLAUDE.md`, next to the code that adds them.
 - `packages/apt.txt` is the only place Linux package names live. Line format:

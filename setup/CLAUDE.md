@@ -6,18 +6,19 @@ conventions that apply everywhere.
 ## Third-party apt sources (`packages-linux.sh`)
 
 `setup/packages-linux.sh` adds every third-party apt source up front, then **one** `apt-get install`
-pulls the whole of `packages/apt.txt`. Only what apt cannot carry at all comes after: antidote (git
-clone `~/.antidote`) and starship (upstream installer).
+pulls the whole of `packages/apt.txt`. Only what apt cannot carry at all comes after: helix
+(classic snap), antidote (git clone `~/.antidote`) and starship (upstream installer).
 
 - Sources: **WakeMeOps** (`deb.wakemeops.com`, components `devops terminal`) for `kubectl`,
   `helm`, `yq` and `bat`; the **git PPA** (`ppa:git-core/ppa` — upstream's own stable build);
-  the **helix PPA** (no apt package named `helix` exists); **NodeSource** for `nodejs`.
+  **NodeSource** for `nodejs`.
 - A source whose package exists anyway only **warns** on failure and returns 0 — git and
-  NodeSource, where the run still ends with a git/node, just the distro's older one. helix
-  `err`s and counts as a failed step, because there the PPA is the only source there is.
+  NodeSource, where the run still ends with a git/node, just the distro's older one. The helix
+  step in section 4 `err`s and counts as a failed step, because there the snap is the only
+  source there is.
 - Each `_apt_repo_*` is guarded by its sources file, never by `has <tool>`: WakeMeOps on the
   exact `Components:` line (so changing the component list reaches machines that already have
-  the repo), NodeSource, git and helix by grepping `sources.list.d/` for the repo host (so a
+  the repo), NodeSource and git by grepping `sources.list.d/` for the repo host (so a
   node from nvm cannot stop the repo from being added). A `has` guard would freeze them on
   whatever the machine got first. Only WakeMeOps names a file, because the line it needs is *in*
   that file; the others grep the directory, because apt takes both the old `.list` and the
