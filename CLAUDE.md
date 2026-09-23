@@ -117,9 +117,10 @@ so a stray macOS turd in `home/` never lands in `$HOME`.
   documented in `setup/CLAUDE.md`, next to the code that adds them.
 - `packages/apt.txt` is the only place Linux package names live. Line format:
   `name [@tag] [# comment]`, with the optional tag one of `@wsl`, `@!wsl` or `@ubuntu` — that is
-  how `wslu` stays WSL-only and `xclip`/`wl-clipboard` non-WSL-only (the shims use
-  `win32yank.exe`/`clip.exe` under WSL). `@ubuntu` is supported but currently carried by no line,
-  and it is there for a package a derivative might not have. `_apt_read_list` parses it into
+  how `xclip`/`wl-clipboard` stay non-WSL-only (the shims use `win32yank.exe`/`clip.exe` under
+  WSL). `@wsl` and `@ubuntu` are supported but currently carried by no line — `@wsl` last carried
+  `wslu`, which Ubuntu 26.04 dropped (its `wslview` is replaced by `home/.local/bin/winopen`), and
+  `@ubuntu` is there for a package a derivative might not have. `_apt_read_list` parses it into
   the global `$APT_PACKAGES` rather than echoing its result: in a `pkgs="$(_apt_read_list)"` the
   `warn` for an unknown tag would land in `$pkgs` as if it were a package name, and its
   `$LOG_WARNINGS` increment would die with the subshell. An unknown tag warns and drops the line —

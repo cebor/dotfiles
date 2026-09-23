@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Open URLs and files with their Windows default handler from inside WSL.
+#
+# Stands in for wslu's `wslview`, which Ubuntu 26.04 no longer ships. An
+# executable rather than a shell function because $BROWSER names it, and the
+# programs that read $BROWSER (gh, python's webbrowser, …) exec it directly.
+# rundll32's FileProtocolHandler is what wslview used too: unlike `cmd.exe /c
+# start` it needs no quoting for `&` in a URL and does not warn about a UNC cwd.
+
+if [ $# -eq 0 ]; then
+  echo "usage: ${0##*/} <url|path>..." >&2
+  exit 2
+fi
+
+rc=0
+for arg in "$@"; do
+  case "$arg" in
+    *://*|mailto:*) target="$arg" ;;
+    *)
+      # wslpath converts any path, existing or not, and rundll32 would then
+      # report the missing file in a Windows dialog instead of here
+      if [ ! -e "$arg" ]; then
+        echo "${0##*/}: $arg: no such file or directory" >&2
+        rc=1
+        continue
+      fi
+      target="$(wslpath -w "$arg")" || { rc=1; continue; }
+      ;;
+  esac
+  rundll32.exe url.dll,FileProtocolHandler "$target" || rc=1
+done
+exit "$rc"

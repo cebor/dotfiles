@@ -111,4 +111,3 @@ wl-clipboard      @!wsl
 # Misc
 # ─────────────────────────────────────────────────────────────────────────────
 bat                         # from WakeMeOps as `bat`; the distro's installs `batcat`
-wslu              @wsl      # wslview, used by the `open` shim in home/.functions

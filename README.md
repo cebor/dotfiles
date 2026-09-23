@@ -102,6 +102,7 @@ manifest at `~/.local/state/dotfiles/manifest`.
 │   ├── .zsh_plugins.txt   #   antidote plugin list
 │   ├── .vimrc .tmux.conf .latexmkrc
 │   ├── .ssh/config
+│   ├── .local/bin/winopen #   WSL: open URLs/files in Windows ($BROWSER, `open`)
 │   └── .config/           #   git/ignore (the global gitignore), helix, pycodestyle
 ├── lib/                   # sourced helpers, never executed
 │   ├── os.sh              #   platform detection, `has`, brew shellenv, arch mapping
@@ -148,9 +149,10 @@ dcl                      # docker: kill everything running, then remove it all
 ```
 
 On Linux, `pbcopy`, `pbpaste` and `open` are defined as shims (win32yank / clip.exe / wl-copy /
-xclip, and wslview / xdg-open) so the same functions work in WSL. Under WSL the `open` shim
+xclip, and winopen / xdg-open) so the same functions work in WSL. Under WSL the `open` shim
 deliberately **overrides** the `/usr/bin/open` that xdg-utils ships: `xdg-open` would look for a
-Linux application, while `wslview` hands the file to Windows.
+Linux application, while `winopen` (`home/.local/bin/winopen`, standing in for wslu's `wslview`,
+which Ubuntu 26.04 no longer ships) hands the file to Windows.
 
 ## Platform differences
 
@@ -160,7 +162,7 @@ Linux application, while `wslview` hands the file to Windows.
 | Prerequisites | Xcode CLI tools + Homebrew | apt: `git`, `curl`, `ca-certificates`, `gnupg`, `software-properties-common` |
 | Git credentials | `osxkeychain` | libsecret, else 1 h cache |
 | Clipboard | native `pbcopy`/`pbpaste` | shims in `home/.functions` |
-| Browser | native `open` | `wslview` under WSL, overriding xdg-utils' `open`; `xdg-open` otherwise |
+| Browser | native `open` | `winopen` under WSL, overriding xdg-utils' `open`; `xdg-open` otherwise |
 
 | `bat` | `bat` | `bat` from WakeMeOps; the distro's own ships as `batcat`, symlinked to `~/.local/bin/bat` |
 | SSH `UseKeychain` | honoured | ignored via `IgnoreUnknown` |

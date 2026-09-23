@@ -292,7 +292,7 @@ cmd_test() {
   # deliberately is not — every variable it sets is consumed by the .bats files,
   # which shellcheck cannot see, so it produces nothing but SC2034 noise.
   local scripts=("$DOTFILES_ROOT/dot" "$DOTFILES_ROOT/bootstrap.sh"
-                 "$DOTFILES_ROOT/test/ci-deps.sh")
+                 "$DOTFILES_ROOT/test/ci-deps.sh" "$DOTFILES_ROOT/home/.local/bin/winopen")
   local f
   for f in "$DOTFILES_ROOT"/lib/*.sh "$DOTFILES_ROOT"/setup/*.sh; do
     scripts+=("$f")
@@ -403,11 +403,15 @@ cmd_doctor() {
     has "$tool" || missing="$missing $tool"
   done
   is_macos && { has brew || missing="$missing brew"; }
-  # home/.exports sets BROWSER=wslview, and the `open` shim relies on it
-  is_wsl && { has wslview || missing="$missing wslview"; }
-
   if [ -n "$missing" ]; then
     warn "not installed:$missing — run ./dot packages"
+    issues=1
+    tools_ok=""
+  fi
+  # home/.exports sets BROWSER=winopen and the `open` shim relies on it. winopen
+  # itself is a link (reported above), but it is only as good as Windows interop.
+  if is_wsl && ! has rundll32.exe; then
+    warn "rundll32.exe not on \$PATH — Windows interop is off, winopen/open cannot work"
     issues=1
     tools_ok=""
   fi

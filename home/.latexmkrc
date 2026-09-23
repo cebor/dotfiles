@@ -3,7 +3,7 @@ if ($^O eq 'darwin') {
     $pdf_previewer = 'open -a Skim';
 } else {
     $pdf_previewer = 'start xdg-open';   # fallback
-    for my $viewer ('zathura', 'okular', 'evince', 'wslview') {
+    for my $viewer ('zathura', 'okular', 'evince', 'winopen') {
         if (system("command -v $viewer >/dev/null 2>&1") == 0) {
             $pdf_previewer = "start $viewer";
             last;

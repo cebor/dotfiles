@@ -139,13 +139,11 @@ git'
 
   platform 0 1          # WSL
   _apt_read_list
-  [[ " ${APT_PACKAGES[*]} " == *" wslu "* ]]
   [[ " ${APT_PACKAGES[*]} " != *" xclip "* ]]
 
   platform 1 0          # not WSL
   _apt_read_list
   [[ " ${APT_PACKAGES[*]} " == *" xclip "* ]]
-  [[ " ${APT_PACKAGES[*]} " != *" wslu "* ]]
 
   # untagged, so they land everywhere: vim and the add-apt-repository package the
   # git PPA needs, which is also in the set setup/prereqs.sh installs

@@ -19,12 +19,13 @@ fi
 #
 # Under WSL this deliberately overrides an `open` that already exists: xdg-utils
 # ships /usr/bin/open on Ubuntu, and xdg-open looks for a *Linux*
-# application, while wslview hands the file to Windows. A `! command -v open`
-# guard would find that /usr/bin/open and leave the wslview branch dead.
+# application, while winopen (home/.local/bin) hands the file to Windows. A
+# `! command -v open` guard would find that /usr/bin/open and leave the WSL
+# branch dead.
 # Everywhere else the shim only steps in when there is no `open` at all.
 if [[ -r /proc/version && "$(</proc/version)" == *[Mm]icrosoft* ]] &&
-   command -v wslview >/dev/null 2>&1; then                  # WSL: opens Windows default app
-  open() { wslview "$@"; }
+   command -v winopen >/dev/null 2>&1; then                  # WSL: opens Windows default app
+  open() { winopen "$@"; }
 elif ! command -v open >/dev/null 2>&1 && command -v xdg-open >/dev/null 2>&1; then
   open() { xdg-open "$@"; }
 fi

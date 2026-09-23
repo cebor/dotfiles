@@ -18,7 +18,7 @@ export DISABLE_AUTO_UPDATE=true
 # WSL: default browser (used by the `open` shim / xdg). $(<file) rather than a
 # grep pipeline: zsh reads the file without forking, and this runs on every
 # shell start. Same test as `is_wsl` in lib/os.sh, which we must not source here.
-[[ -r /proc/version && "$(</proc/version)" == *[Mm]icrosoft* ]] && export BROWSER=wslview
+[[ -r /proc/version && "$(</proc/version)" == *[Mm]icrosoft* ]] && export BROWSER=winopen
 
 # default editor - guarded, so machines without helix fall back to the system default
 if command -v hx &>/dev/null; then
