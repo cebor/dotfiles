@@ -109,7 +109,9 @@ teardown() { teardown_sandbox; }
 }
 
 @test "dot and bootstrap.sh are the only executables" {
-  run bash -c "cd '$REPO' && git ls-files -s | awk '\$1 == \"100755\" { print \$4 }' | sort"
+  # home/.local/bin/ is exempt: sync links those scripts onto $PATH, and a
+  # link to a file without the x bit is a command that cannot run.
+  run bash -c "cd '$REPO' && git ls-files -s | awk '\$1 == \"100755\" && \$4 !~ /^home\\/\\.local\\/bin\\// { print \$4 }' | sort"
   [ "$output" = "bootstrap.sh
 dot" ]
 }

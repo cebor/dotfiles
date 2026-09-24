@@ -14,8 +14,8 @@ exported `$DOTFILES_OS`.
 
 ### Key components
 
-- `bootstrap.sh` — the one executable besides `dot`, and the only file that runs before the repo
-  exists: fetched by `curl` on a bare machine, it installs `git` (apt, or the Xcode CLI tools on
+- `bootstrap.sh` — the one executable besides `dot` (and the scripts under `home/.local/bin/`,
+  which `sync` links onto `$PATH`), and the only file that runs before the repo exists: fetched by `curl` on a bare machine, it installs `git` (apt, or the Xcode CLI tools on
   macOS), clones the repo over HTTPS and stops, pointing at `./dot install`. It therefore **cannot
   source `lib/*.sh`** — none of it is on the machine yet — so its output helpers are deliberate
   duplicates of `lib/log.sh` and must stay self-contained. Piped into bash it has the script on
