@@ -1,0 +1,18 @@
+# omp settings shared by every profile. Loaded as a read-only overlay through
+# PI_CONFIG_FILES (home/.exports, ompl in home/.functions): it wins over both
+# ~/.omp/agent/config.yml and a project's .omp/config.yml, so a key set here
+# can't be changed from /settings, `omp config set` or per-project modelRoles.
+# Only keys set on purpose belong here; everything else stays at omp's default.
+memory:
+  backend: local
+symbolPreset: nerd
+theme:
+  dark: titanium
+hideThinkingBlock: true
+display:
+  showTokenUsage: true
+composer:
+  shape: box
+browser:
+  headless: true
+  relay: false

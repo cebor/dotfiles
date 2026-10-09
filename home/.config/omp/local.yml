@@ -1,0 +1,15 @@
+# omp settings of the `local` profile (ompl): local Ollama models only. Overlay
+# after common.yml. Every chat role is set, because an unset one falls back to
+# omp's own priority list of hosted models. The profile has its own login store,
+# so no account logged in under the default profile reaches it.
+modelRoles:
+  default: ollama/qwen3.8-27b-instruct:latest
+  plan: ollama/qwen3.8-27b-instruct:latest
+  slow: ollama/qwen3.8-27b-instruct:latest
+  smol: ollama/qwen3.8-27b-instruct:latest
+  task: ollama/qwen3.8-27b-instruct:latest
+  advisor: ollama/qwen3.8-27b-instruct:latest
+  commit: ollama/qwen3.8-27b-instruct:latest
+  vision: ollama/qwen3.8-27b-instruct:latest
+  tiny: ollama/qwen3.8-27b-instruct:latest
+  memory: ollama/qwen3.8-27b-instruct:latest

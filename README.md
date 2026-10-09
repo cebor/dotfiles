@@ -103,7 +103,7 @@ manifest at `~/.local/state/dotfiles/manifest`.
 │   ├── .vimrc .tmux.conf .latexmkrc
 │   ├── .ssh/config
 │   ├── .local/bin/winopen #   WSL: open URLs/files in Windows ($BROWSER, `open`)
-│   └── .config/           #   git/ignore (the global gitignore), helix, pycodestyle
+│   └── .config/           #   git/ignore (the global gitignore), helix, pycodestyle, omp overlays
 ├── lib/                   # sourced helpers, never executed
 │   ├── os.sh              #   platform detection, `has`, brew shellenv, arch mapping
 │   ├── log.sh             #   section/info/ok/warn/err, prompts, dry-run `run`
@@ -145,6 +145,7 @@ pwgen 32                 # openssl rand -base64
 f '*.conf'               # find . -name
 bump patch               # npm version, with a "bump version to %s" message
 dcl                      # docker: kill everything running, then remove it all
+ompl                     # omp with local Ollama models only (profile "local")
 
 ```
 

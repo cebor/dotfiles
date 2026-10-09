@@ -124,3 +124,10 @@ svenv () {
     return 1
   fi
 }
+
+# omp with local models only: its own profile (~/.omp/profiles/local, with its
+# own logins, sessions and memory) and the local set of home/.config/omp.
+ompl () {
+  PI_CONFIG_FILES="$HOME/.config/omp/common.yml:$HOME/.config/omp/local.yml" \
+    command omp --profile local "$@"
+}

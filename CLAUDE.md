@@ -248,7 +248,7 @@ EditorConfig: 2-space indent, LF.
 ## Custom Functions to Preserve
 
 The functions in `home/.functions` (`svenv`, `scpp`, `tunnel`, `pwgen`, `server`, `f`, `bump`,
-`dcl`) are load-bearing — do not remove them or rewrite their behavior.
+`dcl`, `ompl`) are load-bearing — do not remove them or rewrite their behavior.
 
 ## Common Tasks
 

@@ -26,3 +26,12 @@ if command -v hx &>/dev/null; then
   export VISUAL=hx
   export SYSTEMD_EDITOR=hx
 fi
+
+# omp settings from this repo (home/.config/omp), as read-only overlays over
+# ~/.omp/agent/config.yml: shared settings plus the Anthropic set of the default
+# profile. `ompl` (home/.functions) swaps in the local set. Guarded because omp
+# aborts on a missing overlay file; without one the default profile falls back
+# to ~/.omp/agent/config.yml.
+if [[ -f "$HOME/.config/omp/common.yml" && -f "$HOME/.config/omp/anthropic.yml" ]]; then
+  export PI_CONFIG_FILES="$HOME/.config/omp/common.yml:$HOME/.config/omp/anthropic.yml"
+fi
