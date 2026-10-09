@@ -18,7 +18,7 @@ teardown() { teardown_sandbox; }
   DOTFILES_OS=macos detect_os
   [ "$OS" = "macos" ]
   is_macos
-  ! is_linux
+  if is_linux; then return 1; fi
 
   DOTFILES_OS=linux detect_os
   [ "$OS" = "linux" ]

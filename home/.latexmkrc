@@ -3,7 +3,13 @@ if ($^O eq 'darwin') {
     $pdf_previewer = 'open -a Skim';
 } else {
     $pdf_previewer = 'start xdg-open';   # fallback
-    for my $viewer ('zathura', 'okular', 'evince', 'winopen') {
+    my @viewers = ('zathura', 'okular', 'evince');
+    # winopen only under WSL: elsewhere it is on PATH too, but has no Windows
+    if (open(my $fh, '<', '/proc/version')) {
+        push @viewers, 'winopen' if <$fh> =~ /microsoft/i;
+        close $fh;
+    }
+    for my $viewer (@viewers) {
         if (system("command -v $viewer >/dev/null 2>&1") == 0) {
             $pdf_previewer = "start $viewer";
             last;

@@ -55,6 +55,13 @@ _prereqs_macos() {
     # NONINTERACTIVE under --yes because the installer waits for RETURN.
     local nonint=""
     [ -n "$ASSUME_YES" ] && nonint="NONINTERACTIVE=1 "
+    # NONINTERACTIVE makes the installer use `sudo -n`, which fails on a fresh Mac
+    # unless credentials are cached — so cache them first
+    if [ -n "$nonint" ] && ! run sudo -v; then
+      err "sudo is needed to install Homebrew — re-run without --yes"
+      return 1
+    fi
+
     # Via a temp file, not `/bin/bash -c "$(curl …)"`: a failed fetch makes the
     # command substitution empty and `bash -c ""` exits 0. pipefail cannot catch
     # that — this is a substitution, not a pipeline — so fetch and run are

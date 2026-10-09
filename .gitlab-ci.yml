@@ -11,7 +11,7 @@ stages:
 
 test:
   stage: test
-  image: ubuntu:24.04
+  image: ubuntu:26.04
   variables:
     # shellcheck echoes the offending source line back, and the comments in this
     # repo are full of em-dashes. In the images' default C locale that is a hard

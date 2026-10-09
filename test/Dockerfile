@@ -3,7 +3,7 @@
 #   docker build -f test/Dockerfile -t dot-test .
 #   docker run --rm dot-test
 
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 # shellcheck writes the offending source line back out, and this repo's comments
 # are full of em-dashes. In the images' default C locale that is a hard error

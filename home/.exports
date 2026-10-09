@@ -9,7 +9,7 @@ export LANG=en_US.UTF-8
 # omz
 export DISABLE_AUTO_UPDATE=true
 
-# user-local binaries (starship etc. on Linux)
+# ~/.local/bin: the dot link, winopen (home/.local/bin) and on Linux the batcat -> bat fallback
 [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
 
 # snap binaries on PATH (Linux)

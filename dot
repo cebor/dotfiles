@@ -69,7 +69,7 @@ Commands:
 
 Options:
   -n, --dry-run      Show what would happen without changing anything
-  -y, --yes          Assume yes; never prompt
+  -y, --yes          Never prompt; questions keep their default, destructive ones are declined
   -h, --help         Show this help
       --linux        Force the Linux path (overrides platform detection)
       --unlink       sync only: remove the symlinks we created
@@ -77,7 +77,7 @@ Options:
 
 Examples:
   ./dot install              # first run on a new machine, and after a packages/config change
-  ./dot sync                 # after editing anything under home/
+  ./dot sync                 # after adding, renaming or deleting a file under home/
   ./dot sync --status        # what drifted?
   ./dot update               # pull the latest commits and re-link
   ./dot configure git        # just re-apply the git config
@@ -107,6 +107,10 @@ cmd_sync() {
 
 cmd_configure() {
   [ $# -le 1 ] || die "configure takes at most one step (got: $*)"
+
+  # same reason as in cmd_install and cmd_doctor: without brew on PATH, setup_shell
+  # would switch a brew zsh back to /bin/zsh and setup_git core.editor back to vim
+  is_macos && brew_shellenv
 
   # shellcheck source=setup/locale.sh
   source "$DOTFILES_ROOT/setup/locale.sh"
@@ -262,10 +266,17 @@ cmd_update() {
     info "  $line"
   done < <(git -C "$DOTFILES_ROOT" log --oneline --no-decorate "HEAD..$upstream" 2>/dev/null)
 
+  # --ff-only would refuse a diverged branch too, but only after a dry run had
+  # already promised to fast-forward — say so up front, in both modes
+  if ! git -C "$DOTFILES_ROOT" merge-base --is-ancestor HEAD "$upstream" 2>/dev/null; then
+    err "the branch has diverged from $upstream — sort it out in $DOTFILES_ROOT"
+    return 1
+  fi
+
   # --quiet: the commits are already listed above, and merge's own diffstat is
   # raw output in the middle of the run report
   if ! run git -C "$DOTFILES_ROOT" merge --quiet --ff-only "$upstream"; then
-    err "fast-forward failed — the branch has diverged or a local change is in the way; sort it out in $DOTFILES_ROOT"
+    err "fast-forward failed — a local change is in the way; sort it out in $DOTFILES_ROOT"
     return 1
   fi
   ok_run "fast-forwarded to $upstream" "would fast-forward to $upstream"
@@ -299,7 +310,13 @@ cmd_test() {
   done
 
   section "Syntax"
-  if bash -n "${scripts[@]}"; then
+  # one file per call: `bash -n a b c` parses only a and hands b, c to it as
+  # positional parameters
+  local bad=0
+  for f in "${scripts[@]}"; do
+    bash -n "$f" || bad=1
+  done
+  if [ "$bad" -eq 0 ]; then
     ok "${#scripts[@]} scripts parse"
   else
     err "syntax errors — see above"
@@ -311,7 +328,9 @@ cmd_test() {
   # dotfiles, only for developing them. CI installs it, so the gate still exists.
   if ! has shellcheck; then
     skip "shellcheck not installed — brew install shellcheck / apt-get install shellcheck"
-  elif shellcheck -x "${scripts[@]}"; then
+  # -P: the `# shellcheck source=lib/…` directives are repo-relative, and `dot`
+  # is on $PATH, so the cwd can be anywhere
+  elif shellcheck -x -P "$DOTFILES_ROOT" "${scripts[@]}"; then
     ok "no findings"
   else
     err "shellcheck findings — see above"

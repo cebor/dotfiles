@@ -4,9 +4,9 @@
 #
 # Sources first, packages second: every third-party apt source is added up front
 # (WakeMeOps, the git PPA, NodeSource), then a single apt-get install pulls the
-# whole of packages/apt.txt. Only what apt cannot carry at all is installed after
-# that — helix (classic snap), antidote (git clone) and starship (upstream
-# installer).
+# whole of packages/apt.txt — helix included, as `hx`, from Ubuntu 26.04 on. Only
+# what apt cannot carry at all is installed after that — helix on older releases
+# (classic snap), antidote (git clone) and starship (upstream installer).
 #
 # The tools all of that needs (curl, gnupg, git, add-apt-repository) come from
 # setup/prereqs.sh, which `./dot install` runs first; this step only checks that
@@ -44,6 +44,27 @@ _apt_read_list() {
   done < "$DOTFILES_ROOT/packages/apt.txt"
 }
 
+# Is there an *enabled* apt source matching the ERE $1? A file counts when an
+# uncommented line matches and deb822 `Enabled: no` does not switch it off —
+# do-release-upgrade leaves third-party sources behind in exactly those two
+# shapes, and a guard that took them for live would never re-add them. With
+# $2, the same file must also name that release codename. $APT_SOURCES_DIR
+# exists for the tests.
+_apt_source_enabled() {
+  local pattern="$1" codename="$2" f
+  for f in "${APT_SOURCES_DIR:-/etc/apt/sources.list.d}"/*; do
+    [ -f "$f" ] || continue
+    case "$f" in *.list|*.sources) ;; *) continue ;; esac
+    grep -qiE '^[[:space:]]*Enabled:[[:space:]]*no' "$f" && continue
+    grep -qE "^[^#]*$pattern" "$f" || continue
+    if [ -n "$codename" ] && ! grep -qE "^[^#]*[[:space:]]$codename([[:space:]]|$)" "$f"; then
+      continue
+    fi
+    return 0
+  done
+  return 1
+}
+
 # WakeMeOps — a signed apt repo (https://docs.wakemeops.com) carrying kubectl,
 # helm, yq and bat, which apt would otherwise not provide in a usable version.
 # Only the two components we want; the installer's default is all five
@@ -56,7 +77,10 @@ _apt_read_list() {
 _apt_repo_wakemeops() {
   local components="devops terminal"
   local sources="/etc/apt/sources.list.d/wakemeops.sources"
-  if grep -qxF "Components: $components" "$sources" 2>/dev/null; then
+  # a release upgrade switches the file off with `Enabled: no` rather than
+  # removing it — that is no repo
+  if grep -qxF "Components: $components" "$sources" 2>/dev/null &&
+     ! grep -qiE '^[[:space:]]*Enabled:[[:space:]]*no' "$sources"; then
     skip "wakemeops repo ($components)"
     return 0
   fi
@@ -78,12 +102,14 @@ _apt_repo_wakemeops() {
 # git — the distro ships a git that is a year or more behind. This PPA is
 # upstream's own stable build.
 #
-# The guard greps the directory rather than naming a file, for the same reason as
-# the NodeSource one: add-apt-repository writes `.list` on older Ubuntu and
+# The guard searches the directory rather than naming a file, for the same reason
+# as the NodeSource one: add-apt-repository writes `.list` on older Ubuntu and
 # deb822 `.sources` from 24.04 on, and a filename guard would silently stop
-# matching — re-running add-apt-repository on every ./dot packages.
+# matching — re-running add-apt-repository on every ./dot packages. And it wants
+# an enabled entry for the *current* codename: after a release upgrade the old
+# one is disabled, or still names the previous release.
 _apt_repo_git() {
-  if grep -rqs git-core /etc/apt/sources.list.d/; then
+  if _apt_source_enabled 'git-core/ppa' "$(os_codename)"; then
     skip "git ppa"
     return 0
   fi
@@ -92,31 +118,38 @@ _apt_repo_git() {
   run sudo add-apt-repository -y ppa:git-core/ppa && return 0
   # a warning rather than an error, and a 0 return: `git` is in apt.txt, so the run
   # does end with a git — just the distro's older one. The helix step in section 4
-  # errs instead, because there it is the snap or nothing.
+  # errs instead, because once apt had no hx there it is the snap or nothing.
   warn "could not add the git PPA — git will come from the distro (older)"
   return 0
 }
 
-# Node.js current — the distro's `nodejs` is years behind. The guard is the sources
-# file rather than `has node`, so a node that came from nvm or a manual install
-# cannot stop the repo from being added — `nodejs` is in apt.txt either way, and
-# without the repo it would quietly come from the distro instead.
+# Node.js — the distro's `nodejs` is years behind. The guard is the sources file
+# rather than `has node`, so a node that came from nvm or a manual install cannot
+# stop the repo from being added — `nodejs` is in apt.txt either way, and without
+# the repo it would quietly come from the distro instead.
 #
-# It greps the directory for the repo host rather than naming a file: the
-# installer used to write `nodesource.list` and now writes `nodesource.sources`
-# (deb822), so a filename guard silently stops matching the day upstream
-# switches format — and then re-runs the whole installer on every ./dot packages.
+# An explicit major rather than `setup_current.x`: that writes whichever major is
+# current on the day it runs, and the guard would then keep every machine on it
+# forever. With the major in the guard, a bump here reaches every machine.
+#
+# It searches the directory for the repo rather than naming a file: the installer
+# used to write `nodesource.list` and now writes `nodesource.sources` (deb822), so
+# a filename guard silently stops matching the day upstream switches format — and
+# then re-runs the whole installer on every ./dot packages.
 _apt_repo_node() {
-  if grep -rqs deb.nodesource.com /etc/apt/sources.list.d/; then
-    skip "nodesource repo"
+  local major=26
+  if _apt_source_enabled "deb\.nodesource\.com/node_${major}\.x"; then
+    skip "nodesource repo (node ${major}.x)"
     return 0
   fi
 
-  info "Adding the NodeSource repo..."
-  run bash -c 'set -o pipefail; curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -' &&
+  info "Adding the NodeSource repo (node ${major}.x)..."
+  # no `sudo -E`: sudo-rs ignores it with a warning, and the script needs nothing
+  # from the caller's environment
+  run bash -c "set -o pipefail; curl -fsSL https://deb.nodesource.com/setup_${major}.x | sudo bash -" &&
     return 0
   # a warning rather than an error, and a 0 return: apt.txt still installs
-  # `nodejs`, so the run does end with a node — just not the current one
+  # `nodejs`, so the run does end with a node — just an older one
   warn "could not add the NodeSource repo — nodejs will come from the distro (stale)"
   return 0
 }
@@ -194,33 +227,33 @@ setup_packages_linux() {
 
   # --- 4. what apt cannot provide ---------------------------------------------
 
-  # helix — no apt package under that name. The PPA this used to come from
-  # (ppa:maveonair/helix-editor) stopped at oracular (24.10): add-apt-repository
-  # still succeeds on a newer release, apt-get update then warns about a dist that
-  # does not exist, and `helix` falls out of the batch without the run saying so.
-  # The snap is `classic` — helix needs the whole filesystem — and ships the `hx`
-  # alias itself, so nothing here has to link it.
+  # helix — apt carries it as `hx` from Ubuntu 26.04 on, and step 3 installed it
+  # from packages/apt.txt. Older releases have no apt package, and the PPA it
+  # used to come from (ppa:maveonair/helix-editor) stopped at oracular (24.10), so
+  # there the classic snap is the fallback — classic because helix needs the whole
+  # filesystem; it ships the `hx` alias itself, so nothing here has to link it.
   #
-  # The guard is `has hx`, not `snap list helix`: a helix from anywhere else should
-  # stop the snap from being installed alongside it, the same way `has starship`
-  # works below.
+  # The guard is `has hx`, not `snap list helix`: a helix from anywhere else — apt
+  # first of all — should stop the snap from being installed alongside it, the
+  # same way `has starship` works below.
   if has hx; then
     skip "helix"
-  elif ! has snap && [ -z "$DRY_RUN" ]; then
+  elif { ! has snap || [ ! -S /run/snapd.socket ]; } && [ -z "$DRY_RUN" ]; then
     # its own message rather than the generic one: without systemd — which under
     # WSL means `systemd=true` in /etc/wsl.conf — snapd is not there to be reached,
     # and "snap install failed" would not say what to do about it.
     #
     # Not under --dry-run, for the same reason as the prerequisite check in step 1:
     # `snapd` is in apt.txt, so on a forecast run its absence only means step 3 has
-    # not really run yet — the honest forecast is the "would install" below.
-    err "snapd is not available — helix will be missing"
+    # not really run yet — the honest forecast is the "would install" below. The
+    # socket is checked too: the snapd package always ships /usr/bin/snap.
+    err "snapd is not running — helix will be missing (under WSL: systemd=true in /etc/wsl.conf)"
     failed=$((failed + 1))
   elif run sudo snap install helix --classic; then
     ok_run "helix installed" "would install helix"
   else
-    # an error, not a warning: unlike git and nodejs there is no second source
-    # helix would still come from
+    # an error, not a warning: unlike git and nodejs there is no source left
+    # once apt had no hx
     err "helix snap install failed"
     failed=$((failed + 1))
   fi

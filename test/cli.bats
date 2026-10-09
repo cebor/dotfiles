@@ -71,7 +71,9 @@ teardown() { teardown_sandbox; }
   # the flag exists so a Mac can exercise the Linux path; here it just has to
   # reach the Linux branch rather than being ignored
   run "$DOT" --linux configure locale -n
-  [[ "$output" != *"skipping"*"macOS"* ]]
+  [[ "$output" != *"macOS ships every locale precompiled"* ]]
+  # every Linux branch names the LANG from home/.exports; the macOS one does not
+  [[ "$output" == *"en_US.UTF-8"* ]]
 }
 
 # --- sync, for real, into the sandbox --------------------------------------
@@ -139,22 +141,28 @@ teardown() { teardown_sandbox; }
   # relative, so it only resolves against the directory holding the link
   ( cd "$SANDBOX/bin2" && ln -s dot-abs dot-rel )
 
-  run "$SANDBOX/bin2/dot-rel" help
+  cd "$SANDBOX"
+  run "$SANDBOX/bin2/dot-rel" sync -n
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Usage: ./dot <command>"* ]]
+  [[ "$output" == *"would link"* ]]
+  [[ "$output" != *"No such file"* ]]
+  [[ "$output" != *"command not found"* ]]
 }
 
 # --- the dry-run invariant, end to end -------------------------------------
 
 @test "a dry run of sync writes nothing" {
-  local before
+  local before state_before tmp_before
   before="$(snapshot_fs "$HOME")"
+  state_before="$(snapshot_fs "$XDG_STATE_HOME")"
+  tmp_before="$(snapshot_fs "$TMPDIR")"
 
   run "$DOT" sync -n
   [ "$status" -eq 0 ]
   [[ "$output" == *"would link"* ]]
   [ "$before" = "$(snapshot_fs "$HOME")" ]
-  [ "$(snapshot_fs "$XDG_STATE_HOME")" != "" ]
+  [ "$state_before" = "$(snapshot_fs "$XDG_STATE_HOME")" ]
+  [ "$tmp_before" = "$(snapshot_fs "$TMPDIR")" ]
   [ ! -e "$XDG_STATE_HOME/dotfiles/manifest" ]
 }
 
@@ -182,9 +190,13 @@ teardown() { teardown_sandbox; }
   [ "$state_before" = "$(snapshot_fs "$XDG_STATE_HOME")" ]
   [ "$tmp_before" = "$(snapshot_fs "$TMPDIR")" ]
 
-  ! stub_called sudo
-  ! stub_called apt-get
-  ! stub_called brew
+  local cmd
+  for cmd in sudo apt-get brew; do
+    if stub_called "$cmd"; then
+      cat "$SANDBOX/calls"
+      return 1
+    fi
+  done
 }
 
 @test "a dry run speaks in the conditional" {
@@ -297,6 +309,20 @@ push_upstream_commit() {
   [[ "$output" != *"fast-forwarded to"* ]]
   [ "$home_before" = "$(snapshot_fs "$HOME")" ]
   [ "$head_before" = "$(git -C "$CLONE" rev-parse HEAD)" ]
+}
+
+@test "a dry run of update refuses a diverged branch" {
+  seed_checkout
+  push_upstream_commit
+  printf 'local\n' > "$CLONE/home/.a-local-file"
+  git -C "$CLONE" add -A
+  git -C "$CLONE" -c user.name=t -c user.email=t@t commit -qm local
+  git -C "$CLONE" fetch -q origin
+
+  run "$CLONE/dot" update -n
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"diverged"* ]]
+  [[ "$output" != *"would fast-forward"* ]]
 }
 
 # --- doctor ----------------------------------------------------------------

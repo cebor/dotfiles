@@ -4,8 +4,10 @@ if ! command -v pbcopy >/dev/null 2>&1; then
     pbcopy()  { win32yank.exe -i --crlf; }
     pbpaste() { win32yank.exe -o --lf; }
   elif command -v clip.exe >/dev/null 2>&1; then             # WSL fallback
-    pbcopy()  { clip.exe; }
-    pbpaste() { powershell.exe -NoProfile -Command Get-Clipboard | sed 's/\r$//'; }
+    # clip.exe reads UTF-16LE and PowerShell writes the OEM code page — both ends
+    # are transcoded, or every umlaut arrives mangled
+    pbcopy()  { iconv -f UTF-8 -t UTF-16LE | clip.exe; }
+    pbpaste() { powershell.exe -NoProfile -Command '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; Get-Clipboard' | sed 's/\r$//'; }
   elif command -v wl-copy >/dev/null 2>&1; then              # Wayland
     pbcopy()  { wl-copy; }
     pbpaste() { wl-paste; }
@@ -52,9 +54,12 @@ scpp () {
   local name="${1##*/}"
 
   scp "$1" "$host:$dir" || return 1
-  ssh "$host" chmod a+r "$dir/$name" || return 1
-  echo "https://static.stkn.org/$name" | pbcopy
-  echo "Copied to clipboard: https://static.stkn.org/$name"
+  # ${(q)…}: ssh hands the command to a remote shell, which would split a name
+  # with spaces or parentheses; the URL needs the name percent-encoded
+  ssh "$host" chmod a+r -- "${(q)dir}/${(q)name}" || return 1
+  local url="https://static.stkn.org/$(omz_urlencode -P "$name")"
+  echo "$url" | pbcopy
+  echo "Copied to clipboard: $url"
 }
 
 # npm bump
@@ -89,40 +94,29 @@ pwgen () {
   openssl rand -base64 "$length" | tr -d '\n' | cut -c1-"$length"
 }
 
-# source python venv - walks up tree to find and activate virtual environment
+# source python venv - walks up tree to find and activate virtual environment,
+# without `cd`, so OLDPWD and the auto_pushd stack stay unchanged
 svenv () {
-  # Deactivate current venv if active
   if [ -n "$VIRTUAL_ENV" ]; then
     deactivate 2>/dev/null
   fi
 
-  local CURRENT_DIR FOUND
-  CURRENT_DIR="$(pwd)"
-  FOUND=0
-
-  while [ "$(pwd)" != "/" ]; do
-    # Check for standard venv
-    if [ -f "venv/bin/activate" ]; then
-      source "venv/bin/activate"
-      FOUND=1
-      break
-    elif [ -f ".venv/bin/activate" ]; then
-      source ".venv/bin/activate"
-      FOUND=1
-      break
-    else
-      cd ..
+  local dir="$PWD"
+  while [ "$dir" != "/" ]; do
+    if [ -f "$dir/venv/bin/activate" ]; then
+      source "$dir/venv/bin/activate"
+      echo "✓ Activated virtual environment: $VIRTUAL_ENV"
+      return 0
+    elif [ -f "$dir/.venv/bin/activate" ]; then
+      source "$dir/.venv/bin/activate"
+      echo "✓ Activated virtual environment: $VIRTUAL_ENV"
+      return 0
     fi
+    dir="${dir:h}"
   done
 
-  cd "$CURRENT_DIR"
-
-  if [ $FOUND -eq 1 ]; then
-    echo "✓ Activated virtual environment: $VIRTUAL_ENV"
-  else
-    echo "✗ No virtual environment found"
-    return 1
-  fi
+  echo "✗ No virtual environment found"
+  return 1
 }
 
 # omp with local models only: its own profile (~/.omp/profiles/local, with its

@@ -153,7 +153,7 @@ teardown() { teardown_sandbox; }
   ln -sfn /somewhere/else "$HOME/.zshrc"
 
   bats_run link_tree
-  [[ "$output" == *"was pointing elsewhere"* ]]
+  [[ "$output" == *"was pointing at /somewhere/else"* ]]
   [ "$(readlink "$HOME/.zshrc")" = "$LINK_SRC/.zshrc" ]
 }
 
@@ -205,6 +205,18 @@ teardown() { teardown_sandbox; }
   grep -qx ".oldrc" "$LINK_MANIFEST"
 }
 
+@test "a source file that became a directory is pruned, not reported as 'self'" {
+  link_tree >/dev/null
+  rm "$SANDBOX/src/.aliases"
+  mkfile "$SANDBOX/src/.aliases/inner" "inner"
+
+  bats_run link_tree
+  [ "$status" -eq 0 ]
+  [ ! -L "$HOME/.aliases" ]
+  [ -d "$HOME/.aliases" ]
+  [ -L "$HOME/.aliases/inner" ]
+}
+
 @test "a stale link that could not be removed stays in the manifest" {
   skip_if_root
   link_tree >/dev/null
@@ -214,6 +226,9 @@ teardown() { teardown_sandbox; }
 
   bats_run link_tree
   [[ "$output" == *"could not remove stale link"* ]]
+  # a failure in _prune is a failure of the run
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"1 failed"* ]]
 
   chmod 700 "$HOME/.config/helix"
   # the next run gets another chance at it, which needs the record to survive
@@ -422,6 +437,33 @@ teardown() { teardown_sandbox; }
   # yes-default is the one answer that would be wrong
   [[ "$output" == *"Restore it with:"* ]]
   [ ! -e "$HOME/.zshrc" ]
+}
+
+@test "_link_restore puts files back without touching directory modes" {
+  chmod 750 "$HOME"
+  mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+  local dir="$LINK_BACKUP_ROOT/20240101-000000"
+  mkfile "$dir/.ssh/config" "old ssh"
+  mkfile "$dir/.zshrc" "old"
+  chmod 775 "$dir" "$dir/.ssh"
+
+  bats_run _link_restore "$dir"
+  [ "$status" -eq 0 ]
+  [ "$(ls -ld "$HOME" | cut -c1-10)" = "drwxr-x---" ]
+  [ "$(ls -ld "$HOME/.ssh" | cut -c1-10)" = "drwx------" ]
+  grep -qx "old ssh" "$HOME/.ssh/config"
+  grep -qx "old" "$HOME/.zshrc"
+}
+
+@test "_link_restore never writes through a link" {
+  mkfile "$SANDBOX/elsewhere" "keep"
+  ln -s "$SANDBOX/elsewhere" "$HOME/.zshrc"
+  local dir="$LINK_BACKUP_ROOT/20240101-000000"
+  mkfile "$dir/.zshrc" "old"
+
+  bats_run _link_restore "$dir"
+  [ "$status" -ne 0 ]
+  grep -qx keep "$SANDBOX/elsewhere"
 }
 
 @test "link_unlink leaves a link pointing at another checkout" {

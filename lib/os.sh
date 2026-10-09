@@ -27,6 +27,14 @@ is_wsl() { grep -qi microsoft /proc/version 2>/dev/null; }
 # that a derivative might not carry.
 is_ubuntu() { grep -qi ubuntu /etc/os-release 2>/dev/null; }
 
+# The Ubuntu release codename (resolute, noble, …). UBUNTU_CODENAME first, so a
+# derivative answers with the Ubuntu base its PPAs are built for. In a subshell:
+# sourcing os-release would leak NAME, ID, VERSION … into the run.
+os_codename() {
+  # shellcheck source=/dev/null
+  ( . /etc/os-release 2>/dev/null && printf '%s\n' "${UBUNTU_CODENAME:-$VERSION_CODENAME}" )
+}
+
 # single idiom for "is this command available?"
 has() { command -v "$1" >/dev/null 2>&1; }
 

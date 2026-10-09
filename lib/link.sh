@@ -86,7 +86,9 @@ link_stale() {
   local rel dest
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
-    [ -e "$LINK_SRC/$rel" ] && continue
+    # -f, the same test as link_files (-type f): a source that is now a
+    # directory counts as gone
+    [ -f "$LINK_SRC/$rel" ] && continue
     dest="$HOME/$rel"
     [ -L "$dest" ] || continue
     case "$(readlink "$dest")" in
@@ -109,7 +111,8 @@ link_orphans() {
   local rel dest
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
-    [ -e "$LINK_SRC/$rel" ] && continue
+    # -f, as in link_stale
+    [ -f "$LINK_SRC/$rel" ] && continue
     dest="$HOME/$rel"
     [ -L "$dest" ] || continue
     case "$(readlink "$dest")" in
@@ -120,16 +123,18 @@ link_orphans() {
 }
 
 # Remove the links link_stale found. link_unlink reuses this before dropping the
-# manifest. Sets $_link_pruned.
+# manifest. Sets $_link_pruned and $_link_prune_failed.
 #
 # $1, if given, is a file to append entries we failed to remove to. The caller
 # must carry those into the new manifest: the link is still out there, and this
 # record is the only thing that will ever find it again — dropping it on a
 # transient rm failure would orphan the link permanently.
 _link_pruned=0
+_link_prune_failed=0
 _prune() {
   local keep="$1"
   _link_pruned=0
+  _link_prune_failed=0
   # `run` is a no-op under --dry-run, so the report has to stay in the
   # conditional — nothing may read as if it had already happened
   local did="removed"
@@ -142,6 +147,7 @@ _prune() {
       ok "$did $rel (no longer in home/)"
     else
       err "$rel — could not remove stale link $dest"
+      _link_prune_failed=$((_link_prune_failed + 1))
       if [ -n "$keep" ]; then printf '%s\n' "$rel" >> "$keep"; fi
     fi
   done < <(link_stale)
@@ -221,7 +227,7 @@ link_bin_status() {
 
 # Link every file in home/ into $HOME. Idempotent.
 link_tree() {
-  local rel src dest parent state note backup identical what
+  local rel src dest parent state note backup identical what old
   local linked=0 replaced=0 unchanged=0 failed=0
   # parents we already created — only a dry run needs this: there `mkdir` never
   # runs, so `[ ! -d "$parent" ]` stays true and every file in a directory would
@@ -246,6 +252,7 @@ link_tree() {
   # stale links we could not remove go straight into the new manifest, so the
   # next run gets another chance at them
   _prune "$manifest_tmp"
+  failed=$((failed + _link_prune_failed))
 
   # links we refuse to remove but must not forget either — see link_orphans.
   # Disjoint from both loops around it: _prune takes the ones pointing into
@@ -309,12 +316,13 @@ link_tree() {
         fi
         ;;
       stale-link)
+        old="$(readlink "$dest")"
         if ! run rm -f "$dest"; then
           err "$rel — could not remove the old link"
           failed=$((failed + 1))
           continue
         fi
-        note=" (was pointing elsewhere)"
+        note=" (was pointing at $old)"
         ;;
     esac
 
@@ -415,6 +423,27 @@ link_status() {
   return $bad
 }
 
+# Copy a backup's files back into $HOME. Files only: `cp -a dir/. $HOME/` would
+# also copy the backup directories' modes onto $HOME and ~/.ssh, which _backup
+# created with the umask. A link at the destination is never written through.
+_link_restore() {
+  local dir="$1" rel dest rc=0
+  while IFS= read -r -d '' rel; do
+    rel="${rel#./}"
+    dest="$HOME/$rel"
+    if [ -L "$dest" ]; then
+      err "$rel — a link is in the way, not restored"
+      rc=1
+      continue
+    fi
+    if ! { run mkdir -p "$(dirname "$dest")" && run cp -pP "$dir/$rel" "$dest"; }; then
+      err "$rel — could not restore"
+      rc=1
+    fi
+  done < <(cd "$dir" && find . ! -type d -print0)
+  return "$rc"
+}
+
 # Remove every link we created and restore the newest backup, if any.
 link_unlink() {
   local rel dest removed=0 newest
@@ -507,13 +536,11 @@ link_unlink() {
     # handled inside confirm; --yes has to be re-checked here, because confirm
     # answers *yes* to it and this is the one question where that is wrong.
     if [ -z "$ASSUME_YES" ] && confirm "Restore it into \$HOME?"; then
-      if run cp -a "$newest/." "$HOME/"; then
+      if _link_restore "$newest"; then
         ok_run "backup restored" "would restore the backup"
-      else
-        err "could not restore the backup"
       fi
     else
-      info "Restore it with: cp -a '$newest/.' \"\$HOME/\""
+      info "Restore it with: (cd '$newest' && find . ! -type d -exec sh -c 'mkdir -p \"\$HOME/\${1%/*}\" && cp -p \"\$1\" \"\$HOME/\$1\"' _ {} \;)"
     fi
   fi
 

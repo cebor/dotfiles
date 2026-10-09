@@ -1,8 +1,9 @@
 #!/usr/bin/env bats
 #
-# setup/packages-linux.sh — the apt.txt parser. The _apt_repo_* steps run
-# `curl | sudo bash` and are out of reach here; _apt_read_list is pure and is
-# the only place Linux package names are decided.
+# setup/packages-linux.sh — the apt.txt parser and the source guard. The
+# _apt_repo_* steps run `curl | sudo bash` and are out of reach here;
+# _apt_read_list is pure and is the only place Linux package names are decided,
+# and _apt_source_enabled, which those steps are guarded by, only reads files.
 #
 # The design it has to keep: it fills the global $APT_PACKAGES rather than
 # echoing. In a `pkgs="$(_apt_read_list)"` the warn below would land in $pkgs as
@@ -17,6 +18,8 @@ setup() {
   # shellcheck source=../setup/packages-linux.sh
   source "$DOTFILES_ROOT/setup/packages-linux.sh"
   REPO_ROOT="$DOTFILES_ROOT"
+  APT_SOURCES_DIR="$SANDBOX/sources.list.d"
+  mkdir -p "$APT_SOURCES_DIR"
 }
 
 teardown() { teardown_sandbox; }
@@ -155,4 +158,29 @@ git'
     [[ " ${APT_PACKAGES[*]} " == *" vim "* ]]
     [[ " ${APT_PACKAGES[*]} " == *" software-properties-common "* ]]
   done
+}
+
+@test "an apt source a release upgrade disabled does not count" {
+  printf '%s\n' 'Types: deb' 'URIs: https://deb.nodesource.com/node_26.x' \
+    'Suites: nodistro' 'Components: main' 'Enabled: no' \
+    > "$APT_SOURCES_DIR/nodesource.sources"
+  if _apt_source_enabled 'deb\.nodesource\.com/node_26\.x'; then return 1; fi
+
+  printf '%s\n' 'Types: deb' 'URIs: https://deb.nodesource.com/node_26.x' \
+    'Suites: nodistro' 'Components: main' \
+    > "$APT_SOURCES_DIR/nodesource.sources"
+  printf '%s\n' '# deb https://deb.nodesource.com/node_24.x nodistro main # disabled on upgrade to resolute' \
+    > "$APT_SOURCES_DIR/old.list"
+  _apt_source_enabled 'deb\.nodesource\.com/node_26\.x'
+  if _apt_source_enabled 'node_24\.x'; then return 1; fi
+}
+
+@test "a PPA for another release does not count" {
+  printf '%s\n' 'Types: deb' 'URIs: https://ppa.launchpadcontent.net/git-core/ppa/ubuntu/' \
+    'Suites: noble' 'Components: main' > "$APT_SOURCES_DIR/git.sources"
+  if _apt_source_enabled 'git-core/ppa' resolute; then return 1; fi
+
+  printf '%s\n' 'Types: deb' 'URIs: https://ppa.launchpadcontent.net/git-core/ppa/ubuntu/' \
+    'Suites: resolute' 'Components: main' > "$APT_SOURCES_DIR/git.sources"
+  _apt_source_enabled 'git-core/ppa' resolute
 }

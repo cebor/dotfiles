@@ -123,9 +123,9 @@ teardown() { teardown_sandbox; }
   bats_run confirm "go ahead?"
   [ "$status" -ne 0 ]
 
-  # neither flag set, and bats gives the test no terminal on stdin
+  # neither flag set; stdin is /dev/null, so there is no terminal to ask
   DRY_RUN=""
-  bats_run confirm "go ahead?"
+  bats_run confirm "go ahead?" </dev/null
   [ "$status" -ne 0 ]
 }
 
@@ -141,7 +141,7 @@ teardown() { teardown_sandbox; }
   [ -z "$output" ]
 
   DRY_RUN=""
-  bats_run ask "Your name"
+  bats_run ask "Your name" </dev/null
   [ -z "$output" ]
 }
 
