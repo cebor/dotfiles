@@ -6,13 +6,8 @@
 memory:
   backend: local
 symbolPreset: nerd
-theme:
-  dark: titanium
 hideThinkingBlock: true
 display:
   showTokenUsage: true
-composer:
-  shape: box
-browser:
-  headless: true
-  relay: false
+worktree:
+  onExit: remove
