@@ -4,12 +4,3 @@
 # so no account logged in under the default profile reaches it.
 modelRoles:
   default: ollama/qwen3.8-27b-instruct:latest
-  plan: ollama/qwen3.8-27b-instruct:latest
-  slow: ollama/qwen3.8-27b-instruct:latest
-  smol: ollama/qwen3.8-27b-instruct:latest
-  task: ollama/qwen3.8-27b-instruct:latest
-  advisor: ollama/qwen3.8-27b-instruct:latest
-  commit: ollama/qwen3.8-27b-instruct:latest
-  vision: ollama/qwen3.8-27b-instruct:latest
-  tiny: ollama/qwen3.8-27b-instruct:latest
-  memory: ollama/qwen3.8-27b-instruct:latest
