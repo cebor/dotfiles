@@ -1,0 +1,15 @@
+# omp settings for `ompc` (OpenAI Codex models): default profile and logins,
+# overlay after common.yml instead of anthropic.yml. Same roles as anthropic.yml
+# with opus -> sol, sonnet -> terra, haiku -> luna, and thinking one level up
+# (OpenAI high ~ Anthropic medium); capped at xhigh, Codex's highest effort.
+modelRoles:
+  default: openai-codex/gpt-5.6-sol:high
+  plan: openai-codex/gpt-5.6-sol:xhigh
+  slow: openai-codex/gpt-5.6-sol:xhigh
+  commit: openai-codex/gpt-5.6-terra:high
+  advisor: openai-codex/gpt-5.6-terra:xhigh
+  smol: openai-codex/gpt-5.6-terra:high
+  task: openai-codex/gpt-5.6-terra:xhigh
+  tiny: openai-codex/gpt-5.6-luna:minimal
+task:
+  enableLsp: true

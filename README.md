@@ -147,6 +147,7 @@ f '*.conf'               # find . -name
 bump patch               # npm version, with a "bump version to %s" message
 dcl                      # docker: kill everything running, then remove it all
 ompl                     # omp with local Ollama models only (profile "local")
+ompc                     # omp with OpenAI Codex models (sol/terra/luna), default profile
 
 ```
 

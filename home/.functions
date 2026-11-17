@@ -125,3 +125,10 @@ ompl () {
   PI_CONFIG_FILES="$HOME/.config/omp/common.yml:$HOME/.config/omp/local.yml" \
     command omp --profile local "$@"
 }
+
+# omp with OpenAI Codex models: default profile (same logins and sessions),
+# with the OpenAI set of home/.config/omp in place of the Anthropic one.
+ompc () {
+  PI_CONFIG_FILES="$HOME/.config/omp/common.yml:$HOME/.config/omp/openai.yml" \
+    command omp "$@"
+}
