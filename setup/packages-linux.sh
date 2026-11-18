@@ -175,10 +175,10 @@ setup_packages_linux() {
     # Under --dry-run their absence is an artefact of the forecast: setup_prereqs
     # only said it *would* install them. Same guard as in setup/packages.sh.
     if [ -z "$DRY_RUN" ]; then
-      err "prerequisites missing:$missing — run ./dot install"
+      err "prerequisites missing:$missing — run dot install"
       return 1
     fi
-    info "prerequisites not installed yet — ./dot install installs them before this step"
+    info "prerequisites not installed yet — dot install installs them before this step"
   fi
 
   # Every `curl … | interpreter` below starts with `set -o pipefail`, and it is

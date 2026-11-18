@@ -41,9 +41,9 @@ _prereqs_macos() {
     # never opened one (already running, no network, MDM policy) the user would be
     # waiting on a window that is not coming
     if run xcode-select --install; then
-      err "Finish the Xcode installer, then re-run ./dot install"
+      err "Finish the Xcode installer, then re-run dot install"
     else
-      err "could not start the Xcode installer — run xcode-select --install by hand, then re-run ./dot install"
+      err "could not start the Xcode installer — run xcode-select --install by hand, then re-run dot install"
     fi
     return 1
   fi
@@ -108,14 +108,14 @@ _prereqs_linux() {
   if run sudo apt-get install -y $prereqs; then
     ok_run "apt prerequisites installed" "would install the apt prerequisites ($prereqs)"
   else
-    warn "could not install the prerequisites ($prereqs) — ./dot packages may not be able to add its apt sources"
+    warn "could not install the prerequisites ($prereqs) — dot packages may not be able to add its apt sources"
   fi
 
   # curl is what separates a degraded run from no run at all: every apt source
   # and every upstream installer downloads with it. packages-linux.sh checks the
   # same thing again, because it can be reached without ever coming through here.
   if ! has curl && [ -z "$DRY_RUN" ]; then
-    err "curl is missing — ./dot packages cannot add the apt sources"
+    err "curl is missing — dot packages cannot add the apt sources"
     return 1
   fi
   return 0

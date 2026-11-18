@@ -20,15 +20,15 @@ teardown() { teardown_sandbox; }
 @test "no command and 'help' both print the usage" {
   run "$DOT"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Usage: ./dot <command>"* ]]
+  [[ "$output" == *"Usage: dot <command>"* ]]
 
   run "$DOT" help
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Usage: ./dot <command>"* ]]
+  [[ "$output" == *"Usage: dot <command>"* ]]
 
   run "$DOT" --help
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Usage: ./dot <command>"* ]]
+  [[ "$output" == *"Usage: dot <command>"* ]]
 }
 
 @test "an unknown command fails and says so" {

@@ -11,7 +11,7 @@ setup_vim() {
     # absence here is an artefact of the forecast. Same guard as in
     # setup/packages.sh and setup/shell.sh.
     if [ -n "$DRY_RUN" ]; then
-      info "vim not installed yet — ./dot packages installs it before this step"
+      info "vim not installed yet — dot packages installs it before this step"
       ok "would set up the vim directories and plugins once vim is there"
       return 0
     fi
@@ -52,7 +52,7 @@ setup_vim() {
   # absence there is a forecast artefact.
   if [ ! -f "$HOME/.vimrc" ] && [ -z "$DRY_RUN" ]; then
     # shellcheck disable=SC2088  # message text: ~ is how the user writes the path
-    warn "~/.vimrc is not linked — run ./dot sync first; skipping the plugin install"
+    warn "~/.vimrc is not linked — run dot sync first; skipping the plugin install"
     return 0
   fi
 

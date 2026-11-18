@@ -17,7 +17,7 @@ setup_shell() {
     # Under --dry-run the packages phase would have installed zsh, so its absence
     # is an artefact of the forecast. Same guard as in setup/vim.sh.
     if [ -n "$DRY_RUN" ]; then
-      info "zsh not installed yet — ./dot packages installs it before this step"
+      info "zsh not installed yet — dot packages installs it before this step"
       ok "would set zsh as the login shell once it is there"
       return 0
     fi

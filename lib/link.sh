@@ -218,7 +218,7 @@ link_bin() {
 link_bin_status() {
   case "$(_link_bin_state)" in
     linked)     skip ".local/bin/dot" ; return 0 ;;
-    missing)    warn ".local/bin/dot — not linked, \`dot\` is not on \$PATH — run ./dot sync" ;;
+    missing)    warn ".local/bin/dot — not linked, \`dot\` is not on \$PATH — run dot sync" ;;
     conflict)   warn ".local/bin/dot — a real file is in the way" ;;
     stale-link) warn ".local/bin/dot — link points elsewhere: $(readlink "$LINK_BIN_DEST")" ;;
   esac
@@ -406,7 +406,7 @@ link_status() {
   # without this they stay invisible and `doctor` would report all clear
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
-    warn "$rel — no longer in home/, stale link left over — run ./dot sync"
+    warn "$rel — no longer in home/, stale link left over — run dot sync"
     bad=1
   done < <(link_stale)
 
@@ -517,7 +517,7 @@ link_unlink() {
   if [ -z "$DRY_RUN" ]; then
     if [ -s "$kept" ]; then
       if mkdir -p "$(dirname "$LINK_MANIFEST")" && mv "$kept" "$LINK_MANIFEST"; then
-        warn "$(wc -l < "$LINK_MANIFEST" | tr -d ' ') link(s) left behind — kept in the manifest so the next ./dot sync still knows about them"
+        warn "$(wc -l < "$LINK_MANIFEST" | tr -d ' ') link(s) left behind — kept in the manifest so the next dot sync still knows about them"
       else
         err "could not update $LINK_MANIFEST — the links left behind are now untracked"
         rm -f "$kept"

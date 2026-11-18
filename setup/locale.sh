@@ -69,7 +69,7 @@ setup_locale() {
     # step ever ran, so its absence here is an artefact of the forecast, not a
     # finding. Same guard as in setup/shell.sh and setup/vim.sh.
     if [ -n "$DRY_RUN" ]; then
-      info "the locales package is not installed yet — ./dot packages installs it before this step"
+      info "the locales package is not installed yet — dot packages installs it before this step"
       ok "would generate $lang once it is there"
       return 0
     fi

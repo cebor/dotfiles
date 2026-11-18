@@ -20,10 +20,10 @@ setup_packages() {
     # guard as in setup/vim.sh and setup/shell.sh.
     if ! has brew; then
       if [ -z "$DRY_RUN" ]; then
-        err "Homebrew missing — run ./dot install"
+        err "Homebrew missing — run dot install"
         return 1
       fi
-      info "Homebrew not installed yet — ./dot install installs it before this step"
+      info "Homebrew not installed yet — dot install installs it before this step"
       ok "would install the Brewfile packages once Homebrew is there"
       return 0
     fi

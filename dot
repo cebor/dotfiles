@@ -55,7 +55,7 @@ ASSUME_YES=""
 
 usage() {
   cat <<'EOF'
-Usage: ./dot <command> [options]
+Usage: dot <command> [options]
 
 Commands:
   install            Full setup: prereqs → sync → packages → configure
@@ -76,11 +76,11 @@ Options:
       --status       sync only: report link state without writing
 
 Examples:
-  ./dot install              # first run on a new machine, and after a packages/config change
-  ./dot sync                 # after adding, renaming or deleting a file under home/
-  ./dot sync --status        # what drifted?
-  ./dot update               # pull the latest commits and re-link
-  ./dot configure git        # just re-apply the git config
+  dot install                # first run on a new machine, and after a packages/config change
+  dot sync                   # after adding, renaming or deleting a file under home/
+  dot sync --status          # what drifted?
+  dot update                 # pull the latest commits and re-link
+  dot configure git          # just re-apply the git config
 EOF
 }
 
@@ -217,7 +217,7 @@ cmd_update() {
   # same guard as setup/git.sh and cmd_doctor: without git every query below
   # sprays "command not found" onto stderr, outside the run report
   if ! has git; then
-    err "git not installed — run ./dot packages"
+    err "git not installed — run dot packages"
     return 1
   fi
 
@@ -373,7 +373,7 @@ cmd_doctor() {
     *zsh) ok "login shell is zsh" ;;
     # neither getent nor dscl answered — "not zsh" would be a claim we cannot make
     "")   warn "could not determine the login shell"; issues=1 ;;
-    *)    warn "login shell is not zsh — run ./dot configure shell"; issues=1 ;;
+    *)    warn "login shell is not zsh — run dot configure shell"; issues=1 ;;
   esac
 
   # The LANG home/.exports exports has to exist on this machine, or setlocale()
@@ -388,7 +388,7 @@ cmd_doctor() {
   elif _locale_available "$want_locale"; then
     ok "locale $want_locale available"
   elif is_linux; then
-    warn "locale $want_locale is not generated — run ./dot configure locale"
+    warn "locale $want_locale is not generated — run dot configure locale"
     issues=1
   else
     warn "locale $want_locale is not available on this system — check home/.exports"
@@ -423,7 +423,7 @@ cmd_doctor() {
   done
   is_macos && { has brew || missing="$missing brew"; }
   if [ -n "$missing" ]; then
-    warn "not installed:$missing — run ./dot packages"
+    warn "not installed:$missing — run dot packages"
     issues=1
     tools_ok=""
   fi
@@ -460,7 +460,7 @@ cmd_doctor() {
   # found" onto stderr — outside the report — and every finding under them would
   # describe a configuration that cannot exist yet. Same guard as setup/git.sh.
   if ! has git; then
-    warn "git not installed — run ./dot packages"
+    warn "git not installed — run dot packages"
     issues=1
   else
     # both halves, the same condition setup_git ends on — testing only the mail
@@ -472,7 +472,7 @@ cmd_doctor() {
     if [ -n "$git_name" ] && [ -n "$git_email" ]; then
       ok "$git_name <$git_email>"
     else
-      warn "git identity incomplete — run ./dot configure git"
+      warn "git identity incomplete — run dot configure git"
       issues=1
     fi
     local helper
@@ -480,7 +480,7 @@ cmd_doctor() {
     if [ -n "$helper" ]; then
       info "credential.helper: $helper"
     else
-      warn "credential.helper not set — run ./dot configure git"
+      warn "credential.helper not set — run dot configure git"
       issues=1
     fi
   fi

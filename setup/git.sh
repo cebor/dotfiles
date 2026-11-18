@@ -13,7 +13,7 @@ setup_git() {
   # an artefact of the forecast. Same guard as in setup/shell.sh and setup/vim.sh.
   if ! has git; then
     if [ -n "$DRY_RUN" ]; then
-      info "git not installed yet — ./dot install installs it before this step"
+      info "git not installed yet — dot install installs it before this step"
       ok "would configure git once it is there"
       return 0
     fi
