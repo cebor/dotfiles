@@ -3,13 +3,13 @@
 # with opus -> sol, sonnet -> terra, haiku -> luna, and thinking one level up
 # (OpenAI high ~ Anthropic medium); capped at xhigh, Codex's highest effort.
 modelRoles:
-  default: openai-codex/gpt-5.6-sol:high
-  plan: openai-codex/gpt-5.6-sol:xhigh
-  slow: openai-codex/gpt-5.6-sol:xhigh
-  commit: openai-codex/gpt-5.6-terra:high
-  advisor: openai-codex/gpt-5.6-terra:xhigh
-  smol: openai-codex/gpt-5.6-terra:high
-  task: openai-codex/gpt-5.6-terra:xhigh
-  tiny: openai-codex/gpt-5.6-luna:minimal
+  default: openai-codex/gpt-6.2-sol:high
+  plan: openai-codex/gpt-6.2-sol:xhigh
+  slow: openai-codex/gpt-6.2-sol:xhigh
+  commit: openai-codex/gpt-6.1-terra:high
+  advisor: openai-codex/gpt-6.1-terra:xhigh
+  smol: openai-codex/gpt-6.1-terra:high
+  task: openai-codex/gpt-6.1-terra:xhigh
+  tiny: openai-codex/gpt-6-luna:minimal
 task:
   enableLsp: true
